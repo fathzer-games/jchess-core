@@ -1,0 +1,38 @@
+package com.fathzer.jchess.standard;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.fathzer.games.Color;
+import com.fathzer.jchess.Board;
+import com.fathzer.jchess.Castling;
+import com.fathzer.jchess.Dimension;
+import com.fathzer.jchess.Move;
+import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.PieceWithPosition;
+
+public class ChessBoard extends com.fathzer.jchess.generic.ChessBoard {
+	
+	public ChessBoard(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassant, int halfMoveCount, int moveNumber) {
+		super(Dimension.STANDARD, pieces, activeColor, castlings, enPassant, halfMoveCount, moveNumber);
+		castlings.forEach(this::checkCastling);
+	}
+	
+	@Override
+	public Board<Move> create() {
+		return new ChessBoard(Collections.emptyList(), Color.WHITE, Collections.emptyList(), -1, 0, 1);
+	}
+	
+	private void checkCastling(Castling castling) {
+		final int kingPosition = Color.BLACK.equals(castling.getColor()) ? 4 : 60;
+		if (getKingPosition(castling.getColor())!=kingPosition) {
+			throw new IllegalArgumentException("Invalid castling: King is not at its initial position");
+		}
+		final int rookPosition = kingPosition + (Castling.BLACK_KING_SIDE.equals(castling) || Castling.WHITE_KING_SIDE.equals(castling) ? 3 : -4);
+		final Piece rook = Color.BLACK.equals(castling.getColor()) ? Piece.BLACK_ROOK : Piece.WHITE_ROOK;
+		if (!rook.equals(getPiece(rookPosition))) {
+			throw new IllegalArgumentException("Invalid castling: Rook is not at its initial position");
+		}
+	}
+}
