@@ -18,7 +18,6 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.fen.FENParser;
-import com.fathzer.jchess.lichess.DefaultOpenings;
 import com.fathzer.jchess.standard.CompactMoveList;
 
 import lombok.Setter;
@@ -42,9 +41,13 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		this.evaluator = evaluator;
 		this.sessions = new LinkedList<>();
 		this.parallelism = 0;
-		this.openingLibrary = DefaultOpenings.INSTANCE;
+		this.openingLibrary = null;
 	}
 	
+	/** Sets the opening library of this engine.
+	 * @param openingLibrary The opening library. It returns null if the library does not known what to play here.
+	 * @return This updated chess engine
+	 */
 	public JChessEngine setOpenings(Function<Board<Move>, Move> openingLibrary) {
 		this.openingLibrary = openingLibrary;
 		return this;
