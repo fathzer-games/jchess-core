@@ -7,16 +7,18 @@ import java.util.Random;
 import java.util.function.LongSupplier;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 class RandomGeneratorTest {
 	// java.security.SecuredRandom implementation is secured but quite slow (>1000s to test on my computer)
 	// java.util.Random is secured and fast (about 8s to test on my computer)
 	private static final Random JAVA = new Random(0); 
-	// All implementations based on Math.random() I've found and not secured.
+	// All implementations based on Math.random() I've found are not secured.
 	// Chesslib XorShiftRandom implementation is secured and blazing fast (about 3s to test on my computer)
 	//private static final XorShiftRandom CHESS_LIB = new XorShiftRandom(); 
 	
 	@Test
+	@EnabledIfSystemProperty(named = "rndGenTest", matches = "*")
 	void test() {
 		final int sampleSize = 2000;
 		final int count = 300000000;

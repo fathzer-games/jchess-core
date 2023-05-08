@@ -35,7 +35,7 @@ class PerfTTest {
 	}
 
 	private void doTest(PerfTTestData test) {
-		final int depth = 3;
+		final int depth = Integer.getInteger("perftDepth", 1);
 		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
 		final PerfT<Move> perfT = new PerfT<>(() -> new CopyBasedMoveGenerator<>(StandardChessRules.PERFT, board));
 		if (test.getSize()>=depth) {
