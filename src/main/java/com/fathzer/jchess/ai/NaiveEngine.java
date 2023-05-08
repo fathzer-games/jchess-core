@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class NaiveEngine implements Function<Board<Move>, Move> {
+	private static final Random RND = new Random();
 	private final ToIntFunction<Board<Move>> evaluator;
 	
 	private final Board<Move> board;
@@ -41,7 +42,7 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 		System.out.println(moves); //TODO
 		final double best = moves.get(0).getValue();
 		List<Move> bestMoves = moves.stream().filter(m -> m.getValue()==best).map(EvaluatedMove::getMove).collect(Collectors.toList());
-		return bestMoves.get(new Random().nextInt(bestMoves.size()));
+		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	
 	private int evaluate(Move move) {
@@ -69,8 +70,8 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 	@AllArgsConstructor
 	@Getter
 	private static class EvaluatedMove implements Comparable<EvaluatedMove> {
-		private Move move;
-		private int value;
+		private final Move move;
+		private final int value;
 		
 		@Override
 		public int compareTo(EvaluatedMove o) {
@@ -96,7 +97,11 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 			EvaluatedMove other = (EvaluatedMove) obj;
 			return this.compareTo(other)==0;
 		}
-		
+
+		@Override
+		public int hashCode() {
+			return value;
+		}
 	}
 
 }
