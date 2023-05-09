@@ -1,5 +1,5 @@
-![Maven Central](https://img.shields.io/maven-central/v/com.fathzer/jchess-core)
-![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)
+[![Maven Central](https://img.shields.io/maven-central/v/com.fathzer/jchess-core)](https://central.sonatype.com/artifact/com.fathzer/jchess-core)
+[![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg)](https://github.com/fathzer-games/jchess-core/blob/master/LICENSE)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fathzer-games_jchess-core&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fathzer-games_jchess-core)
 [![javadoc](https://javadoc.io/badge2/com.fathzer/jchess-core/javadoc.svg)](https://javadoc.io/doc/com.fathzer/jchess-core)
 
