@@ -21,12 +21,20 @@ It appears to be the case for all platforms I've tested. So, the test is deactiv
 To activate this test, which is pretty long (8s on my small J4125 powered machine), set the **rndGenTest** system property to true.
 
 ## TODO
-* Implement detection of draw by repetition
-* Perform some Quiescence Search before evaluate move
-* Improve evaluation function
-* Use bitboards to generate move faster?
-* Use killer moves in Alpha beta pruning moves sort?
-* Remove PinnedDetector (and its test) if not used
+- General things ... if it does not alter performance too much:
+    - Is it a good idea to separate ChessBoards and rules? Would it be better to have newGame and getState methods in ChessBoard? It seems we often need rules and Board.  
+A way could be to change Rules to something like Game or Board and only have genericity on Move.
+Then, we can imagine adding some useful methods to ChessBoard like isCheck.
+    - Could it be a good idea to have the ChessBoard able to rewind moves?
+    - Move generation improvements:
+        - Remove PinnedDetector (and its test) if not used
+        - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.
+        - Think about using multithreading in move generation. It is quite simple except to check if move make king in check as it moves pieces on the board.
+- Engine improvements:
+    - Perform some Quiescence Search before evaluate move
+    - Improve evaluation function
+    - Use killer moves in Alpha beta pruning moves sort?
 
 ## Known bugs
-* com.fathzer.jchess.generic.BasicMove is not thread safe
+- Draw by repetition is not implemented
+- com.fathzer.jchess.generic.BasicMove is not thread safe

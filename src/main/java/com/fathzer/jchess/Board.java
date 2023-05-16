@@ -24,6 +24,7 @@ public interface Board<M> {
 	}
 
 	long getKey();
+
 	/** Creates an empty board of the same class as this.
 	 * @return a new Board.
 	 */
@@ -38,6 +39,7 @@ public interface Board<M> {
 	default void copy(Board<M> board) {
 		throw new UnsupportedOperationException();
 	}
+
 	/** Creates a new empty move list.
 	 * @return a new move list
 	 */

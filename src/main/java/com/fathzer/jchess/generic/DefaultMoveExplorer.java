@@ -14,7 +14,7 @@ public class DefaultMoveExplorer {
 		void generate(ChessGameState moves, int from, int to);
 	}
 	
-	public static final MoveGenerator DEFAULT = (m, f, t) -> m.add(f, t);
+	public static final MoveGenerator DEFAULT = ChessGameState::add;
 	
 	private final Board<Move> board;
 
