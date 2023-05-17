@@ -53,6 +53,8 @@ public enum Castling {
 	}
 
 	public int getKingDestination(Dimension dimension) {
+		//TODO Probably this method would be in ChessRules rather than here.
+		// Even if Chess 960 and Capablanca uses the same rule, we can imagine chess rules with different castling king's destination. 
 		final int rowStart = Color.WHITE.equals(color) ? dimension.getPosition(dimension.getHeight()-1, 0): 0;
 		return rowStart + (Side.QUEEN.equals(side) ? 2 : dimension.getWidth()-2);
 	}

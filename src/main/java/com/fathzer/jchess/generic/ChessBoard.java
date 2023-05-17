@@ -222,27 +222,6 @@ public abstract class ChessBoard implements Board<Move> {
 		this.pieces[from] = null;
 	}
 	
-	/** Tests whether a king's move is a castling or not and, if it is the case, returns the corresponding castling.
-	 * <br>Please note this method is called by this class only when king is moving. Calling it on other moves
-	 * may produce unpredictable results.
-	 * @param from The king's starting position.
-	 * @param to The king's end position.
-	 * <br>Please note this position is the representation of the king's destination in the encoded move,
-	 * not necessarily the 'effective' king's position after the move. For example, in chess360, the castling move
-	 * is encoded as 'king moves to the rook it castles with', but the 'effective' end position is the same as in standard chess.
-	 * @return The castling if the move is a castling, null if it is a king standard move.
-	 * <br>The default implementation, returns true if the king moves more than 1 cell or on a cell occupied by a rook of the same color).
-	 */
-	protected Castling getCastling(int from, int to, Color playingColor) {
-		final int offset = Math.abs(to-from);
-		boolean castling = offset>=2 && (dimension.getRow(from)==dimension.getRow(to));
-		if (!castling) {
-			final Piece rook = Color.WHITE.equals(playingColor) ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
-			castling = rook.equals(pieces[to]);
-		}
-		return castling ? Castling.get(playingColor, to>from) : null;
-	}
-	
 	private void fastPawnMove(int to, Color playingColor) {
 		final boolean whiteMove = Color.WHITE.equals(playingColor);
 		if (to==enPassant) {
