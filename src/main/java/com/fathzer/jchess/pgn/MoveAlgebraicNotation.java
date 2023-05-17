@@ -27,7 +27,7 @@ public class MoveAlgebraicNotation {
 	private char captureSymbol = 'x';
 	private String enPassantSymbol = " e.p";
 	private Function<Castling.Side,String> castlingSymbolBuilder = s -> s==Castling.Side.KING?"O-O":"O-O-O";
-	private Function<Piece, String> promotionSymbolBuilder = p -> p.getNotation().toUpperCase();
+	private Function<Piece, String> promotionSymbolBuilder = p -> "="+p.getNotation().toUpperCase();
 	private boolean playMove;
 	
 	public MoveAlgebraicNotation(ChessRules rules) {
