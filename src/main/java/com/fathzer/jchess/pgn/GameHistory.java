@@ -40,7 +40,7 @@ public class GameHistory {
 		int moveNumber = -1;
 		for (Move move:moves) {
 			if (board.getMoveNumber()!=moveNumber) {
-				if (!buf.isEmpty()) {
+				if (buf.length()!=0) {
 					result.add(buf.toString());
 				}
 				moveNumber = board.getMoveNumber();
@@ -52,7 +52,7 @@ public class GameHistory {
 			}
 			buf.append(an.get(board, move));
 		}
-		if (!buf.isEmpty()) {
+		if (buf.length()!=0) {
 			result.add(buf.toString());
 		}
 		return result;
