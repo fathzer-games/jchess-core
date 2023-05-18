@@ -12,23 +12,24 @@ import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.generic.ChessBoard;
 
-public class ChessBoard extends com.fathzer.jchess.generic.ChessBoard {
+public class Chess960Board extends ChessBoard {
 	private int[] initialRookPositions;
 	
-	public ChessBoard(List<PieceWithPosition> pieces) {
+	public Chess960Board(List<PieceWithPosition> pieces) {
 		super(Dimension.STANDARD, pieces);
 		setInitialRookPositions(pieces);
 	}
 
-	public ChessBoard(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int[] initialRookPositions, int enPassant, int halfMoveCount, int moveNumber) {
+	public Chess960Board(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int[] initialRookPositions, int enPassant, int halfMoveCount, int moveNumber) {
 		super(Dimension.STANDARD, pieces, activeColor, castlings, enPassant, halfMoveCount, moveNumber);
 		this.initialRookPositions = initialRookPositions;
 	}
 	
 	@Override
 	public Board<Move> create() {
-		return new ChessBoard(Collections.emptyList(), Color.WHITE, Collections.emptyList(), new int[4], -1, 0, 1);
+		return new Chess960Board(Collections.emptyList(), Color.WHITE, Collections.emptyList(), new int[4], -1, 0, 1);
 	}
 	
 
@@ -38,7 +39,7 @@ public class ChessBoard extends com.fathzer.jchess.generic.ChessBoard {
 	}
 
 	private void setInitialRookPositions(List<PieceWithPosition> pieces) {
-		this.initialRookPositions = new int[4];
+		this.initialRookPositions = new int[Castling.ALL.size()];
 		Arrays.fill(initialRookPositions, -1);
 		pieces.stream().filter(p->PieceKind.ROOK.equals(p.getPiece().getKind())).forEach(this::fillRookPosition);
 	}
@@ -54,6 +55,6 @@ public class ChessBoard extends com.fathzer.jchess.generic.ChessBoard {
 	@Override
 	public void copy(Board<Move> other) {
 		super.copy(other);
-		System.arraycopy(((ChessBoard)other).initialRookPositions, 0, initialRookPositions, 0, initialRookPositions.length);
+		System.arraycopy(((Chess960Board)other).initialRookPositions, 0, initialRookPositions, 0, initialRookPositions.length);
 	}
 }

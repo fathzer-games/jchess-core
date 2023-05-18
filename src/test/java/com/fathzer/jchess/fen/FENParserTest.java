@@ -22,4 +22,11 @@ class FENParserTest {
 		assertEquals(fen, FENParser.to(board));
 	}
 
+	@Test
+	void test960() {
+		final String fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
+		Board<Move> board = FENParser.from(fen);
+		System.out.println(board);
+		assertEquals(fen, FENParser.to(board));
+	}
 }

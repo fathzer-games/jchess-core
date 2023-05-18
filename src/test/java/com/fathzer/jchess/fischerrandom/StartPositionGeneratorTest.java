@@ -15,11 +15,11 @@ class StartPositionGeneratorTest {
 	@Test
 	void test() {
 		// Test 518 is standard board
-		String fen518 = FENParser.to(new ChessBoard(StartPositionGenerator.INSTANCE.fromPositionNumber(518)));
+		String fen518 = FENParser.to(new Chess960Board(StartPositionGenerator.INSTANCE.fromPositionNumber(518)));
 		assertEquals(FENParser.NEW_STANDARD_GAME, fen518);
 		
 		// Test there is 960 different positions
-		final Set<String> fens = IntStream.range(0, 960).mapToObj(i -> FENParser.to(new ChessBoard(StartPositionGenerator.INSTANCE.fromPositionNumber(i)))).collect(Collectors.toSet());
+		final Set<String> fens = IntStream.range(0, 960).mapToObj(i -> FENParser.to(new Chess960Board(StartPositionGenerator.INSTANCE.fromPositionNumber(i)))).collect(Collectors.toSet());
 		assertEquals(960,fens.size());
 	}
 

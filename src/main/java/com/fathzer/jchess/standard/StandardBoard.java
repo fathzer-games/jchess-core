@@ -12,16 +12,16 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
 
-public class ChessBoard extends com.fathzer.jchess.generic.ChessBoard {
+public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 	
-	public ChessBoard(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassant, int halfMoveCount, int moveNumber) {
+	public StandardBoard(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassant, int halfMoveCount, int moveNumber) {
 		super(Dimension.STANDARD, pieces, activeColor, castlings, enPassant, halfMoveCount, moveNumber);
 		castlings.forEach(this::checkCastling);
 	}
 	
 	@Override
 	public Board<Move> create() {
-		return new ChessBoard(Collections.emptyList(), Color.WHITE, Collections.emptyList(), -1, 0, 1);
+		return new StandardBoard(Collections.emptyList(), Color.WHITE, Collections.emptyList(), -1, 0, 1);
 	}
 	
 	private void checkCastling(Castling castling) {

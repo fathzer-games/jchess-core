@@ -136,7 +136,7 @@ public abstract class ChessBoard implements Board<Move> {
 		} else {
 			halfMoveCount = 0;
 		}
-		if (Color.WHITE.equals(activeColor)) {
+		if (Color.BLACK.equals(activeColor)) {
 			moveNumber++;
 		}
 		activeColor = movedPiece.getColor().opposite();

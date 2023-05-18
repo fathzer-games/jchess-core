@@ -14,7 +14,7 @@ public class FischerRandomRules extends StandardChessRules {
 	
 	@Override
 	public Board<Move> newGame() {
-		return new ChessBoard(StartPositionGenerator.INSTANCE.get());
+		return new Chess960Board(StartPositionGenerator.INSTANCE.get());
 	}
 
 	@Override

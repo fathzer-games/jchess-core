@@ -17,7 +17,7 @@ class ChessBoardTest {
 	@Test
 	void test() {
 		final List<PieceWithPosition> pieces = FENParser.getPieces("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/2RK3R");
-		final ChessBoard board = new ChessBoard(pieces);
+		final Chess960Board board = new Chess960Board(pieces);
 		final ChessGameState moves = board.newMoveList();
 		moves.add(Coord.toIndex("d1"), Coord.toIndex("c1"));
 		board.move(moves.get(0));

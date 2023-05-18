@@ -13,6 +13,7 @@ import com.fathzer.games.GameState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.ChessRules;
+import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Notation;
 import com.fathzer.jchess.Piece;
@@ -49,7 +50,7 @@ public class MoveAlgebraicNotation {
 		final int to = move.getTo();
 		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).collect(Collectors.toList());
 		if (!checkValidMove(move, candidates)) {
-			throw new IllegalArgumentException("Move is not valid");
+			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
 		}
 		final Piece moved = board.getPiece(move.getFrom());
 		final Castling castling = moved.getKind()==KING ? board.getCastling(move.getFrom(), to, board.getActiveColor()) : null;
@@ -63,6 +64,19 @@ public class MoveAlgebraicNotation {
 			builder.append(afterMove.get());
 		}
 		return builder.toString();
+	}
+	
+	private CharSequence moveToString(Move move, Board<Move> board) {
+		final Dimension d = board.getDimension();
+		final StringBuilder buf = new StringBuilder();
+		buf.append(Notation.toString(move.getFrom(), d));
+		buf.append('-');
+		buf.append(Notation.toString(move.getTo(), d));
+		if (move.promotedTo()!=null) {
+			buf.append('=');
+			buf.append(move.promotedTo().getNotation());
+		}
+		return buf;
 	}
 
 	private boolean checkValidMove(Move move, List<Move> candidates) {

@@ -21,6 +21,7 @@ It appears to be the case for all platforms I've tested. So, the test is deactiv
 To activate this test, which is pretty long (8s on my small J4125 powered machine), set the **rndGenTest** system property to true.
 
 ## TODO
+- Finish FENParser for Chess960
 - General things ... if it does not alter performance too much:
     - Is it a good idea to separate ChessBoards and rules? Would it be better to have newGame and getState methods in ChessBoard? It seems we often need rules and Board.  
 A way could be to change Rules to something like Game or Board and only have genericity on Move.
