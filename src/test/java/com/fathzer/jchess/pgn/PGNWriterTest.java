@@ -1,14 +1,13 @@
 package com.fathzer.jchess.pgn;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.ChessRules;
+import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.SimpleMove;
 import com.fathzer.jchess.generic.StandardChessRules;
 
-class GameHistoryTest {
+class PGNWriterTest {
 
 	@Test
 	void test() {
@@ -22,6 +21,7 @@ class GameHistoryTest {
 		history.add(new SimpleMove("b8", "c6"));
 		history.add(new SimpleMove("h5", "f7"));
 		
-		history.getPGN().forEach(System.out::println);
+		final PGNWriter writer = new PGNWriter();
+		writer.getPGN(new PGNHeaders.Builder().build(), history).forEach(System.out::println);
 	}
 }
