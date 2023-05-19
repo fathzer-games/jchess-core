@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
@@ -20,13 +21,24 @@ class FENParserTest {
 		assertEquals(Piece.BLACK_BISHOP, board.getPiece(Coord.toIndex("h6")));
 		
 		assertEquals(fen, FENParser.to(board));
+		
+		// Missing rook test
+		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbnr/pppppppp/8/8/8/R7/PPPPPPPP/1NBQKBNR w Q - 0 1"));
+		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbnr/pppppppp/8/8/8/7R/PPPPPPPP/RNBQKBN1 w K - 0 1"));
+		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbn1/pppppppp/7r/8/8/8/PPPPPPPP/RNBQKBNR w k - 0 1"));
+		assertThrows(IllegalArgumentException.class, () -> FENParser.from("1nbqkbnr/pppppppp/r7/8/8/8/PPPPPPPP/RNBQKBNR w q - 0 1"));
 	}
 
+	@Test
+	void bug20230518() {
+		// Parser failed if not all rooks were in place
+		assertEquals(Color.WHITE, FENParser.from("4k3/8/8/8/8/8/3PP3/r3K2R w K - 0 1").getActiveColor());
+	}
+	
 	@Test
 	void test960() {
 		final String fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
 		Board<Move> board = FENParser.from(fen);
-		System.out.println(board);
 		assertEquals(fen, FENParser.to(board));
 	}
 }

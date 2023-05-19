@@ -50,8 +50,8 @@ class ChessBoardTest {
 		assertFalse(copy.hasCastling(Castling.WHITE_QUEEN_SIDE));
 		assertTrue(copy.hasCastling(Castling.BLACK_KING_SIDE));
 		assertTrue(copy.hasCastling(Castling.BLACK_QUEEN_SIDE));
-		// Test castling counts for one move, increments halfmoves, clears 'en-passant' and changes next player
-		assertEquals(board.getMoveNumber()+1,copy.getMoveNumber());
+		// Test castling counts for one move (so does not increment move counter as White are playing), increments halfmoves, clears 'en-passant' and changes next player
+		assertEquals(board.getMoveNumber(),copy.getMoveNumber());
 		assertEquals(board.getHalfMoveCount()+1,copy.getHalfMoveCount());
 		assertTrue(copy.getEnPassant()<0);
 		assertEquals(Color.BLACK, copy.getActiveColor());
@@ -75,7 +75,7 @@ class ChessBoardTest {
 	
 	@Test
 	void invalidEnPassantArgs() {
-		// Not the rigth side to move
+		// Not the right side to move
 		assertThrows(IllegalArgumentException.class, () -> FENParser.from("r1b1k2r/1pppqp1p/2n2n1b/pP6/2N1Q3/B2B1P1N/P2PP1p1/R3K2R b KQkq a6 2 10"));
 		assertThrows(IllegalArgumentException.class, () -> FENParser.from("r1b1k3/1pppqp1p/2n2n1b/rP6/2N1Q1pP/B2B4/P2PPN2/R3K2R w KQq h3 2 10"));
 		// The en-Passant cell is not empty
@@ -89,20 +89,6 @@ class ChessBoardTest {
 		assertThrows(IllegalArgumentException.class, () -> FENParser.from("r1b1k3/1pppqp1p/2n2n1b/rP4pP/2N1Q3/B2B4/P2PPN2/R3K3 b Qq h4 2 10"));
 	}
 	
-	@Test
-	void invalidCastlingArgs() {
-		// King not in the right position
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w k - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w K - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w q - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR w Q - 0 1"));
-		// Rook not in the right position
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbnr/pppppppp/8/8/8/R7/PPPPPPPP/1NBQKBNR w Q - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbnr/pppppppp/8/8/8/7R/PPPPPPPP/RNBQKBN1 w K - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("rnbqkbn1/pppppppp/7r/8/8/8/PPPPPPPP/RNBQKBNR w k - 0 1"));
-		assertThrows(IllegalArgumentException.class, () -> FENParser.from("1nbqkbnr/pppppppp/r7/8/8/8/PPPPPPPP/RNBQKBNR w q - 0 1"));
-	}
-
 	@Test
 	void pawnMoveTest() {
 		// Test Pawn move

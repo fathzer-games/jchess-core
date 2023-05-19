@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.IntFunction;
@@ -128,23 +129,27 @@ public class FENParser {
 	}
 	
 	private int[] getInitialRookPositions(Dimension dimension, List<PieceWithPosition> pieces, Collection<Castling> castlings, String castlingsString) {
-		if (castlings.isEmpty()) {
-			return null;
+		try {
+			if (castlings.isEmpty()) {
+				return null;
+			}
+			final int[] positions = new int[Castling.ALL.size()];
+			Arrays.fill(positions, -1);
+			final int blackKing = getPosition(pieces, p->p.getPiece()==BLACK_KING);
+			final int whiteKing = getPosition(pieces, p->p.getPiece()==WHITE_KING);
+			boolean isDefault = blackKing==dimension.getWidth()/2; // isDefault is true is Kings are at their default position
+			for (Castling castling : castlings) {
+				final int kingPosition = castling.getColor()==WHITE ? whiteKing : blackKing;
+				//TODO Support inner rook position as start position
+				// Initial rook position is the furthest rook from the king
+				int rookPosition = getFurthest(dimension, pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingPosition, castling.getSide());
+				isDefault = isDefault && rookPosition==getStandardRookPosition(dimension, castling);
+				positions[castling.ordinal()] = rookPosition;
+			}
+			return isDefault ? null : positions;
+		} catch (NoSuchElementException e) {
+			throw new IllegalArgumentException(e);
 		}
-		final int[] positions = new int[Castling.ALL.size()];
-		Arrays.fill(positions, -1);
-		final int blackKing = getPosition(pieces, p->p.getPiece()==BLACK_KING);
-		final int whiteKing = getPosition(pieces, p->p.getPiece()==WHITE_KING);
-		boolean isDefault = blackKing==dimension.getWidth()/2; // isDefault is true is Kings are at their default position
-		for (Castling castling : Castling.ALL) {
-			final int kingPosition = castling.getColor()==WHITE ? whiteKing : blackKing;
-			//TODO Support inner rook position as start position
-			// Initial rook position is the furthest rook from the king
-			int rookPosition = getFurthest(dimension, pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingPosition, castling.getSide());
-			isDefault = isDefault && rookPosition==getStandardRookPosition(dimension, castling);
-			positions[castling.ordinal()] = rookPosition;
-		}
-		return isDefault ? null : positions;
 	}
 	
 	private int getPosition(List<PieceWithPosition> pieces, Predicate<PieceWithPosition> p) {
