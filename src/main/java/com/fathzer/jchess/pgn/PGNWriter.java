@@ -13,7 +13,7 @@ import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 
 public class PGNWriter {
-	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+	public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
 	public List<String> getPGN(PGNHeaders headers, GameHistory history) {
 		final LinkedList<String> result = new LinkedList<>();
