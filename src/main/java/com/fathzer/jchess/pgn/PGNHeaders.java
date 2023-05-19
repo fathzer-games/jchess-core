@@ -1,11 +1,11 @@
 package com.fathzer.jchess.pgn;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class PGNHeaders {
 	private String event = "?";
 	private String site = "?";
-	private Date date = new Date();
+	private LocalDate date = LocalDate.now();
 	private Long round = null;
 	private String whiteName = "?";
 	private String blackName = "?";
@@ -22,7 +22,7 @@ public class PGNHeaders {
 		return site;
 	}
 
-	public Date getDate() {
+	public LocalDate getDate() {
 		return date;
 	}
 
@@ -55,7 +55,7 @@ public class PGNHeaders {
             return this;
         }
         
-        public Builder setDate(Date date) {
+        public Builder setDate(LocalDate date) {
             headers.date = date;
             return this;
         }

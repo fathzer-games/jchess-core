@@ -2,8 +2,7 @@ package com.fathzer.jchess.pgn;
 
 import static com.fathzer.games.Status.*;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,7 +13,7 @@ import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 
 public class PGNWriter {
-	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd");
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
 	public List<String> getPGN(PGNHeaders headers, GameHistory history) {
 		final LinkedList<String> result = new LinkedList<>();
