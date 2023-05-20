@@ -9,6 +9,7 @@ public class PGNHeaders {
 	private Long round = null;
 	private String whiteName = "?";
 	private String blackName = "?";
+	private String variant = null;
 	
     private PGNHeaders() {
         // Private constructor to enforce the use of the builder
@@ -37,6 +38,12 @@ public class PGNHeaders {
 	public String getBlackName() {
 		return blackName;
 	}
+
+
+	public String getVariant() {
+		return variant;
+	}
+
 
 	public static class Builder {
         private PGNHeaders headers;
@@ -75,6 +82,11 @@ public class PGNHeaders {
             return this;
         }
         
+        public Builder setVariant(String variant) {
+            headers.variant = variant;
+            return this;
+        }
+            
         public PGNHeaders build() {
             return headers;
         }

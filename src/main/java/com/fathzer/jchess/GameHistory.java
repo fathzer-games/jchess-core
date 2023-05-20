@@ -8,8 +8,8 @@ public class GameHistory {
 	private final ChessRules rules;
 	private final List<Move> moves;
 
-	public GameHistory(ChessRules rules) {
-		this(rules, rules.newGame(), new LinkedList<>());
+	public GameHistory(ChessRules rules, Board<Move> board) {
+		this(rules, board, new LinkedList<>());
 	}
 
 	public GameHistory(ChessRules rules, Board<Move> board, List<Move> moves) {

@@ -12,7 +12,7 @@ class PGNWriterTest {
 	@Test
 	void test() {
 		final ChessRules rules = StandardChessRules.INSTANCE;
-		final GameHistory history = new GameHistory(rules);
+		final GameHistory history = new GameHistory(rules, rules.newGame());
 		history.add(new SimpleMove("e2", "e4"));
 		history.add(new SimpleMove("e7", "e5"));
 		history.add(new SimpleMove("d1", "h5"));
