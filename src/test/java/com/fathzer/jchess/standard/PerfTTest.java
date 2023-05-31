@@ -20,22 +20,28 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.StandardChessRules;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 class PerfTTest {
 	@Test
 	void test() throws IOException {
+		final int depth = Integer.getInteger("perftDepth", 1);
+		if (depth!=1) {
+			log.info("PerfT test depth is set to {}",depth);
+		}
 		final Iterator<PerfTTestData> iterator = readTests().iterator();
 		while (iterator.hasNext()) {
 			final PerfTTestData test = iterator.next();
 			try {
-				doTest(test);
+				doTest(test, depth);
 			} catch (Exception e) {
 				fail("Exception on "+test.getStartPosition(),e);
 			}
 		}
 	}
 
-	private void doTest(PerfTTestData test) {
-		final int depth = Integer.getInteger("perftDepth", 1);
+	private void doTest(PerfTTestData test, int depth) {
 		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
 		final PerfT<Move> perfT = new PerfT<>(() -> new CopyBasedMoveGenerator<>(StandardChessRules.PERFT, board));
 		if (test.getSize()>=depth) {
