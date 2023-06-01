@@ -54,35 +54,35 @@ public class StartPositionGenerator implements Supplier<List<PieceWithPosition>>
 		}
 		final List<PieceWithPosition> pieces = new ArrayList<>();
 		// Add pawns
-		IntStream.range(8, 16).forEach(i->pieces.add(new PieceWithPosition(Piece.BLACK_PAWN, i)));
-		IntStream.range(48, 56).forEach(i->pieces.add(new PieceWithPosition(Piece.WHITE_PAWN, i)));
+		IntStream.range(0, 8).forEach(i->pieces.add(new PieceWithPosition(Piece.BLACK_PAWN, 1, i)));
+		IntStream.range(0, 8).forEach(i->pieces.add(new PieceWithPosition(Piece.WHITE_PAWN, 6, i)));
 		
 		// Add bishops
-		final int whiteCellBishop = (position % 4)*2;
-		pieces.add(new PieceWithPosition(Piece.WHITE_BISHOP, 57 + whiteCellBishop));
-		pieces.add(new PieceWithPosition(Piece.BLACK_BISHOP, 1 + whiteCellBishop));
+		final int whiteCellBishop = 1+(position % 4)*2;
+		pieces.add(new PieceWithPosition(Piece.BLACK_BISHOP, 0, whiteCellBishop));
+		pieces.add(new PieceWithPosition(Piece.WHITE_BISHOP, 7, whiteCellBishop));
 		position = position/4;
 		final int blackCellBishop = (position % 4)*2;
-		pieces.add(new PieceWithPosition(Piece.WHITE_BISHOP, 56 + blackCellBishop));
-		pieces.add(new PieceWithPosition(Piece.BLACK_BISHOP, blackCellBishop));
+		pieces.add(new PieceWithPosition(Piece.BLACK_BISHOP, 0, blackCellBishop));
+		pieces.add(new PieceWithPosition(Piece.WHITE_BISHOP, 7, blackCellBishop));
 		position = position/4;
 		
 		// We will maintain a list of free cells in order to position the remaining piece
 		final List<Integer> freeCells = IntStream.range(0, 8).mapToObj(Integer::valueOf).collect(Collectors.toList());
-		freeCells.remove(Integer.valueOf(whiteCellBishop+1));
+		freeCells.remove(Integer.valueOf(whiteCellBishop));
 		freeCells.remove(Integer.valueOf(blackCellBishop));
 		// Add queens
 		final int queenPosition = freeCells.remove(position%6);
-		pieces.add(new PieceWithPosition(Piece.WHITE_QUEEN, 56 + queenPosition));
-		pieces.add(new PieceWithPosition(Piece.BLACK_QUEEN, queenPosition));
+		pieces.add(new PieceWithPosition(Piece.BLACK_QUEEN, 0, queenPosition));
+		pieces.add(new PieceWithPosition(Piece.WHITE_QUEEN, 7, queenPosition));
 		
 		// Add rest of pieces
-		addKRN(pieces, freeCells, WHITE_KRN[position/6], 56);
 		addKRN(pieces, freeCells, BLACK_KRN[position/6], 0);
+		addKRN(pieces, freeCells, WHITE_KRN[position/6], 7);
 		return pieces;
 	}
 	
-	private void addKRN(List<PieceWithPosition> pieces, List<Integer> positions, Piece[] krn, int offset) {
-		IntStream.range(0, positions.size()).mapToObj(i -> new PieceWithPosition(krn[i], offset+positions.get(i))).forEach(pieces::add);
+	private void addKRN(List<PieceWithPosition> pieces, List<Integer> positions, Piece[] krn, int row) {
+		IntStream.range(0, positions.size()).mapToObj(i -> new PieceWithPosition(krn[i], row, positions.get(i))).forEach(pieces::add);
 	}
 }

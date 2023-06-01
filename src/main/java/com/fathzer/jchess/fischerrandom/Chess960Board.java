@@ -1,5 +1,6 @@
 package com.fathzer.jchess.fischerrandom;
 
+import static com.fathzer.games.Color.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,9 +23,18 @@ public class Chess960Board extends ChessBoard {
 		setInitialRookPositions(pieces);
 	}
 
-	public Chess960Board(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int[] initialRookPositions, int enPassant, int halfMoveCount, int moveNumber) {
+	public Chess960Board(List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int[] initialRookColumns, int enPassant, int halfMoveCount, int moveNumber) {
 		super(Dimension.STANDARD, pieces, activeColor, castlings, enPassant, halfMoveCount, moveNumber);
-		this.initialRookPositions = initialRookPositions;
+		this.initialRookPositions = new int[initialRookColumns.length];
+		for (int i = 0; i < initialRookColumns.length; i++) {
+			if (initialRookColumns[i]<0) {
+				this.initialRookPositions[i] = -1;
+			} else if (Castling.ALL.get(i).getColor()==BLACK) {
+				this.initialRookPositions[i] = getIndex(0, initialRookColumns[i]);
+			} else {
+				this.initialRookPositions[i] = getIndex(getDimension().getHeight()-1, initialRookColumns[i]);
+			}
+		}
 	}
 	
 	@Override
@@ -46,9 +56,10 @@ public class Chess960Board extends ChessBoard {
 
 	private void fillRookPosition(PieceWithPosition p) {
 		final Color color = p.getPiece().getColor();
-		final Castling castling = Castling.get(color, p.getPosition()>super.getKingPosition(color));
+		final int position = getIndex(p);
+		final Castling castling = Castling.get(color, position>super.getKingPosition(color));
 		if (super.hasCastling(castling)) {
-			initialRookPositions[castling.ordinal()] = p.getPosition();
+			initialRookPositions[castling.ordinal()] = position;
 		}
 	}
 

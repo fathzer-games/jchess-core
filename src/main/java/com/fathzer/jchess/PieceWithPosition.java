@@ -7,5 +7,11 @@ import lombok.Getter;
 @Getter
 public class PieceWithPosition {
 	private Piece piece;
-	private int position;
+	private int row;
+	private int column;
+	
+	@Override
+	public String toString() {
+		return piece + ":" + row + "," + column;
+	}
 }

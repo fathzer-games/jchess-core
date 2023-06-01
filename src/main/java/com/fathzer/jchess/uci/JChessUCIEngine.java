@@ -93,7 +93,7 @@ public class JChessUCIEngine implements Engine, UCIMoveGeneratorProvider<Move> {
 		if (promotionAsFen==null) {
 			lst.add(from, to);
 		} else {
-			final Optional<Piece> o = Arrays.stream(com.fathzer.jchess.Piece.values()).filter(x->x.getNotation().equals(promotionAsFen)).findAny();
+			final Optional<Piece> o = Arrays.stream(com.fathzer.jchess.Piece.values()).filter(x->promotionAsFen.equals(x.getNotation())).findAny();
 			if (o.isEmpty()) {
 				throw new NoSuchElementException(promotionAsFen+" is not a valid piece notation");
 			} else {

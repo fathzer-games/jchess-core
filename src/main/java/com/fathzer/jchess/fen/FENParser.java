@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -33,24 +32,24 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class FENParser {
-	private static final Map<Character, IntFunction<PieceWithPosition>> BUILDERS;
+	private static final Map<Character, Piece> CODE_TO_PIECE;
 	
 	public static final String NEW_STANDARD_GAME = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	
 	static {
-		BUILDERS = new HashMap<>();
-		BUILDERS.put('p', p->new PieceWithPosition(BLACK_PAWN,p));
-		BUILDERS.put('P', p->new PieceWithPosition(WHITE_PAWN, p));
-		BUILDERS.put('r', p->new PieceWithPosition(BLACK_ROOK, p));
-		BUILDERS.put('R', p->new PieceWithPosition(WHITE_ROOK, p));
-		BUILDERS.put('n', p->new PieceWithPosition(BLACK_KNIGHT, p));
-		BUILDERS.put('N', p->new PieceWithPosition(WHITE_KNIGHT, p));
-		BUILDERS.put('b', p->new PieceWithPosition(BLACK_BISHOP, p));
-		BUILDERS.put('B', p->new PieceWithPosition(WHITE_BISHOP, p));
-		BUILDERS.put('q', p->new PieceWithPosition(BLACK_QUEEN, p));
-		BUILDERS.put('Q', p->new PieceWithPosition(WHITE_QUEEN, p));
-		BUILDERS.put('k', p->new PieceWithPosition(BLACK_KING, p));
-		BUILDERS.put('K', p->new PieceWithPosition(WHITE_KING, p));
+		CODE_TO_PIECE = new HashMap<>();
+		CODE_TO_PIECE.put('p', BLACK_PAWN);
+		CODE_TO_PIECE.put('P', WHITE_PAWN);
+		CODE_TO_PIECE.put('r', BLACK_ROOK);
+		CODE_TO_PIECE.put('R', WHITE_ROOK);
+		CODE_TO_PIECE.put('n', BLACK_KNIGHT);
+		CODE_TO_PIECE.put('N', WHITE_KNIGHT);
+		CODE_TO_PIECE.put('b', BLACK_BISHOP);
+		CODE_TO_PIECE.put('B', WHITE_BISHOP);
+		CODE_TO_PIECE.put('q', BLACK_QUEEN);
+		CODE_TO_PIECE.put('Q', WHITE_QUEEN);
+		CODE_TO_PIECE.put('k', BLACK_KING);
+		CODE_TO_PIECE.put('K', WHITE_KING);
 	}
 
 	public static String to(Board<Move> board) {
@@ -117,7 +116,7 @@ public class FENParser {
 		final int halfMoveCount = Integer.parseInt(tokens[4]);
 		final int moveNumber = Integer.parseInt(tokens[5]);
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
-			final int[] rooks = getInitialRookPositions(dimension, pieces, castlings, tokens[2]);
+			final int[] rooks = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
 			if (rooks!=null) {
 				return new com.fathzer.jchess.fischerrandom.Chess960Board(pieces, color, castlings, rooks, enPassant, halfMoveCount, moveNumber);
 			} else {
@@ -128,22 +127,24 @@ public class FENParser {
 		}
 	}
 	
-	private int[] getInitialRookPositions(Dimension dimension, List<PieceWithPosition> pieces, Collection<Castling> castlings, String castlingsString) {
+	private int[] getInitialRookColumns(Dimension dimension, List<PieceWithPosition> pieces, Collection<Castling> castlings, String castlingsString) {
 		try {
 			if (castlings.isEmpty()) {
 				return null;
 			}
 			final int[] positions = new int[Castling.ALL.size()];
 			Arrays.fill(positions, -1);
-			final int blackKing = getPosition(pieces, p->p.getPiece()==BLACK_KING);
-			final int whiteKing = getPosition(pieces, p->p.getPiece()==WHITE_KING);
-			boolean isDefault = blackKing==dimension.getWidth()/2; // isDefault is true is Kings are at their default position
+			final int blackKingColumn = getColumn(pieces, p->p.getPiece()==BLACK_KING);
+			final int whiteKingColumn = getColumn(pieces, p->p.getPiece()==WHITE_KING);
+			final int defaultKingColumn = dimension.getWidth()/2;
+			boolean isDefault = true; // isDefault will remain true if kings and rooks involved in castling are at their default position
 			for (Castling castling : castlings) {
-				final int kingPosition = castling.getColor()==WHITE ? whiteKing : blackKing;
+				final int kingRow = castling.getColor()==WHITE ? dimension.getHeight()-1 : 0;
+				final int kingColumn = castling.getColor()==WHITE ? whiteKingColumn : blackKingColumn;
 				//TODO Support inner rook position as start position
 				// Initial rook position is the furthest rook from the king
-				int rookPosition = getFurthest(dimension, pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingPosition, castling.getSide());
-				isDefault = isDefault && rookPosition==getStandardRookPosition(dimension, castling);
+				int rookPosition = getFurthest(pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingRow, kingColumn, castling.getSide());
+				isDefault = isDefault && rookPosition==getStandardRookColumn(dimension, castling) && kingColumn==defaultKingColumn;
 				positions[castling.ordinal()] = rookPosition;
 			}
 			return isDefault ? null : positions;
@@ -152,24 +153,19 @@ public class FENParser {
 		}
 	}
 	
-	private int getPosition(List<PieceWithPosition> pieces, Predicate<PieceWithPosition> p) {
-		return pieces.stream().filter(p).findAny().orElseThrow().getPosition();
+	private int getColumn(List<PieceWithPosition> pieces, Predicate<PieceWithPosition> p) {
+		return pieces.stream().filter(p).findAny().orElseThrow().getColumn();
 	}
 	
-	private int getStandardRookPosition(Dimension dimension, Castling castling) {
-		int pos = castling.getColor()==BLACK ? 0 : dimension.getPosition(dimension.getHeight()-1, 0);
-		if (castling.getSide()==KING) {
-			pos += dimension.getWidth()-1;
-		}
-		return pos;
+	private int getStandardRookColumn(Dimension dimension, Castling castling) {
+		return castling.getSide()==KING ? dimension.getWidth()-1 : 0;
 	}
 	
-	private int getFurthest(Dimension dimension, List<PieceWithPosition> pieces, Piece searchedPiece, int kingPosition, Castling.Side side) {
-		final int kingRow = dimension.getRow(kingPosition);
-		final Predicate<PieceWithPosition> sidePredicate = p -> side==KING ? p.getPosition()>kingPosition : p.getPosition()<kingPosition;
-		final Predicate<PieceWithPosition> pieceOnRow = p -> p.getPiece()==searchedPiece && dimension.getRow(p.getPosition())==kingRow;
-		final IntStream sortedPositions = pieces.stream().filter(pieceOnRow.and(sidePredicate)).mapToInt(PieceWithPosition::getPosition).sorted();
-		OptionalInt result = side==KING ? sortedPositions.max() : sortedPositions.min();
+	private int getFurthest(List<PieceWithPosition> pieces, Piece searchedPiece, int kingRow, int kingColumn, Castling.Side side) {
+		final Predicate<PieceWithPosition> sidePredicate = p -> side==KING ? p.getColumn()>kingColumn : p.getColumn()<kingColumn;
+		final Predicate<PieceWithPosition> pieceOnRow = p -> p.getPiece()==searchedPiece && p.getRow()==kingRow;
+		final IntStream sortedColumns = pieces.stream().filter(pieceOnRow.and(sidePredicate)).mapToInt(PieceWithPosition::getColumn).sorted();
+		OptionalInt result = side==KING ? sortedColumns.max() : sortedColumns.min();
 		return result.getAsInt();
 	}
 
@@ -218,12 +214,11 @@ public class FENParser {
 		int x = 0;
 		for (int i = 0; i < str.length(); i++) {
 			final char code = str.charAt(i);
-			final IntFunction<PieceWithPosition> b = BUILDERS.get(code);
-			if (b==null) {
+			final Piece p = CODE_TO_PIECE.get(code);
+			if (p==null) {
 				x+=Integer.parseInt(Character.toString(code));
 			} else {
-				final int pos = dimension.getPosition(row, x);
-				result.add(b.apply(pos));
+				result.add(new PieceWithPosition(p, row, x));
 				x++;
 			}
 		}
@@ -235,8 +230,8 @@ public class FENParser {
 		int width = 0;
 		for (int i = 0; i < lines[0].length(); i++) {
 			final char code = str.charAt(i);
-			final IntFunction<PieceWithPosition> b = BUILDERS.get(code);
-			width = width + (b==null ? Integer.parseInt(Character.toString(code)) : 1);
+			final Piece p = CODE_TO_PIECE.get(code);
+			width = width + (p==null ? Integer.parseInt(Character.toString(code)) : 1);
 		}
 		return new Dimension(width, lines.length);
 	}

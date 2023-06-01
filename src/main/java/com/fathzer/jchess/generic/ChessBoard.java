@@ -50,11 +50,11 @@ public abstract class ChessBoard implements Board<Move> {
 			throw new NullPointerException();
 		}
 		this.pieces = new Piece[dimension.getSize()];
-		this.backup = new Piece[dimension.getSize()];
+		this.backup = new Piece[this.pieces.length];
 		for (PieceWithPosition p : pieces) {
-			final int dest = p.getPosition();
+			final int dest = getIndex(p);
 			if (this.pieces[dest]!=null) {
-				throw new IllegalArgumentException ("More than one piece at "+p.getPosition());
+				throw new IllegalArgumentException ("More than one piece at "+dest+": "+this.pieces[dest]+"/"+p.getPiece());
 			}
 			this.pieces[dest]=p.getPiece();
 			if (PieceKind.KING.equals(p.getPiece().getKind())) {
@@ -77,6 +77,14 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 		this.moveNumber = moveNumber;
 		this.key = dimension.getZobristKeyBuilder().get(this);
+	}
+	
+	protected int getIndex(PieceWithPosition p) {
+		return getIndex(p.getRow(), p.getColumn());
+	}
+
+	protected int getIndex(int row, int column) {
+		return row*dimension.getWidth()+column;
 	}
 
 	private void checkEnPassant(Color activeColor, int enPassant) {
