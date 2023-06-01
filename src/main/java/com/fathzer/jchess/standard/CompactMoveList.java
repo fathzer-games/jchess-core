@@ -15,16 +15,18 @@ import com.fathzer.jchess.Piece;
 import lombok.AllArgsConstructor;
 
 /** A list of possible moves encoded in a compact way.
- * <br>Each move is encoded as an int.
+ * <br>Each move is encoded as an long.
  */
 public class CompactMoveList implements ChessGameState {
 	// It seems the maximum number of moves for a position is 218
 	private static final int MAX_POSSIBLE_MOVES = 218;
-	private static final int FROM_MASK = 0x3f;
-	private static final int TO_OFFSET = 6;
-	private static final int TO_MASK = 0xfc0;
-	private static final int PROMOTION_OFFSET = 12;
-	private static final int PROMOTION_MASK = 0xf000;
+	// 8 bits for the start position of the moved piece (from)
+	private static final int FROM_MASK = 0xff;
+	private static final int TO_OFFSET = 8;
+	// 8 bits for the destination position of the moved piece (to)
+	private static final int TO_MASK = 0xff00;
+	private static final int PROMOTION_OFFSET = 16;
+	private static final int PROMOTION_MASK = 0xf0000;
 	// A copy of Piece values to prevent the use of Piece.values() which creates a new array at every call
 	// We will shift the elements of the array in order to use the shifted promoted field without
 	// testing for null value and decreasing its value.

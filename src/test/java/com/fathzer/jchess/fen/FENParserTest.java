@@ -36,6 +36,12 @@ class FENParserTest {
 	}
 	
 	@Test
+	void bug20230601() {
+		// Parser failed
+		assertEquals(Color.BLACK, FENParser.from("r4br1/4p3/k1p2npp/PpnQ4/P5b1/2PPP1qP/5P2/RNB1KB2 b Q - 0 1").getActiveColor());
+	}
+	
+	@Test
 	void test960() {
 		final String fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
 		Board<Move> board = FENParser.from(fen);

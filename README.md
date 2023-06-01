@@ -22,6 +22,7 @@ To activate this test, which is pretty long (8s on my small J4125 powered machin
 
 ## TODO
 - Finish FENParser for Chess960
+- Not sure CompactMoveList.sort is really useful, even if it is effectively called (It does not seems to use any capture information
 - General things ... if it does not alter performance too much:
     - Is it a good idea to separate ChessBoards and rules? Would it be better to have newGame and getState methods in ChessBoard? It seems we often need rules and Board.  
 A way could be to change Rules to something like Game or Board and only have genericity on Move.
