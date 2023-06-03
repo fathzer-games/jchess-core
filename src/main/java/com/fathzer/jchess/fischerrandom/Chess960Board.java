@@ -30,9 +30,9 @@ public class Chess960Board extends ChessBoard {
 			if (initialRookColumns[i]<0) {
 				this.initialRookPositions[i] = -1;
 			} else if (Castling.ALL.get(i).getColor()==BLACK) {
-				this.initialRookPositions[i] = getIndex(0, initialRookColumns[i]);
+				this.initialRookPositions[i] = getCoordinatesSystem().getIndex(0, initialRookColumns[i]);
 			} else {
-				this.initialRookPositions[i] = getIndex(getDimension().getHeight()-1, initialRookColumns[i]);
+				this.initialRookPositions[i] = getCoordinatesSystem().getIndex(getDimension().getHeight()-1, initialRookColumns[i]);
 			}
 		}
 	}
@@ -56,7 +56,7 @@ public class Chess960Board extends ChessBoard {
 
 	private void fillRookPosition(PieceWithPosition p) {
 		final Color color = p.getPiece().getColor();
-		final int position = getIndex(p);
+		final int position = getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
 		final Castling castling = Castling.get(color, position>super.getKingPosition(color));
 		if (super.hasCastling(castling)) {
 			initialRookPositions[castling.ordinal()] = position;

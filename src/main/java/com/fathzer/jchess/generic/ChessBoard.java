@@ -6,10 +6,12 @@ import java.util.List;
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
+import com.fathzer.jchess.Castling.Side;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Dimension.Explorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
@@ -18,8 +20,12 @@ import com.fathzer.jchess.standard.CompactMoveList;
 import lombok.Getter;
 
 public abstract class ChessBoard implements Board<Move> {
+	
 	@Getter
-	private Dimension dimension;
+	private final Dimension dimension;
+	@Getter
+	private final CoordinatesSystem coordinatesSystem;
+
 	private final Piece[] pieces;
 	@Getter
 	private Color activeColor;
@@ -44,15 +50,25 @@ public abstract class ChessBoard implements Board<Move> {
 		this(dimension, pieces,Color.WHITE, Castling.ALL, -1, 0, 1);
 	}
 
-	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassant, int halfMoveCount, int moveNumber) {
+	/** Constructor.
+	 * @param dimension The chess board dimension (8x8 for a standard game)
+	 * @param pieces The pieces to place on the board with their positions
+	 * @param activeColor The color that will make next move
+	 * @param castlings A list of possible castlings 
+	 * @param enPassantColumn The "en passant" column or a negative number if no "en passant" is possible.
+	 * @param halfMoveCount This is the number of half moves since the last capture or pawn advance.
+	 * @param moveNumber The move number (1 at the beginning of the game)
+	 */
+	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassantColumn, int halfMoveCount, int moveNumber) {
 		this.dimension = dimension;
+		this.coordinatesSystem = new DefaultCoordinatesSystem(dimension);
 		if (activeColor==null) {
 			throw new NullPointerException();
 		}
 		this.pieces = new Piece[dimension.getSize()];
 		this.backup = new Piece[this.pieces.length];
 		for (PieceWithPosition p : pieces) {
-			final int dest = getIndex(p);
+			final int dest = coordinatesSystem.getIndex(p.getRow(), p.getColumn());
 			if (this.pieces[dest]!=null) {
 				throw new IllegalArgumentException ("More than one piece at "+dest+": "+this.pieces[dest]+"/"+p.getPiece());
 			}
@@ -64,9 +80,10 @@ public abstract class ChessBoard implements Board<Move> {
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
 		this.enPassant = -1;
-		if (enPassant>=0) {
-			checkEnPassant(activeColor, enPassant);
-			setEnPassant(enPassant, activeColor);
+		if (enPassantColumn>=0) {
+			final int enPassantIndex = coordinatesSystem.getIndex(getEnPassantRow(activeColor), enPassantColumn);
+			checkEnPassant(activeColor, enPassantIndex);
+			setEnPassant(enPassantIndex, activeColor);
 		}
 		if (halfMoveCount<0) {
 			throw new IllegalArgumentException("Half move count can't be negative");
@@ -79,19 +96,11 @@ public abstract class ChessBoard implements Board<Move> {
 		this.key = dimension.getZobristKeyBuilder().get(this);
 	}
 	
-	protected int getIndex(PieceWithPosition p) {
-		return getIndex(p.getRow(), p.getColumn());
+	private int getEnPassantRow(Color activeColor) {
+		return Color.WHITE.equals(activeColor) ? 2 : dimension.getHeight()-3;
 	}
-
-	protected int getIndex(int row, int column) {
-		return row*dimension.getWidth()+column;
-	}
-
+	
 	private void checkEnPassant(Color activeColor, int enPassant) {
-		final int validRow = Color.WHITE.equals(activeColor) ? 2 : dimension.getHeight()-3;
-		if (dimension.getRow(enPassant)!=validRow) {
-			throw new IllegalArgumentException("EnPassant is not a valid enPassant cell for "+activeColor);
-		}
 		if (this.pieces[enPassant]!=null) {
 			throw new IllegalArgumentException("EnPassant cell is not empty");
 		}
@@ -177,7 +186,7 @@ public abstract class ChessBoard implements Board<Move> {
 		final Castling castling = getCastling(from, to, playingColor);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
-			to = castling.getKingDestination(dimension); 
+			to = getKingDestination(castling); 
 			// Move the rook too
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
@@ -251,10 +260,8 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 	}
 	
-	/** Gets the initial rook position of a castling.
+	/** {@inheritDoc}
 	 * <br>This generic implementation returns the corner that contains the rook in standard chess
-	 * @param castling The castling
-	 * @return The initial position of the rook involved in the castling.
 	 */
 	@Override
 	public int getInitialRookPosition(Castling castling) {
@@ -269,6 +276,12 @@ public abstract class ChessBoard implements Board<Move> {
 		} else {
 			return -1;
 		}
+	}
+	
+	@Override
+	public int getKingDestination(Castling castling) {
+		final int rowStart = Color.WHITE==castling.getColor() ? dimension.getPosition(dimension.getHeight()-1, 0): 0;
+		return rowStart + (Side.QUEEN==castling.getSide() ? 2 : dimension.getWidth()-2);
 	}
 
 	private void pawnMove(int from, int to, Piece promotion) {

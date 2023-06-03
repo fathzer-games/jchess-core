@@ -26,7 +26,6 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.standard.StandardBoard;
-import com.fathzer.jchess.Notation;
 
 import lombok.experimental.UtilityClass;
 
@@ -66,7 +65,7 @@ public class FENParser {
 		b.append(' ');
 		addCastlings(b, board);
 		b.append(' ');
-		b.append(board.getEnPassant()<0?"-":Notation.toString(board.getEnPassant(),board.getDimension()));
+		b.append(board.getEnPassant()<0?"-":board.getCoordinatesSystem().getAlgebraicNotation(board.getEnPassant()));
 		b.append(' ');
 		b.append(board.getHalfMoveCount());
 		b.append(' ');
@@ -112,7 +111,7 @@ public class FENParser {
 		final List<PieceWithPosition> pieces = getPieces(tokens[0]);
 		final Color color = getColor(tokens[1]);
 		final Collection<Castling> castlings = getCastlings(tokens[2]);
-		final int enPassant = getPosition(tokens[3], dimension);
+		final int enPassant = "-".equals(tokens[3]) ? -1 : getColumn(tokens[3]);
 		final int halfMoveCount = Integer.parseInt(tokens[4]);
 		final int moveNumber = Integer.parseInt(tokens[5]);
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
@@ -125,6 +124,17 @@ public class FENParser {
 		} else {
 			return new StandardBoard(pieces, color, castlings, enPassant, halfMoveCount, moveNumber);
 		}
+	}
+	
+	private int getColumn(String algebraicNotation) {
+		if (algebraicNotation.isEmpty()) {
+			throw new IllegalArgumentException();
+		}
+		final int column = algebraicNotation.charAt(0)-'a';
+		if (column<0) {
+			throw new IllegalArgumentException(); 
+		}
+		return column;
 	}
 	
 	private int[] getInitialRookColumns(Dimension dimension, List<PieceWithPosition> pieces, Collection<Castling> castlings, String castlingsString) {
@@ -181,10 +191,6 @@ public class FENParser {
 		//TODO Does not support X-FEN castling
 		final Optional<Castling> value = Castling.ALL.stream().filter(x -> x.getCode().charAt(0)==c).findFirst();
 		return value.orElseThrow(IllegalArgumentException::new);
-	}
-
-	private static int getPosition(String pos, Dimension dimension) {
-		return "-".equals(pos) ? -1 : Notation.toPosition(pos, dimension);
 	}
 
 	private static Color getColor(String code) {
