@@ -6,4 +6,7 @@ public interface Move {
 	default Piece promotedTo() {
 		return null;
 	}
+	default String toString(CoordinatesSystem cs) {
+		return cs.getAlgebraicNotation(getFrom())+"-"+cs.getAlgebraicNotation(getTo())+(promotedTo()==null?"":promotedTo().toString());
+	}
 }

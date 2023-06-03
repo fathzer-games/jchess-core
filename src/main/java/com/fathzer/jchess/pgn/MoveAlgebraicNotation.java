@@ -13,9 +13,8 @@ import com.fathzer.games.GameState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.ChessRules;
-import com.fathzer.jchess.Dimension;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.Notation;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
@@ -67,11 +66,11 @@ public class MoveAlgebraicNotation {
 	}
 	
 	private CharSequence moveToString(Move move, Board<Move> board) {
-		final Dimension d = board.getDimension();
 		final StringBuilder buf = new StringBuilder();
-		buf.append(Notation.toString(move.getFrom(), d));
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		buf.append(cs.getAlgebraicNotation(move.getFrom()));
 		buf.append('-');
-		buf.append(Notation.toString(move.getTo(), d));
+		buf.append(cs.getAlgebraicNotation(move.getTo()));
 		if (move.promotedTo()!=null) {
 			buf.append('=');
 			buf.append(move.promotedTo().getNotation());
@@ -89,14 +88,15 @@ public class MoveAlgebraicNotation {
 		final Piece moved = board.getPiece(move.getFrom());
 		// Add caught symbol if needed
 		final Piece caught = board.getPiece(move.getTo());
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		if (moved.getKind()==PAWN) {
 			if (caught!=null || board.getEnPassant()==move.getTo()) {
 				// Adds column of pawn
-				builder.append(Notation.toString(move.getFrom(), board.getDimension()).charAt(0));
+				builder.append(cs.getAlgebraicNotation(move.getFrom()).charAt(0));
 				builder.append(captureSymbol);
 			}
 			// Add move's destination
-			builder.append(Notation.toString(move.getTo(), board.getDimension()));
+			builder.append(cs.getAlgebraicNotation(move.getTo()));
 			if (move.getTo()==board.getEnPassant()) {
 				builder.append(enPassantSymbol);
 			}
@@ -112,7 +112,7 @@ public class MoveAlgebraicNotation {
 				builder.append(captureSymbol);
 			}
 			// Add move's destination
-			builder.append(Notation.toString(move.getTo(), board.getDimension()));
+			builder.append(cs.getAlgebraicNotation(move.getTo()));
 		}
 		return builder;
 	}
@@ -126,7 +126,7 @@ public class MoveAlgebraicNotation {
 		}
 		final int row = board.getDimension().getRow(from);
 		final int column = board.getDimension().getColumn(from);
-		final String pos = Notation.toString(move.getFrom(), board.getDimension());
+		final String pos = board.getCoordinatesSystem().getAlgebraicNotation(move.getFrom());
 		if (ambiguities.stream().noneMatch(m->column==board.getDimension().getColumn(m.getFrom()))) {
 			// No candidates with same column => return column
 			return pos.substring(0,1);

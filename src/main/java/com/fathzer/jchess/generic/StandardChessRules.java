@@ -153,7 +153,7 @@ public class StandardChessRules implements ChessRules {
 	private void tryCastling(ChessGameState moves, Tools tools, Castling castling) {
 		if (tools.board.hasCastling(castling)) {
 			final int kingPosition = tools.exp.getStartPosition();
-			final int kingDestination = castling.getKingDestination(tools.board.getDimension());
+			final int kingDestination = tools.board.getKingDestination(castling);
 			final int rookPosition = tools.board.getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (getFreeCells(tools.board, kingPosition, rookPosition, kingDestination, rookDestination).allMatch(p-> tools.board.getPiece(p)==null) &&

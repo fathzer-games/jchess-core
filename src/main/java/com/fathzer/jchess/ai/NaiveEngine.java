@@ -8,14 +8,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.GameState;
+import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.generic.StandardChessRules;
-import com.fathzer.jchess.standard.Coord;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 public class NaiveEngine implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random();
@@ -35,13 +32,13 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 	@Override
 	public Move apply(Board<Move> board) {
 		GameState<Move> possibleMoves = rules.getState(board); 
-		List<EvaluatedMove> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
+		List<Evaluation<Move>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
 			final Move mv = possibleMoves.get(i);
-			return new EvaluatedMove(mv, evaluate(mv));
+			return new Evaluation<>(mv, evaluate(mv));
 		}).sorted().collect(Collectors.toList());
-		System.out.println(moves); //TODO
+		System.out.println(Evaluation.toString(moves, m -> m.toString(board.getCoordinatesSystem()))); //TODO
 		final double best = moves.get(0).getValue();
-		List<Move> bestMoves = moves.stream().filter(m -> m.getValue()==best).map(EvaluatedMove::getMove).collect(Collectors.toList());
+		List<Move> bestMoves = moves.stream().filter(m -> m.getValue()==best).map(Evaluation::getContent).collect(Collectors.toList());
 		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	
@@ -66,42 +63,4 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 		}
 		return max;
 	}
-	
-	@AllArgsConstructor
-	@Getter
-	private static class EvaluatedMove implements Comparable<EvaluatedMove> {
-		private final Move move;
-		private final int value;
-		
-		@Override
-		public int compareTo(EvaluatedMove o) {
-			return value - o.value;
-		}
-		
-		@Override
-		public String toString() {//TODO
-			return ""+Coord.toString(move.getFrom())+"-"+Coord.toString(move.getTo())+":"+value;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			EvaluatedMove other = (EvaluatedMove) obj;
-			return this.compareTo(other)==0;
-		}
-
-		@Override
-		public int hashCode() {
-			return value;
-		}
-	}
-
 }

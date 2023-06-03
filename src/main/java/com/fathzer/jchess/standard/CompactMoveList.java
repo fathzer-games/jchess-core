@@ -74,10 +74,11 @@ public class CompactMoveList implements ChessGameState {
 		public Piece promotedTo() {
 			return promotedTo(code);
 		}
-
+		
 		@Override
 		public String toString() {
-			return Coord.toString(getFrom())+"-"+Coord.toString(getTo())+(promotedTo()==null?"":promotedTo().toString());
+			throw new UnsupportedOperationException();
+//TODO			return ""+getFrom()+"-"+getTo()+(promotedTo()==null?"":promotedTo().toString());
 		}
 	}
 

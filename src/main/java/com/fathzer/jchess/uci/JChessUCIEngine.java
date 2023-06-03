@@ -11,6 +11,7 @@ import com.fathzer.games.Rules;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.ChessGameState;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
@@ -19,7 +20,6 @@ import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.generic.StandardChessRules;
 import com.fathzer.jchess.standard.CompactMoveList;
-import com.fathzer.jchess.standard.Coord;
 import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 import com.fathzer.jchess.uci.option.SpinOption;
@@ -74,12 +74,12 @@ public class JChessUCIEngine implements Engine, UCIMoveGeneratorProvider<Move> {
 	
 	@Override
 	public void move(UCIMove move) {
-		board.move(toMove(move, board.getActiveColor()));
+		board.move(toMove(board.getCoordinatesSystem(), move, board.getActiveColor()));
 	}
 	
-	public static Move toMove(UCIMove move, Color color) {
-		final int from = Coord.toIndex(move.getFrom());
-		final int to = Coord.toIndex(move.getTo());
+	public static Move toMove(CoordinatesSystem cs, UCIMove move, Color color) {
+		final int from = cs.getIndex(move.getFrom());
+		final int to = cs.getIndex(move.getTo());
 		String promotion = move.getPromotion();
 		if (promotion!=null && Color.WHITE.equals(color)) {
 			// Warning the promotion code is always in lowercase
@@ -116,7 +116,7 @@ public class JChessUCIEngine implements Engine, UCIMoveGeneratorProvider<Move> {
 			public UCIMove get() {
 				final Move best = engine.apply(board);
 				board.move(best);
-				return toMove(best);
+				return toMove(board.getCoordinatesSystem(), best);
 			}
 
 			@Override
@@ -127,9 +127,9 @@ public class JChessUCIEngine implements Engine, UCIMoveGeneratorProvider<Move> {
 		};
 	}
 	
-	private static UCIMove toMove(Move move) {
+	private static UCIMove toMove(CoordinatesSystem cs, Move move) {
 		final String promotion = move.promotedTo()==null ? null : move.promotedTo().getNotation().toLowerCase();
-		return new UCIMove(Coord.toString(move.getFrom()), Coord.toString(move.getTo()), promotion);
+		return new UCIMove(cs.getAlgebraicNotation(move.getFrom()), cs.getAlgebraicNotation(move.getTo()), promotion);
 	}
 
 	@Override
@@ -144,7 +144,7 @@ public class JChessUCIEngine implements Engine, UCIMoveGeneratorProvider<Move> {
 
 		@Override
 		public UCIMove toUCI(Move move) {
-			return toMove(move);
+			return toMove(getBoard().getCoordinatesSystem(), move);
 		}
 
 		@Override

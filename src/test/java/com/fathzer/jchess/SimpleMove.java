@@ -1,7 +1,5 @@
 package com.fathzer.jchess;
 
-import com.fathzer.jchess.standard.Coord;
-
 import lombok.Getter;
 
 @Getter
@@ -10,13 +8,13 @@ public class SimpleMove implements Move {
 	private final int to;
 	private Piece promoted;
 	
-	public SimpleMove(String from, String to) {
-		this(from,to,null);
+	public SimpleMove(CoordinatesSystem cs, String from, String to) {
+		this(cs, from, to, null);
 	}
 
-	public SimpleMove(String from, String to, Piece promoted) {
-		this.from = Coord.toIndex(from);
-		this.to = Coord.toIndex(to);
+	public SimpleMove(CoordinatesSystem cs, String from, String to, Piece promoted) {
+		this.from = cs.getIndex(from);
+		this.to = cs.getIndex(to);
 		this.promoted = promoted;
 	}
 
