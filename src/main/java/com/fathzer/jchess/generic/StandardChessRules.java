@@ -210,7 +210,7 @@ public class StandardChessRules implements ChessRules {
 		};
 		// Standard moves (no catch)
 		final int startRow = black ? 1 : tools.board.getDimension().getHeight()-2;
-		final int countAllowed = tools.board.getDimension().getRow(tools.exp.getStartPosition()) == startRow ? 2 : 1;
+		final int countAllowed = tools.board.getCoordinatesSystem().getRow(tools.exp.getStartPosition()) == startRow ? 2 : 1;
 		final int rowIncrement = black ? 1 : -1;
 		tools.explorer.addMoves(moves, tools.exp, rowIncrement, 0, countAllowed, tools.mv.getPawnNoCatch(), generator);
 		

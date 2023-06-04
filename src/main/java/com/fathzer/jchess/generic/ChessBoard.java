@@ -280,8 +280,9 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public int getKingDestination(Castling castling) {
-		final int rowStart = Color.WHITE==castling.getColor() ? dimension.getPosition(dimension.getHeight()-1, 0): 0;
-		return rowStart + (Side.QUEEN==castling.getSide() ? 2 : dimension.getWidth()-2);
+		final int row = Color.WHITE==castling.getColor() ? dimension.getHeight()-1 : 0;
+		final int column = Side.QUEEN==castling.getSide() ? 2 : dimension.getWidth()-2;
+		return coordinatesSystem.getIndex(row, column);
 	}
 
 	private void pawnMove(int from, int to, Piece promotion) {
@@ -300,7 +301,7 @@ public abstract class ChessBoard implements Board<Move> {
 			pieces[pos] = null;
 		}
 		
-		final int rowOffset = dimension.getRow(to) - dimension.getRow(from);
+		final int rowOffset = coordinatesSystem.getRow(to) - coordinatesSystem.getRow(from);
 		if (Math.abs(rowOffset)==2) {
 			// Make en-passant available for opponent
 			setEnPassant(from + rowOffset*dimension.getWidth()/2, pawn.getColor().opposite());

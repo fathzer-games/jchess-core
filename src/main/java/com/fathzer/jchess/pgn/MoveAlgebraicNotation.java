@@ -124,13 +124,13 @@ public class MoveAlgebraicNotation {
 		if (ambiguities.isEmpty()) {
 			return "";
 		}
-		final int row = board.getDimension().getRow(from);
-		final int column = board.getDimension().getColumn(from);
-		final String pos = board.getCoordinatesSystem().getAlgebraicNotation(move.getFrom());
-		if (ambiguities.stream().noneMatch(m->column==board.getDimension().getColumn(m.getFrom()))) {
+		final int row = board.getCoordinatesSystem().getRow(from);
+		final int column = board.getCoordinatesSystem().getColumn(from);
+		final String pos = board.getCoordinatesSystem().getAlgebraicNotation(from);
+		if (ambiguities.stream().noneMatch(m->column==board.getCoordinatesSystem().getColumn(m.getFrom()))) {
 			// No candidates with same column => return column
 			return pos.substring(0,1);
-		} else if (ambiguities.stream().noneMatch(m->row==board.getDimension().getRow(m.getFrom()))) {
+		} else if (ambiguities.stream().noneMatch(m->row==board.getCoordinatesSystem().getRow(m.getFrom()))) {
 			// No candidates with same row => return row
 			return pos.substring(1);
 		} else {
