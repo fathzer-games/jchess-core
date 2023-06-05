@@ -2,8 +2,7 @@ package com.fathzer.jchess.standard;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Dimension;
-import com.fathzer.jchess.Dimension.Explorer;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
@@ -29,7 +28,7 @@ public class DefenderDetector implements IntPredicate {
 	}
 	
 	private void buildDefenderMap(Board<Move> board, Color color) {
-		final Explorer exp = Dimension.STANDARD.new Explorer(board.getKingPosition(color));
+		final BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(board.getKingPosition(color));
 		defenderMap = 0;
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
 			exp.start(d);
@@ -49,7 +48,7 @@ public class DefenderDetector implements IntPredicate {
 		defenderMap = defenderMap & CORNER_MASK;
 	}
 	
-	private boolean hasAttacker(Explorer exp, Board<Move> board, Color attackerColor, Direction direction) {
+	private boolean hasAttacker(BoardExplorer exp, Board<Move> board, Color attackerColor, Direction direction) {
 		while (exp.hasNext()) {
 			final int pos = exp.next();
 			final Piece p = board.getPiece(pos);

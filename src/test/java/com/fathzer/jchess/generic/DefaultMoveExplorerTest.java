@@ -8,7 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Dimension.Explorer;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -28,7 +28,7 @@ class DefaultMoveExplorerTest {
 		
 		ChessGameState moves = new BasicMoveList();
 		// The rook in a1 can't move
-		Explorer exp = board.getDimension().new Explorer(cs.getIndex("a1"));
+		BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("a1"));
 		explorer.addMoves(moves, exp, -1, 0, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, 1, 0, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, 0, -1, Integer.MAX_VALUE, v, DEFAULT);
@@ -36,7 +36,7 @@ class DefaultMoveExplorerTest {
 		assertEquals(0, moves.size(), U.to(moves, cs).toString());
 
 		// The bishop in d3 can only move to c4
-		exp = board.getDimension().new Explorer(cs.getIndex("d3"));
+		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("d3"));
 		explorer.addMoves(moves, exp, -1, -1, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, 1, -1, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, 1, 1, Integer.MAX_VALUE, v, DEFAULT);
@@ -45,7 +45,7 @@ class DefaultMoveExplorerTest {
 
 		moves = new BasicMoveList();
 		// The bishop in c6 can make 6 moves
-		exp = board.getDimension().new Explorer(cs.getIndex("c6"));
+		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("c6"));
 		explorer.addMoves(moves, exp, -2, -1, 1, v, DEFAULT);
 		explorer.addMoves(moves, exp, -1, -2, 1, v, DEFAULT);
 		explorer.addMoves(moves, exp, 1, -2, 1, v, DEFAULT);

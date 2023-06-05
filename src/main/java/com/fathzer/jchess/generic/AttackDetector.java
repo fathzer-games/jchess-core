@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Dimension.Explorer;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
@@ -22,7 +22,7 @@ class AttackDetector {
 	}
 	
 	public boolean isAttacked(int position, Color color) {
-		final Explorer explorer = board.getDimension().new Explorer(position);
+		final BoardExplorer explorer = board.getCoordinatesSystem().buildExplorer(position);
 
 		// check for knight
 		if (check(explorer, PieceKind.KNIGHT.getDirections(), 1, color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {
@@ -48,11 +48,11 @@ class AttackDetector {
 		return check(explorer, directions, 1, color, p -> PieceKind.PAWN.equals(p.getKind()));
 	}
 	
-	private boolean check(Explorer explorer, Collection<Direction> directions, int maxIteration, Color color, Predicate<Piece> validator) {
+	private boolean check(BoardExplorer explorer, Collection<Direction> directions, int maxIteration, Color color, Predicate<Piece> validator) {
 		return directions.stream().anyMatch(d -> check(explorer, d, maxIteration, color, validator));
 	}
 	
-	private boolean check(Explorer explorer, Direction direction, int maxIteration, Color color, Predicate<Piece> validator)  {
+	private boolean check(BoardExplorer explorer, Direction direction, int maxIteration, Color color, Predicate<Piece> validator)  {
 		explorer.start(direction);
 		int iteration = 0;
 		while (explorer.hasNext()) {

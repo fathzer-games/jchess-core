@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Castling.Side;
 import com.fathzer.jchess.Dimension;
-import com.fathzer.jchess.Dimension.Explorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -324,6 +324,7 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	private void setEnPassant(int pos, Color catchingColor) {
 		if (enPassant>=0) {
+			// clear previous en passant key
 			key ^= dimension.getZobristKeyBuilder().getKey(enPassant);
 		}
 		if (isCatcheableEnPassant(pos, catchingColor)) {
@@ -335,7 +336,7 @@ public abstract class ChessBoard implements Board<Move> {
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final Explorer exp = dimension.new Explorer(pos);
+		final BoardExplorer exp = coordinatesSystem.buildExplorer(pos);
 		final int rowIncrement = Color.WHITE.equals(catchingColor) ? 1:-1;
 		exp.start(rowIncrement,-1);
 		if (exp.hasNext() && isPawn(exp.next(), catchingColor)) {

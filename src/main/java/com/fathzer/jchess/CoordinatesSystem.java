@@ -14,4 +14,6 @@ public interface CoordinatesSystem {
 		final char x = (char)('a' + column);
 		return x+Integer.toString(row+1);
 	}
+	
+	BoardExplorer buildExplorer(int index);
 }

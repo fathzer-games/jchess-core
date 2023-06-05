@@ -9,9 +9,9 @@ import java.util.stream.IntStream;
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.Dimension.Explorer;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.DefaultMoveExplorer.MoveGenerator;
 import com.fathzer.jchess.util.BiIntPredicate;
@@ -37,7 +37,7 @@ public class StandardChessRules implements ChessRules {
 		private AttackDetector attacks;
 		private DefaultMoveExplorer explorer;
 		private MoveValidator mv;
-		private Explorer exp;
+		private BoardExplorer exp;
 		@Getter
 		private boolean check;
 		
@@ -45,7 +45,7 @@ public class StandardChessRules implements ChessRules {
 			this.board = board;
 			this.attacks = new AttackDetector(board);
 			this.explorer = new DefaultMoveExplorer(board);
-			this.exp = board.getDimension().new Explorer(-1);
+			this.exp = board.getCoordinatesSystem().buildExplorer(-1);
 			Color color = board.getActiveColor();
 			this.check = attacks.isAttacked(board.getKingPosition(color), color.opposite());
 			this.mv = new MoveValidator(board, attacks, check);
