@@ -4,7 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
-@EqualsAndHashCode(exclude = {"size"})
+@EqualsAndHashCode
 public class Dimension {
 	public static final Dimension STANDARD = new Dimension(8,8);
 	

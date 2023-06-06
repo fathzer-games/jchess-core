@@ -46,7 +46,7 @@ public class StandardChessRules implements ChessRules {
 			this.board = board;
 			this.attacks = new AttackDetector(board);
 			this.explorer = new DefaultMoveExplorer(board);
-			this.exp = board.getCoordinatesSystem().buildExplorer(-1);
+			this.exp = new SkipFirstExplorer(board.getCoordinatesSystem(), -1);
 			Color color = board.getActiveColor();
 			this.check = attacks.isAttacked(board.getKingPosition(color), color.opposite());
 			this.mv = new MoveValidator(board, attacks, check);
@@ -115,7 +115,7 @@ public class StandardChessRules implements ChessRules {
 	private void addPossibleMoves(ChessGameState list, Tools tools, int position) {
 		final Piece piece = tools.board.getPiece(position);
 		if (piece!=null) {
-			tools.exp.restart(position);
+			tools.exp.reset(position);
 			if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
 				addBasicPieceMove(list, tools, piece.getKind(), Integer.MAX_VALUE, tools.mv.getDefault());
 			} else if (PieceKind.KNIGHT.equals(piece.getKind())) {

@@ -22,7 +22,7 @@ class AttackDetector {
 	}
 	
 	public boolean isAttacked(int position, Color color) {
-		final BoardExplorer explorer = board.getCoordinatesSystem().buildExplorer(position);
+		final BoardExplorer explorer = new SkipFirstExplorer(board.getCoordinatesSystem(), position);
 
 		// check for knight
 		if (check(explorer, PieceKind.KNIGHT.getDirections(), 1, color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {

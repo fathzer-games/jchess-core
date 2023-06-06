@@ -19,7 +19,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 	 
 	public PinnedDetector(Board<Move> board) {
 		final Color color = board.getActiveColor();
-		final BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(board.getKingPosition(color));
+		final BoardExplorer exp = new SkipFirstExplorer(board.getCoordinatesSystem(), board.getKingPosition(color));
 		pinedMap = new Direction[board.getDimension().getSize()];
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
 			exp.start(d);

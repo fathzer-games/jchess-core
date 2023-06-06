@@ -29,7 +29,7 @@ class DefaultMoveExplorerTest {
 		
 		ChessGameState moves = new BasicMoveList();
 		// The rook in a1 can't move
-		BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("a1"));
+		BoardExplorer exp = new SkipFirstExplorer(cs, cs.getIndex("a1"));
 		explorer.addMoves(moves, exp, NORTH, Integer.MAX_VALUE, v);
 		explorer.addMoves(moves, exp, SOUTH, Integer.MAX_VALUE, v);
 		explorer.addMoves(moves, exp, WEST, Integer.MAX_VALUE, v);
@@ -37,7 +37,7 @@ class DefaultMoveExplorerTest {
 		assertEquals(0, moves.size(), U.to(moves, cs).toString());
 
 		// The bishop in d3 can only move to c4
-		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("d3"));
+		exp = new SkipFirstExplorer(cs, cs.getIndex("d3"));
 		explorer.addMoves(moves, exp, NORTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, SOUTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
 		explorer.addMoves(moves, exp, SOUTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
@@ -46,7 +46,7 @@ class DefaultMoveExplorerTest {
 
 		moves = new BasicMoveList();
 		// The bishop in c6 can make 6 moves
-		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("c6"));
+		exp = new SkipFirstExplorer(cs, cs.getIndex("c6"));
 		explorer.addMoves(moves, exp, KNIGHT1, 1, v, DEFAULT);
 		explorer.addMoves(moves, exp, KNIGHT2, 1, v, DEFAULT);
 		explorer.addMoves(moves, exp, KNIGHT3, 1, v, DEFAULT);
