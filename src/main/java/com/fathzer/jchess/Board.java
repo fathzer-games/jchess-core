@@ -54,7 +54,7 @@ public interface Board<M> {
 	 */
 	default Castling getCastling(int from, int to, Color playingColor) {
 		final int offset = Math.abs(to-from);
-		boolean castling = offset>=2 && (getDimension().getRow(from)==getDimension().getRow(to));
+		boolean castling = offset>=2 && (getCoordinatesSystem().getRow(from)==getCoordinatesSystem().getRow(to));
 		if (!castling) {
 			final Piece rook = Color.WHITE.equals(playingColor) ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
 			castling = rook.equals(getPiece(to));

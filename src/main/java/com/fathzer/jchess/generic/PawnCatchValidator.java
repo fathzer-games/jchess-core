@@ -23,7 +23,7 @@ class PawnCatchValidator implements BiIntPredicate {
 			targetColor = board.getPiece(to).getColor();
 			kingSafeAfterMove = optimizedKingSafeAfterMove;
 		} else if (board.getEnPassant()==to) {
-			targetColor = board.getDimension().getRow(to)==2 ? Color.BLACK : Color.WHITE;
+			targetColor = board.getCoordinatesSystem().getRow(to)==2 ? Color.BLACK : Color.WHITE;
 			// Warning, the caught pawn can be a defender of the king
 			kingSafeAfterMove = basicKingSafeAfterMove;
 		} else {

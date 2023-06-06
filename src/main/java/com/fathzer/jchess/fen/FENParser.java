@@ -85,7 +85,7 @@ public class FENParser {
 		final StringBuilder b = new StringBuilder();
 		int emptyCount = 0;
 		for (int col = 0; col < board.getDimension().getHeight(); col++) {
-			final Piece piece = board.getPiece(board.getDimension().getPosition(row, col));
+			final Piece piece = board.getPiece(board.getCoordinatesSystem().getIndex(row, col));
 			if (piece==null) {
 				emptyCount++;
 			} else {

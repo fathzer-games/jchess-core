@@ -1,5 +1,7 @@
 package com.fathzer.jchess.generic;
 
+import static com.fathzer.games.Color.*;
+
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -19,7 +21,7 @@ public class BasicEvaluator implements ChessEvaluator {
 			final Piece p = board.getPiece(i);
 			if (p!=null) {
 				int inc = p.getKind().getValue();
-				if (p.getColor().equals(Color.WHITE)) {
+				if (p.getColor()==WHITE) {
 					points += inc;
 				} else {
 					points -= inc;
@@ -27,7 +29,7 @@ public class BasicEvaluator implements ChessEvaluator {
 			}
 		}
 		points = 100*points;
-		if (Color.BLACK.equals(viewPoint) || (viewPoint==null && Color.BLACK.equals(board.getActiveColor()))) {
+		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
 			points = -points;
 		}
 //		System.out.println(points);

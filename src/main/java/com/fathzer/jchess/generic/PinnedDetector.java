@@ -2,8 +2,7 @@ package com.fathzer.jchess.generic;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Dimension;
-import com.fathzer.jchess.Dimension.Explorer;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
@@ -20,7 +19,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 	 
 	public PinnedDetector(Board<Move> board) {
 		final Color color = board.getActiveColor();
-		final Explorer exp = Dimension.STANDARD.new Explorer(board.getKingPosition(color));
+		final BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(board.getKingPosition(color));
 		pinedMap = new Direction[board.getDimension().getSize()];
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
 			exp.start(d);
@@ -38,7 +37,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 		}
 	}
 	
-	private boolean hasAttacker(Explorer exp, Board<Move> board, Color attackerColor, Direction direction) {
+	private boolean hasAttacker(BoardExplorer exp, Board<Move> board, Color attackerColor, Direction direction) {
 		while (exp.hasNext()) {
 			final int pos = exp.next();
 			final Piece p = board.getPiece(pos);
