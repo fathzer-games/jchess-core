@@ -23,11 +23,11 @@ public class DefaultMoveExplorer {
 	}
 	
 	public void addMoves(ChessGameState moves, BoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator)  {
-		addMoves(moves, explorer, direction.getRowIncrement(), direction.getColumnIncrement(), maxIteration, validator, DEFAULT);
+		addMoves(moves, explorer, direction, maxIteration, validator, DEFAULT);
 	}
-	
-	public void addMoves(ChessGameState moves, BoardExplorer explorer, int rowIncrement, int columnIncrement, int maxIteration, BiIntPredicate validator, MoveGenerator moveGenerator) {
-		explorer.start(rowIncrement, columnIncrement);
+
+	public void addMoves(ChessGameState moves, BoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator, MoveGenerator moveGenerator)  {
+		explorer.start(direction);
 		int iteration = 0;
 		while (explorer.hasNext()) {
 			final int to = explorer.next();

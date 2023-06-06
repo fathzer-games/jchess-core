@@ -4,6 +4,7 @@ import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
+import com.fathzer.jchess.ZobristKeyBuilder;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -43,7 +44,6 @@ class DefaultCoordinatesSystem implements CoordinatesSystem {
 		}
 		return x;
 	}
-
 
 	@Override
 	public int getRow(int index) {
@@ -117,5 +117,10 @@ class DefaultCoordinatesSystem implements CoordinatesSystem {
 			prepareNext();
 			return result;
 		}
+	}
+
+	@Override
+	public ZobristKeyBuilder getZobristKeyBuilder() {
+		return ZobristKeyBuilder.get(dimension.getSize());
 	}
 }

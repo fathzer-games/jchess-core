@@ -16,4 +16,5 @@ public interface CoordinatesSystem {
 	}
 	
 	BoardExplorer buildExplorer(int index);
+	ZobristKeyBuilder getZobristKeyBuilder();
 }

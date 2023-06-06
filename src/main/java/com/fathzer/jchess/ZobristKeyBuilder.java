@@ -7,17 +7,28 @@ import com.fathzer.games.Color;
 import lombok.Getter;
 
 public class ZobristKeyBuilder {
+	private static int lastSize=-1;
+	private static ZobristKeyBuilder lastBuilder;
+	
 	private final long[][] piecesTable;
 	private final long[] enPassantKeys;
 	private final long[] castlingKeys;
 	@Getter
 	private final long turnKey;
 
-	public ZobristKeyBuilder(Dimension dimension) {
+	public static ZobristKeyBuilder get(int boardSize) {
+		if (lastSize!=boardSize) {
+			lastBuilder = new ZobristKeyBuilder(boardSize);
+			lastSize = boardSize;
+		}
+		return lastBuilder;
+	}
+	
+	private ZobristKeyBuilder(int boardSize) {
 		Random random = new Random(0);
-		piecesTable = new long[dimension.getSize()][Piece.values().length];
+		piecesTable = new long[boardSize][Piece.values().length];
 		populatePiecesTable(random);
-		enPassantKeys = new long[dimension.getSize()];
+		enPassantKeys = new long[boardSize];
 		populate(enPassantKeys, random);
 		castlingKeys = new long[Castling.values().length];
 		populate(castlingKeys, random);

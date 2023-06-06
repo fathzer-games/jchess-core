@@ -1,6 +1,7 @@
 package com.fathzer.jchess.generic;
 
 import static com.fathzer.jchess.generic.DefaultMoveExplorer.*;
+import static com.fathzer.jchess.Direction.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Set;
@@ -29,31 +30,31 @@ class DefaultMoveExplorerTest {
 		ChessGameState moves = new BasicMoveList();
 		// The rook in a1 can't move
 		BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("a1"));
-		explorer.addMoves(moves, exp, -1, 0, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, 1, 0, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, 0, -1, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, 0, 1, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, NORTH, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, SOUTH, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, WEST, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, EAST, Integer.MAX_VALUE, v);
 		assertEquals(0, moves.size(), U.to(moves, cs).toString());
 
 		// The bishop in d3 can only move to c4
 		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("d3"));
-		explorer.addMoves(moves, exp, -1, -1, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, 1, -1, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, 1, 1, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, -1, 1, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, NORTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, SOUTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, SOUTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, NORTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
 		assertEquals(Set.of("c4"), U.to(moves, cs));
 
 		moves = new BasicMoveList();
 		// The bishop in c6 can make 6 moves
 		exp = board.getCoordinatesSystem().buildExplorer(cs.getIndex("c6"));
-		explorer.addMoves(moves, exp, -2, -1, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, -1, -2, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, 1, -2, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, 2, -1, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, 2, 1, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, 1, 2, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, -1, 2, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, -2, 1, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT1, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT2, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT3, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT4, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT5, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT6, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT7, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT8, 1, v, DEFAULT);
 		assertEquals(Set.of("a7","b8","d8","e5","d4","b4"), U.to(moves, cs));
 	}
 }

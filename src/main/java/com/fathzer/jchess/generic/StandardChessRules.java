@@ -22,6 +22,7 @@ import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.ChessRules;
+import com.fathzer.jchess.Direction;
 
 public class StandardChessRules implements ChessRules {
 	public static final ChessRules INSTANCE = new StandardChessRules();
@@ -80,7 +81,7 @@ public class StandardChessRules implements ChessRules {
 	private ChessGameState buildMoves(Board<Move> board, final ChessGameState list) {
 		final Tools tools = new Tools(board);
 		final Color color = board.getActiveColor();
-		IntStream.range(0, board.getDimension().getSize())
+		IntStream.range(0, board.getDimension().getSize()) //FIXME Works only with "old school" board
 				.filter(i -> board.getPiece(i)!=null && color.equals(board.getPiece(i).getColor()))
 				.forEach(i -> addPossibleMoves(list, tools, i));
 		if (list.size()==0) {
@@ -96,7 +97,7 @@ public class StandardChessRules implements ChessRules {
 	protected boolean isInsufficientMaterial(Board<Move> board) {
 		int whiteKnightOrBishopCount = 0;
 		int blackKnightOrBishopCount = 0;
-		for (int i = 0; i < board.getDimension().getSize(); i++) {
+		for (int i = 0; i < board.getDimension().getSize(); i++) { //FIXME Works only with "old school" board
 			final Piece p = board.getPiece(i);
 			if (p!=null && !PieceKind.KING.equals(p.getKind())) {
 				if (Piece.BLACK_BISHOP.equals(p) || Piece.BLACK_KNIGHT.equals(p)) {
@@ -197,7 +198,7 @@ public class StandardChessRules implements ChessRules {
 	private void addPawnMoves(ChessGameState moves, Tools tools) {
 		final boolean black = Color.BLACK.equals(tools.board.getPiece(tools.exp.getStartPosition()).getColor());
 		// Take care of promotion when generating move
-		final IntPredicate promoted = black ? i -> i >= tools.board.getDimension().getSize()-tools.board.getDimension().getWidth() : i -> i < tools.board.getDimension().getWidth();
+		final IntPredicate promoted = black ? i -> i >= tools.board.getDimension().getSize()-tools.board.getDimension().getWidth() : i -> i < tools.board.getDimension().getWidth(); //FIXME Works only with "old school" board
 		final MoveGenerator generator = (m, f, t) -> {
 			if (promoted.test(t)) {
 				m.add(f, t, black ? Piece.BLACK_KNIGHT : Piece.WHITE_KNIGHT);
@@ -211,12 +212,17 @@ public class StandardChessRules implements ChessRules {
 		// Standard moves (no catch)
 		final int startRow = black ? 1 : tools.board.getDimension().getHeight()-2;
 		final int countAllowed = tools.board.getCoordinatesSystem().getRow(tools.exp.getStartPosition()) == startRow ? 2 : 1;
-		final int rowIncrement = black ? 1 : -1;
-		tools.explorer.addMoves(moves, tools.exp, rowIncrement, 0, countAllowed, tools.mv.getPawnNoCatch(), generator);
-		
-		// Catches (including En-passant)
-		tools.explorer.addMoves(moves, tools.exp, rowIncrement, -1, 1, tools.mv.getPawnCatch(), generator);
-		tools.explorer.addMoves(moves, tools.exp, rowIncrement, 1, 1, tools.mv.getPawnCatch(), generator);
+		if (black) {
+			tools.explorer.addMoves(moves, tools.exp, Direction.SOUTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
+			// Catches (including En-passant)
+			tools.explorer.addMoves(moves, tools.exp, Direction.SOUTH_EAST, 1, tools.mv.getPawnCatch(), generator);
+			tools.explorer.addMoves(moves, tools.exp, Direction.SOUTH_WEST, 1, tools.mv.getPawnCatch(), generator);
+		} else {
+			tools.explorer.addMoves(moves, tools.exp, Direction.NORTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
+			// Catches (including En-passant)
+			tools.explorer.addMoves(moves, tools.exp, Direction.NORTH_EAST, 1, tools.mv.getPawnCatch(), generator);
+			tools.explorer.addMoves(moves, tools.exp, Direction.NORTH_WEST, 1, tools.mv.getPawnCatch(), generator);
+		}
 	}
 	
 	private boolean isThreatened(Board<Move> board, Color color, int position) {

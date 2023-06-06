@@ -9,12 +9,14 @@ import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Castling.Side;
 import com.fathzer.jchess.Dimension;
+import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.ZobristKeyBuilder;
 import com.fathzer.jchess.standard.CompactMoveList;
 
 import lombok.Getter;
@@ -27,6 +29,7 @@ public abstract class ChessBoard implements Board<Move> {
 	private final CoordinatesSystem coordinatesSystem;
 
 	private final Piece[] pieces;
+	private final ZobristKeyBuilder zobrist;
 	@Getter
 	private Color activeColor;
 	private int castlings;
@@ -62,6 +65,7 @@ public abstract class ChessBoard implements Board<Move> {
 	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassantColumn, int halfMoveCount, int moveNumber) {
 		this.dimension = dimension;
 		this.coordinatesSystem = new DefaultCoordinatesSystem(dimension);
+		zobrist = coordinatesSystem.getZobristKeyBuilder();
 		if (activeColor==null) {
 			throw new NullPointerException();
 		}
@@ -93,7 +97,7 @@ public abstract class ChessBoard implements Board<Move> {
 			throw new IllegalArgumentException("Move number should be strictly positive");
 		}
 		this.moveNumber = moveNumber;
-		this.key = dimension.getZobristKeyBuilder().get(this);
+		this.key = zobrist.get(this);
 	}
 	
 	private int getEnPassantRow(Color activeColor) {
@@ -157,7 +161,7 @@ public abstract class ChessBoard implements Board<Move> {
 			moveNumber++;
 		}
 		activeColor = movedPiece.getColor().opposite();
-		key ^= dimension.getZobristKeyBuilder().getTurnKey();
+		key ^= zobrist.getTurnKey();
 	}
 	
 	@Override
@@ -208,15 +212,15 @@ public abstract class ChessBoard implements Board<Move> {
 		if (!cellsOnly) {
 			// Update zobristKey
 			if (this.pieces[to1]!=null) {
-				key ^= dimension.getZobristKeyBuilder().getKey(to1, this.pieces[to1]);
+				key ^= zobrist.getKey(to1, this.pieces[to1]);
 			}
 			if (this.pieces[to2]!=null) {
-				key ^= dimension.getZobristKeyBuilder().getKey(to2, this.pieces[to2]);
+				key ^= zobrist.getKey(to2, this.pieces[to2]);
 			}
-			key ^= dimension.getZobristKeyBuilder().getKey(from1, moved1);
-			key ^= dimension.getZobristKeyBuilder().getKey(to1, moved1);
-			key ^= dimension.getZobristKeyBuilder().getKey(from2, moved2);
-			key ^= dimension.getZobristKeyBuilder().getKey(to2, moved2);
+			key ^= zobrist.getKey(from1, moved1);
+			key ^= zobrist.getKey(to1, moved1);
+			key ^= zobrist.getKey(from2, moved2);
+			key ^= zobrist.getKey(to2, moved2);
 		}
 		this.pieces[from1] = null;
 		this.pieces[from2] = null;
@@ -230,10 +234,10 @@ public abstract class ChessBoard implements Board<Move> {
 			// Update zobristKey
 			final Piece erased = this.pieces[to];
 			if (erased!=null) {
-				key ^= dimension.getZobristKeyBuilder().getKey(to, erased);
+				key ^= zobrist.getKey(to, erased);
 			}
-			key ^= dimension.getZobristKeyBuilder().getKey(from, moved);
-			key ^= dimension.getZobristKeyBuilder().getKey(to, moved);
+			key ^= zobrist.getKey(from, moved);
+			key ^= zobrist.getKey(to, moved);
 		}
 		this.pieces[to] = moved;
 		this.pieces[from] = null;
@@ -290,14 +294,14 @@ public abstract class ChessBoard implements Board<Move> {
 		if (promotion!=null) {
 			pieces[from] = promotion;
 			// Promotion => update key as if pawn is replaced by the promotion
-			key ^= dimension.getZobristKeyBuilder().getKey(from, pieces[from]);
-			key ^= dimension.getZobristKeyBuilder().getKey(from, pawn);
+			key ^= zobrist.getKey(from, pieces[from]);
+			key ^= zobrist.getKey(from, pawn);
 		}
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
 			final boolean whiteMove = Color.WHITE.equals(pawn.getColor());
 			final int pos = enPassant+(whiteMove ? 1 : -1)*dimension.getWidth();
-			key ^= dimension.getZobristKeyBuilder().getKey(pos, pieces[pos]);
+			key ^= zobrist.getKey(pos, pieces[pos]);
 			pieces[pos] = null;
 		}
 		
@@ -316,7 +320,7 @@ public abstract class ChessBoard implements Board<Move> {
 	private void eraseCastlings(Castling... castlings) {
 		for (Castling castling : castlings) {
 			if ((this.castlings & castling.getMask()) != 0) {
-				key ^= dimension.getZobristKeyBuilder().getKey(castling);
+				key ^= zobrist.getKey(castling);
 				this.castlings -= castling.getMask();
 			}
 		}
@@ -325,11 +329,11 @@ public abstract class ChessBoard implements Board<Move> {
 	private void setEnPassant(int pos, Color catchingColor) {
 		if (enPassant>=0) {
 			// clear previous en passant key
-			key ^= dimension.getZobristKeyBuilder().getKey(enPassant);
+			key ^= zobrist.getKey(enPassant);
 		}
 		if (isCatcheableEnPassant(pos, catchingColor)) {
 			this.enPassant = pos;
-			key ^= dimension.getZobristKeyBuilder().getKey(enPassant);
+			key ^= zobrist.getKey(enPassant);
 		} else {
 			clearEnPassant();
 		}
@@ -337,22 +341,25 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
 		final BoardExplorer exp = coordinatesSystem.buildExplorer(pos);
-		final int rowIncrement = Color.WHITE.equals(catchingColor) ? 1:-1;
-		exp.start(rowIncrement,-1);
-		if (exp.hasNext() && isPawn(exp.next(), catchingColor)) {
-			return true;
+		if (Color.WHITE==catchingColor) {
+			return isCatcheableEnPassant(exp, Direction.SOUTH_EAST, Piece.WHITE_PAWN) || isCatcheableEnPassant(exp, Direction.SOUTH_WEST, Piece.WHITE_PAWN);
+		} else {
+			return isCatcheableEnPassant(exp, Direction.NORTH_EAST, Piece.BLACK_PAWN) || isCatcheableEnPassant(exp, Direction.NORTH_WEST, Piece.BLACK_PAWN);
 		}
-		exp.start(rowIncrement,1);
-		return exp.hasNext() && isPawn(exp.next(), catchingColor);
+	}
+
+	private boolean isCatcheableEnPassant(final BoardExplorer exp, final Direction direction, Piece catchingPawn) {
+		exp.start(direction);
+		return exp.hasNext() && is(exp.next(), catchingPawn);
 	}
 	
-	private boolean isPawn(int pos, Color color) {
-		return (color.equals(Color.WHITE) ? Piece.WHITE_PAWN : Piece.BLACK_PAWN).equals(pieces[pos]);
+	private boolean is(int pos, Piece piece) {
+		return piece==pieces[pos];
 	}
 	
 	private void clearEnPassant() {
 		if (enPassant>=0) {
-			key ^= dimension.getZobristKeyBuilder().getKey(enPassant);
+			key ^= zobrist.getKey(enPassant);
 		}
 		this.enPassant = -1;
 	}
