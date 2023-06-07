@@ -1,7 +1,6 @@
 package com.fathzer.jchess.generic;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
@@ -22,11 +21,11 @@ public class DefaultMoveExplorer {
 		this.board = board;
 	}
 	
-	public void addMoves(ChessGameState moves, BoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator)  {
+	public void addMoves(ChessGameState moves, InternalBoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator)  {
 		addMoves(moves, explorer, direction, maxIteration, validator, DEFAULT);
 	}
 
-	public void addMoves(ChessGameState moves, BoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator, MoveGenerator moveGenerator)  {
+	public void addMoves(ChessGameState moves, InternalBoardExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator, MoveGenerator moveGenerator)  {
 		explorer.start(direction);
 		int iteration = 0;
 		while (explorer.hasNext()) {

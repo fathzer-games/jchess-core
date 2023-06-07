@@ -2,6 +2,7 @@ package com.fathzer.jchess.generic;
 
 import static com.fathzer.games.Color.*;
 import static com.fathzer.jchess.Piece.*;
+import static com.fathzer.jchess.Direction.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -100,7 +101,7 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public BoardExplorer getExplorer() {
-		throw new UnsupportedOperationException("Not yet implemented");
+		return board.getExplorer();
 	}
 	
 	/** Makes a move.
@@ -330,15 +331,15 @@ public abstract class ChessBoard implements Board<Move> {
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final BoardExplorer exp = board.getExplorer(pos);
+		final InternalBoardExplorer exp = new SkipFirstExplorer(getCoordinatesSystem(), pos);
 		if (Color.WHITE==catchingColor) {
-			return isCatcheableEnPassant(exp, Direction.SOUTH_EAST, Piece.WHITE_PAWN) || isCatcheableEnPassant(exp, Direction.SOUTH_WEST, Piece.WHITE_PAWN);
+			return isCatcheableEnPassant(exp, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, SOUTH_WEST, WHITE_PAWN);
 		} else {
-			return isCatcheableEnPassant(exp, Direction.NORTH_EAST, Piece.BLACK_PAWN) || isCatcheableEnPassant(exp, Direction.NORTH_WEST, Piece.BLACK_PAWN);
+			return isCatcheableEnPassant(exp, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, NORTH_WEST, BLACK_PAWN);
 		}
 	}
 
-	private boolean isCatcheableEnPassant(final BoardExplorer exp, final Direction direction, Piece catchingPawn) {
+	private boolean isCatcheableEnPassant(final InternalBoardExplorer exp, final Direction direction, Piece catchingPawn) {
 		exp.start(direction);
 		return exp.hasNext() && board.is(exp.next(), catchingPawn);
 	}
@@ -352,49 +353,12 @@ public abstract class ChessBoard implements Board<Move> {
 
 	@Override
 	public String toString() {
-		final StringBuilder b = new StringBuilder();
-		for (int i = 0; i < getDimension().getSize() ; i++) {
-			final boolean newLine = i%getDimension().getWidth()==0;
-			if (newLine) {
-				if (i!=0) {
-					b.append('\n');
-				}
-				newLine(b, getDimension().getHeight() - i/getDimension().getWidth());
-			} else {
-				b.append(' ');
-			}
-			b.append(getNotation(board.getPiece(i)));
-		}
-		b.append(getLastLine());
-		return b.toString();
-	}
-	
-	private CharSequence getLastLine() {
-		StringBuilder b = new StringBuilder("\n ");
-		char coord = 'a';
-		for (int j = 0; j < getDimension().getWidth(); j++) {
-			b.append(' ');
-			b.append(coord);
-			coord++;
-		}
-		return b;
-	}
-
-	private void newLine(final StringBuilder b, int i) {
-		b.append(i).append(' ');
+		return board.toString();
 	}
 	
 	@Override
 	public Piece getPiece(int position) {
 		return board.getPiece(position);
-	}
-	
-	private String getNotation(Piece p) {
-		if (p==null) {
-			return " ";
-		} else {
-			return p.getNotation();
-		}
 	}
 	
 	@Override

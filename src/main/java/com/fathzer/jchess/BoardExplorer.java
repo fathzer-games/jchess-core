@@ -4,8 +4,9 @@ package com.fathzer.jchess;
  */
 public interface BoardExplorer {
 	void reset(int index);
-	void start(Direction direction);
-	boolean hasNext();
-	int next();
+	void setDirection(Direction direction);
+	boolean next();
+	int getIndex();
+	Piece getPiece();
 	int getStartPosition();
 }

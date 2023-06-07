@@ -9,7 +9,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -29,7 +28,7 @@ class DefaultMoveExplorerTest {
 		
 		ChessGameState moves = new BasicMoveList();
 		// The rook in a1 can't move
-		BoardExplorer exp = new SkipFirstExplorer(cs, cs.getIndex("a1"));
+		InternalBoardExplorer exp = new SkipFirstExplorer(cs, cs.getIndex("a1"));
 		explorer.addMoves(moves, exp, NORTH, Integer.MAX_VALUE, v);
 		explorer.addMoves(moves, exp, SOUTH, Integer.MAX_VALUE, v);
 		explorer.addMoves(moves, exp, WEST, Integer.MAX_VALUE, v);

@@ -6,6 +6,7 @@ import com.fathzer.games.Color;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Dimension;
+import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
@@ -22,6 +23,8 @@ public class BoardRepresentation {
 	private final ZobristKeyBuilder zobrist;
 
 	private final Piece[] pieces;
+	@Getter
+	private final Direction[] pinnedMap;
 	private final Piece[] backup;
 	private final int[] kingPositions=new int[2];
 	private final int[] kingPositionBackup=new int[2];
@@ -33,6 +36,7 @@ public class BoardRepresentation {
 		zobrist = ZobristKeyBuilder.get(size);
 		this.pieces = new Piece[size];
 		this.backup = new Piece[this.pieces.length];
+		this.pinnedMap = new Direction[this.pieces.length];
 		for (PieceWithPosition p : pieces) {
 			final int dest = coordinatesSystem.getIndex(p.getRow(), p.getColumn());
 			if (this.pieces[dest]!=null) {
@@ -79,8 +83,48 @@ public class BoardRepresentation {
 	void updateKingPosition(Color kingsColor, int index) {
 		kingPositions[kingsColor.ordinal()] = index;
 	}
+	
+	@Override
+	public String toString() {
+		final StringBuilder b = new StringBuilder();
+		final BoardExplorer exp = getExplorer();
+		exp.setDirection(Direction.EAST);
+		for (int i = 0; i < getDimension().getHeight() ; i++) {
+			if (i!=0) {
+				b.append('\n');
+			}
+			b.append(getDimension().getHeight() - i);
+			exp.reset(coordinatesSystem.getIndex(i, 0));
+			do {
+				b.append(' ');
+				b.append(getNotation(exp.getPiece()));
+			} while (exp.next());
+		}
+		b.append(getLastLine());
+		return b.toString();
+	}
+	
+	private CharSequence getLastLine() {
+		StringBuilder b = new StringBuilder("\n ");
+		char coord = 'a';
+		for (int j = 0; j < getDimension().getWidth(); j++) {
+			b.append(' ');
+			b.append(coord);
+			coord++;
+		}
+		return b;
+	}
+	
+	private String getNotation(Piece p) {
+		if (p==null) {
+			return " ";
+		} else {
+			return p.getNotation();
+		}
+	}
 
-	BoardExplorer getExplorer(int index) {
-		return new SkipFirstExplorer(coordinatesSystem, index);
+
+	BoardExplorer getExplorer() {
+		return new MyBoardExplorer(pieces, coordinatesSystem, 0);
 	}
 }

@@ -4,6 +4,7 @@ import static com.fathzer.games.Color.*;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.ChessEvaluator;
@@ -15,10 +16,18 @@ public class BasicEvaluator implements ChessEvaluator {
 	private Color viewPoint;
 	
 	public int evaluate(Board<Move> board) {
-//		System.out.println(board); //TODO
+		int points = 100*getPoints(board);
+		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
+			points = -points;
+		}
+		return points;
+	}
+
+	private int getPoints(Board<Move> board) {
+		final BoardExplorer exp = board.getExplorer(); 
 		int points = 0;
-		for (int i = 0; i < board.getDimension().getSize(); i++) {
-			final Piece p = board.getPiece(i);
+		do {
+			final Piece p = exp.getPiece();
 			if (p!=null) {
 				int inc = p.getKind().getValue();
 				if (p.getColor()==WHITE) {
@@ -27,12 +36,7 @@ public class BasicEvaluator implements ChessEvaluator {
 					points -= inc;
 				}
 			}
-		}
-		points = 100*points;
-		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
-			points = -points;
-		}
-//		System.out.println(points);
+		} while (exp.next());
 		return points;
 	}
 }

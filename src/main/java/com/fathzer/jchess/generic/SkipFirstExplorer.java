@@ -1,12 +1,11 @@
 package com.fathzer.jchess.generic;
 
-import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Direction;
 
 import lombok.Getter;
 
-public class SkipFirstExplorer implements BoardExplorer {
+class SkipFirstExplorer implements InternalBoardExplorer {
 	private final CoordinatesSystem cs;
 	@Getter
 	private int startPosition;
