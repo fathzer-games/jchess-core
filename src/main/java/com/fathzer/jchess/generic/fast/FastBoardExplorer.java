@@ -55,6 +55,6 @@ class FastBoardExplorer implements BoardExplorer {
 		if (piece != Piece.BORDER) {
 			return true;
 		}
-		return hasDirection ? false : next();
+		return !hasDirection && next();
 	}
 }
