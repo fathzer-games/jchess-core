@@ -97,8 +97,8 @@ class ChessBoardTest {
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final Board<Move> copy = board.create();
 		// Test valid enPassant is set
-		assertEquals(16, board.getEnPassant());
-		// Test en-passant catch clears the catched pawn and enPassant position
+		assertEquals(board.getCoordinatesSystem().getIndex("a6"), board.getEnPassant());
+		// Test en-passant catch clears the caught pawn and enPassant position
 		copy.copy(board);
 		copy.move(new SimpleMove(cs, "b5","a6"));
 		assertEquals(Piece.WHITE_PAWN, copy.getPiece(cs.getIndex("a6")));

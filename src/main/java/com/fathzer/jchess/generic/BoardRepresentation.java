@@ -72,10 +72,6 @@ public class BoardRepresentation {
 		this.pieces[index] = piece;
 	}
 	
-	boolean is(int index, Piece piece) {
-		return piece==pieces[index];
-	}
-	
 	public int getKingPosition(Color color) {
 		return kingPositions[color.ordinal()];
 	}

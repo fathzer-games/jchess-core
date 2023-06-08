@@ -32,7 +32,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 				if (p!=null) {
 					final int pos = exp.getIndex();
 					// We found a piece, if it is in the defender's team, it will be pined if there's an attacker in the same direction before any other piece.
-					if (color.equals(p.getColor()) && hasAttacker(exp, board, color.opposite(), d)) {
+					if (color.equals(p.getColor()) && hasAttacker(exp, color.opposite(), d)) {
 						pinedMap[pos] = d;
 					}
 					break;
@@ -41,7 +41,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 		}
 	}
 	
-	private boolean hasAttacker(BoardExplorer exp, Board<Move> board, Color attackerColor, Direction direction) {
+	private boolean hasAttacker(BoardExplorer exp, Color attackerColor, Direction direction) {
 		while (exp.next()) {
 			final Piece p = exp.getPiece();
 			// We found a piece, it is an attacker if it is not in the defender's team,

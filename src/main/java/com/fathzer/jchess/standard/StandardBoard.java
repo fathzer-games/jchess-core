@@ -25,7 +25,7 @@ public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 	}
 	
 	private void checkCastling(Castling castling) {
-		final int kingPosition = Color.BLACK.equals(castling.getColor()) ? 4 : 60;
+		final int kingPosition = getCoordinatesSystem().getIndex(Color.BLACK.equals(castling.getColor()) ? 0 : getDimension().getHeight()-1, 4);
 		if (getKingPosition(castling.getColor())!=kingPosition) {
 			throw new IllegalArgumentException("Invalid castling: King is not at its initial position");
 		}

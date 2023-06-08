@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import com.fathzer.games.perft.PerfT;
 import com.fathzer.games.perft.PerfTParser;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class PerfTTest {
+	@DisabledIfSystemProperty(named="perftDepth",matches = "0")
 	@Test
 	void test() throws IOException {
 		final int depth = Integer.getInteger("perftDepth", 1);

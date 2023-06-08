@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
@@ -18,7 +19,10 @@ class PinnedDetectorTest {
 		Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final PinnedDetector dd = new PinnedDetector(board);
-		assertFalse(IntStream.range(0, 64).anyMatch(p -> dd.apply(p)!=null));
+		final BoardExplorer exp = board.getExplorer();
+		do {
+			assertNull(dd.apply(exp.getIndex()));
+		} while (exp.next());
 		
 		
 		board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n2/pP6/1b6/B4P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
