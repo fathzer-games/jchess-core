@@ -20,13 +20,14 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 import com.fathzer.jchess.standard.CompactMoveList;
 
 import lombok.Getter;
 
 public abstract class ChessBoard implements Board<Move> {
 	@Getter
-	final BoardRepresentation board;
+	final FastBoardRepresentation board;
 	@Getter
 	private int enPassant;
 	@Getter
@@ -60,7 +61,7 @@ public abstract class ChessBoard implements Board<Move> {
 		if (activeColor==null) {
 			throw new NullPointerException();
 		}
-		this.board = new BoardRepresentation(dimension, pieces);
+		this.board = new FastBoardRepresentation(dimension, pieces);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
 		this.enPassant = -1;

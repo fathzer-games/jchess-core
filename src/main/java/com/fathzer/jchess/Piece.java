@@ -10,6 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum Piece {
+	BORDER(null,null,null), //TODO Should probably remove it (it is not really a piece)
 	BLACK_PAWN(Color.BLACK,PAWN,"p"), WHITE_PAWN(Color.WHITE,PAWN,"P"),
 	BLACK_ROOK(Color.BLACK,ROOK,"r"), WHITE_ROOK(Color.WHITE,ROOK,"R"),
 	BLACK_KNIGHT(Color.BLACK,KNIGHT,"n"), WHITE_KNIGHT(Color.WHITE,KNIGHT,"N"),
