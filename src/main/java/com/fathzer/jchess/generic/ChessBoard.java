@@ -1,5 +1,9 @@
 package com.fathzer.jchess.generic;
 
+import static com.fathzer.games.Color.*;
+import static com.fathzer.jchess.Piece.*;
+import static com.fathzer.jchess.Direction.*;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -16,33 +20,24 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
-import com.fathzer.jchess.ZobristKeyBuilder;
 import com.fathzer.jchess.standard.CompactMoveList;
 
 import lombok.Getter;
 
 public abstract class ChessBoard implements Board<Move> {
 	@Getter
-	private final Dimension dimension;
+	final BoardRepresentation board;
 	@Getter
-	private final CoordinatesSystem coordinatesSystem;
-
-	private final Piece[] pieces;
-	private final ZobristKeyBuilder zobrist;
+	private int enPassant;
 	@Getter
 	private Color activeColor;
 	private int castlings;
-	@Getter
-	private int enPassant;
 	@Getter
 	private int halfMoveCount;
 	@Getter
 	private int moveNumber;
 	@Getter
 	private long key;
-	private final int[] kingPositions=new int[2];
-	private final int[] kingPositionBackup=new int[2];
-	private final Piece[] backup;
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
 		this(Dimension.STANDARD, pieces);
@@ -62,30 +57,25 @@ public abstract class ChessBoard implements Board<Move> {
 	 * @param moveNumber The move number (1 at the beginning of the game)
 	 */
 	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassantColumn, int halfMoveCount, int moveNumber) {
-		this.dimension = dimension;
-		this.coordinatesSystem = new DefaultCoordinatesSystem(dimension);
-		zobrist = coordinatesSystem.getZobristKeyBuilder();
 		if (activeColor==null) {
 			throw new NullPointerException();
 		}
-		this.pieces = new Piece[dimension.getSize()];
-		this.backup = new Piece[this.pieces.length];
-		for (PieceWithPosition p : pieces) {
-			final int dest = coordinatesSystem.getIndex(p.getRow(), p.getColumn());
-			if (this.pieces[dest]!=null) {
-				throw new IllegalArgumentException ("More than one piece at "+dest+": "+this.pieces[dest]+"/"+p.getPiece());
-			}
-			this.pieces[dest]=p.getPiece();
-			if (PieceKind.KING.equals(p.getPiece().getKind())) {
-				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
-			}
-		}
+		this.board = new BoardRepresentation(dimension, pieces);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
 		this.enPassant = -1;
 		if (enPassantColumn>=0) {
-			final int enPassantIndex = coordinatesSystem.getIndex(getEnPassantRow(activeColor), enPassantColumn);
-			checkEnPassant(activeColor, enPassantIndex);
+			final int enPassantRow = Color.WHITE==activeColor ? 2 : board.getDimension().getHeight()-3;
+			final CoordinatesSystem cs = board.getCoordinatesSystem();
+			final int enPassantIndex = cs.getIndex(enPassantRow, enPassantColumn);
+			if (board.getPiece(enPassantIndex)!=null) {
+				throw new IllegalArgumentException("EnPassant cell is not empty");
+			}
+			final int pawnCell = WHITE==activeColor ? cs.nextRow(enPassantIndex) : cs.previousRow(enPassantIndex);
+			final Piece expected = WHITE==activeColor?BLACK_PAWN:WHITE_PAWN;
+			if (expected != board.getPiece(pawnCell)) {
+				throw new IllegalArgumentException("Attacked enPassant pawn is missing");
+			}
 			setEnPassant(enPassantIndex, activeColor);
 		}
 		if (halfMoveCount<0) {
@@ -96,21 +86,22 @@ public abstract class ChessBoard implements Board<Move> {
 			throw new IllegalArgumentException("Move number should be strictly positive");
 		}
 		this.moveNumber = moveNumber;
-		this.key = zobrist.get(this);
+		this.key = board.getZobrist().get(this);
 	}
 	
-	private int getEnPassantRow(Color activeColor) {
-		return Color.WHITE.equals(activeColor) ? 2 : dimension.getHeight()-3;
+	@Override
+	public Dimension getDimension() {
+		return board.getDimension();
 	}
 	
-	private void checkEnPassant(Color activeColor, int enPassant) {
-		if (this.pieces[enPassant]!=null) {
-			throw new IllegalArgumentException("EnPassant cell is not empty");
-		}
-		final int pawnCell = enPassant + (Color.WHITE.equals(activeColor) ? dimension.getWidth() : -dimension.getWidth());
-		if (!(Color.WHITE.equals(activeColor)?Piece.BLACK_PAWN:Piece.WHITE_PAWN).equals(this.pieces[pawnCell])) {
-			throw new IllegalArgumentException("Attacked enPassant pawn is missing");
-		}
+	@Override
+	public CoordinatesSystem getCoordinatesSystem() {
+		return board.getCoordinatesSystem();
+	}
+	
+	@Override
+	public BoardExplorer getExplorer() {
+		return board.getExplorer();
 	}
 	
 	/** Makes a move.
@@ -122,7 +113,7 @@ public abstract class ChessBoard implements Board<Move> {
 	public void move(Move move) {
 		final int from = move.getFrom();
 		int to = move.getTo();
-		Piece movedPiece = this.pieces[from];
+		Piece movedPiece = board.getPiece(from);
 		if (movedPiece==null) {
 			throw new IllegalArgumentException("No piece at "+from);
 		}
@@ -140,7 +131,7 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 		final boolean incHalfCount;
 		if (castling==null) {
-			final Piece erasedPiece = this.pieces[to];
+			final Piece erasedPiece = board.getPiece(to);
 			if (erasedPiece!=null && castlings!=0 && PieceKind.ROOK.equals(erasedPiece.getKind())) {
 				// Erase castling if needed when rook is captured
 				onRookEvent(to);
@@ -160,14 +151,13 @@ public abstract class ChessBoard implements Board<Move> {
 			moveNumber++;
 		}
 		activeColor = movedPiece.getColor().opposite();
-		key ^= zobrist.getTurnKey();
+		key ^= board.getZobrist().getTurnKey();
 	}
 	
 	@Override
 	public void moveCellsOnly (int from, int to) {
-		System.arraycopy(this.pieces, 0, backup, 0, pieces.length);
-		System.arraycopy(this.kingPositions, 0, this.kingPositionBackup, 0, kingPositions.length);
-		Piece p = this.pieces[from];
+		board.save();
+		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
 		Castling castling = null;
 		if (PieceKind.PAWN.equals(p.getKind())) {
@@ -182,8 +172,7 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public void restoreMoveCellsOnly() {
-		System.arraycopy(backup, 0, this.pieces, 0, pieces.length);
-		System.arraycopy(kingPositionBackup, 0, this.kingPositions, 0, kingPositions.length);
+		board.restore();
 	}
 	private Castling onKingMove(int from, int to, Color playingColor, boolean cellsOnly) {
 		final Castling castling = getCastling(from, to, playingColor);
@@ -196,57 +185,58 @@ public abstract class ChessBoard implements Board<Move> {
 			movePieces(from, to, initialRookPosition, rookDest, cellsOnly);
 		}
 		if (!cellsOnly) {
-			final boolean whitePlaying = Color.WHITE.equals(playingColor);
+			final boolean whitePlaying = WHITE.equals(playingColor);
 			eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
 					whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
 
 		}
-		kingPositions[playingColor.ordinal()] = to;
+		board.updateKingPosition(playingColor, to);
 		return castling;
 	}
 	
 	private void movePieces(int from1, int to1, int from2, int to2, boolean cellsOnly) {
-		final Piece moved1 = this.pieces[from1];
-		final Piece moved2 = this.pieces[from2];
+		final Piece moved1 = board.getPiece(from1);
+		final Piece moved2 = board.getPiece(from2);
 		if (!cellsOnly) {
 			// Update zobristKey
-			if (this.pieces[to1]!=null) {
-				key ^= zobrist.getKey(to1, this.pieces[to1]);
+			if (board.getPiece(to1)!=null) {
+				key ^= board.getZobrist().getKey(to1, board.getPiece(to1));
 			}
-			if (this.pieces[to2]!=null) {
-				key ^= zobrist.getKey(to2, this.pieces[to2]);
+			if (board.getPiece(to2)!=null) {
+				key ^= board.getZobrist().getKey(to2, board.getPiece(to2));
 			}
-			key ^= zobrist.getKey(from1, moved1);
-			key ^= zobrist.getKey(to1, moved1);
-			key ^= zobrist.getKey(from2, moved2);
-			key ^= zobrist.getKey(to2, moved2);
+			key ^= board.getZobrist().getKey(from1, moved1);
+			key ^= board.getZobrist().getKey(to1, moved1);
+			key ^= board.getZobrist().getKey(from2, moved2);
+			key ^= board.getZobrist().getKey(to2, moved2);
 		}
-		this.pieces[from1] = null;
-		this.pieces[from2] = null;
-		this.pieces[to1] = moved1;
-		this.pieces[to2] = moved2;
+		board.setPiece(from1, null);
+		board.setPiece(from2, null);
+		board.setPiece(to1, moved1);
+		board.setPiece(to2, moved2);
 	}
 	
 	private void move(int from, int to, boolean cellsOnly) {
-		final Piece moved = this.pieces[from];
+		final Piece moved = board.getPiece(from);
 		if (!cellsOnly) {
 			// Update zobristKey
-			final Piece erased = this.pieces[to];
+			final Piece erased = board.getPiece(to);
 			if (erased!=null) {
-				key ^= zobrist.getKey(to, erased);
+				key ^= board.getZobrist().getKey(to, erased);
 			}
-			key ^= zobrist.getKey(from, moved);
-			key ^= zobrist.getKey(to, moved);
+			key ^= board.getZobrist().getKey(from, moved);
+			key ^= board.getZobrist().getKey(to, moved);
 		}
-		this.pieces[to] = moved;
-		this.pieces[from] = null;
+		board.setPiece(to, moved);
+		board.setPiece(from, null);
 	}
 	
 	private void fastPawnMove(int to, Color playingColor) {
 		final boolean whiteMove = Color.WHITE.equals(playingColor);
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
-			pieces[enPassant+(whiteMove ? 1 : -1)*dimension.getWidth()] = null;
+			final CoordinatesSystem cs = board.getCoordinatesSystem();
+			board.setPiece(whiteMove ? cs.nextRow(enPassant) : cs.previousRow(to), null);
 		}
 	}
 	
@@ -267,15 +257,16 @@ public abstract class ChessBoard implements Board<Move> {
 	 * <br>This generic implementation returns the corner that contains the rook in standard chess
 	 */
 	@Override
-	public int getInitialRookPosition(Castling castling) {
+	public int getInitialRookPosition(Castling castling) { //TODO Possible to optimize using same structure as in chess960
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		if (Castling.BLACK_QUEEN_SIDE.equals(castling)) {
-			return 0;
+			return cs.getIndex(0, 0);
 		} else if (Castling.BLACK_KING_SIDE.equals(castling)) {
-			return dimension.getWidth()-1;
+			return cs.getIndex(0,board.getDimension().getWidth()-1);
 		} else if (Castling.WHITE_KING_SIDE.equals(castling)) {
-			return dimension.getSize()-1;
+			return cs.getIndex(board.getDimension().getHeight()-1,board.getDimension().getWidth()-1);
 		} else if (Castling.WHITE_QUEEN_SIDE.equals(castling)) {
-			return dimension.getSize() - dimension.getWidth();
+			return cs.getIndex(board.getDimension().getHeight()-1,0);
 		} else {
 			return -1;
 		}
@@ -283,31 +274,32 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public int getKingDestination(Castling castling) {
-		final int row = Color.WHITE==castling.getColor() ? dimension.getHeight()-1 : 0;
-		final int column = Side.QUEEN==castling.getSide() ? 2 : dimension.getWidth()-2;
-		return coordinatesSystem.getIndex(row, column);
+		final int row = Color.WHITE==castling.getColor() ? board.getDimension().getHeight()-1 : 0;
+		final int column = Side.QUEEN==castling.getSide() ? 2 : board.getDimension().getWidth()-2;
+		return board.getCoordinatesSystem().getIndex(row, column);
 	}
 
 	private void pawnMove(int from, int to, Piece promotion) {
-		final Piece pawn = pieces[from];
+		final Piece pawn = board.getPiece(from);
 		if (promotion!=null) {
-			pieces[from] = promotion;
+			board.setPiece(from, promotion);
 			// Promotion => update key as if pawn is replaced by the promotion
-			key ^= zobrist.getKey(from, pieces[from]);
-			key ^= zobrist.getKey(from, pawn);
+			key ^= board.getZobrist().getKey(from, promotion);
+			key ^= board.getZobrist().getKey(from, pawn);
 		}
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
-			final boolean whiteMove = Color.WHITE.equals(pawn.getColor());
-			final int pos = enPassant+(whiteMove ? 1 : -1)*dimension.getWidth();
-			key ^= zobrist.getKey(pos, pieces[pos]);
-			pieces[pos] = null;
+			final boolean whiteMove = WHITE == pawn.getColor();
+			final int pos = whiteMove ? board.getCoordinatesSystem().nextRow(enPassant) : board.getCoordinatesSystem().previousRow(enPassant);
+			key ^= board.getZobrist().getKey(pos, board.getPiece(pos));
+			board.setPiece(pos, null);
 		}
 		
-		final int rowOffset = coordinatesSystem.getRow(to) - coordinatesSystem.getRow(from);
+		final int rowOffset = board.getCoordinatesSystem().getRow(to) - board.getCoordinatesSystem().getRow(from);
 		if (Math.abs(rowOffset)==2) {
 			// Make en-passant available for opponent
-			setEnPassant(from + rowOffset*dimension.getWidth()/2, pawn.getColor().opposite());
+			final boolean whiteMove = WHITE == pawn.getColor();
+			setEnPassant(whiteMove ? board.getCoordinatesSystem().nextRow(to) : board.getCoordinatesSystem().previousRow(to), pawn.getColor().opposite());
 		} else {
 			clearEnPassant();
 		}
@@ -319,7 +311,7 @@ public abstract class ChessBoard implements Board<Move> {
 	private void eraseCastlings(Castling... castlings) {
 		for (Castling castling : castlings) {
 			if ((this.castlings & castling.getMask()) != 0) {
-				key ^= zobrist.getKey(castling);
+				key ^= board.getZobrist().getKey(castling);
 				this.castlings -= castling.getMask();
 			}
 		}
@@ -328,86 +320,46 @@ public abstract class ChessBoard implements Board<Move> {
 	private void setEnPassant(int pos, Color catchingColor) {
 		if (enPassant>=0) {
 			// clear previous en passant key
-			key ^= zobrist.getKey(enPassant);
+			key ^= board.getZobrist().getKey(enPassant);
 		}
 		if (isCatcheableEnPassant(pos, catchingColor)) {
 			this.enPassant = pos;
-			key ^= zobrist.getKey(enPassant);
+			key ^= board.getZobrist().getKey(enPassant);
 		} else {
 			clearEnPassant();
 		}
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final BoardExplorer exp = coordinatesSystem.buildExplorer(pos);
+		final BoardExplorer exp = board.getExplorer();
 		if (Color.WHITE==catchingColor) {
-			return isCatcheableEnPassant(exp, Direction.SOUTH_EAST, Piece.WHITE_PAWN) || isCatcheableEnPassant(exp, Direction.SOUTH_WEST, Piece.WHITE_PAWN);
+			return isCatcheableEnPassant(exp, pos, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, pos, SOUTH_WEST, WHITE_PAWN);
 		} else {
-			return isCatcheableEnPassant(exp, Direction.NORTH_EAST, Piece.BLACK_PAWN) || isCatcheableEnPassant(exp, Direction.NORTH_WEST, Piece.BLACK_PAWN);
+			return isCatcheableEnPassant(exp, pos, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, pos, NORTH_WEST, BLACK_PAWN);
 		}
 	}
 
-	private boolean isCatcheableEnPassant(final BoardExplorer exp, final Direction direction, Piece catchingPawn) {
-		exp.start(direction);
-		return exp.hasNext() && is(exp.next(), catchingPawn);
-	}
-	
-	private boolean is(int pos, Piece piece) {
-		return piece==pieces[pos];
+	private boolean isCatcheableEnPassant(final BoardExplorer exp, int index, final Direction direction, Piece catchingPawn) {
+		exp.setPosition(index);
+		exp.setDirection(direction);
+		return exp.next() && catchingPawn==exp.getPiece();
 	}
 	
 	private void clearEnPassant() {
 		if (enPassant>=0) {
-			key ^= zobrist.getKey(enPassant);
+			key ^= board.getZobrist().getKey(enPassant);
 		}
 		this.enPassant = -1;
 	}
 
 	@Override
 	public String toString() {
-		final StringBuilder b = new StringBuilder();
-		for (int i = 0; i < dimension.getSize() ; i++) {
-			final boolean newLine = i%dimension.getWidth()==0;
-			if (newLine) {
-				if (i!=0) {
-					b.append('\n');
-				}
-				newLine(b, dimension.getHeight() - i/dimension.getWidth());
-			} else {
-				b.append(' ');
-			}
-			b.append(getNotation(pieces[i]));
-		}
-		b.append(getLastLine());
-		return b.toString();
-	}
-	
-	private CharSequence getLastLine() {
-		StringBuilder b = new StringBuilder("\n ");
-		char coord = 'a';
-		for (int j = 0; j < dimension.getWidth(); j++) {
-			b.append(' ');
-			b.append(coord);
-			coord++;
-		}
-		return b;
-	}
-
-	protected void newLine(final StringBuilder b, int i) {
-		b.append(i).append(' ');
+		return board.toString();
 	}
 	
 	@Override
 	public Piece getPiece(int position) {
-		return this.pieces[position];
-	}
-	
-	private String getNotation(Piece p) {
-		if (p==null) {
-			return " ";
-		} else {
-			return p.getNotation();
-		}
+		return board.getPiece(position);
 	}
 	
 	@Override
@@ -420,7 +372,7 @@ public abstract class ChessBoard implements Board<Move> {
 	 */
 	@Override
 	public void copy(Board<Move> other) {
-		if (!dimension.equals(other.getDimension())) {
+		if (!getDimension().equals(other.getDimension())) {
 			throw new IllegalArgumentException("Can't copy board with different dimension");
 		}
 		if (other instanceof ChessBoard) {
@@ -429,8 +381,7 @@ public abstract class ChessBoard implements Board<Move> {
 			this.halfMoveCount = other.getHalfMoveCount();
 			this.moveNumber = other.getMoveNumber();
 			this.castlings = ((ChessBoard)other).castlings;
-			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
-			System.arraycopy(((ChessBoard)other).pieces, 0, pieces, 0, pieces.length);
+			this.board.copy(((ChessBoard)other).board);
 			this.key = other.getKey();
 		} else {
 			throw new UnsupportedOperationException();
@@ -439,11 +390,12 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public int getKingPosition(Color color) {
-		return kingPositions[color.ordinal()];
+		return board.getKingPosition(color);
 	}
 
 	@Override
 	public ChessGameState newMoveList() {
-		return Dimension.STANDARD.equals(dimension) ? new CompactMoveList() : new BasicMoveList();
+		//TODO MoveList can represent move with bigger board
+		return Dimension.STANDARD.equals(board.getDimension()) ? new CompactMoveList() : new BasicMoveList();
 	}
 }

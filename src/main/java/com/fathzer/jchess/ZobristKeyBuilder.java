@@ -10,6 +10,7 @@ public class ZobristKeyBuilder {
 	private static int lastSize=-1;
 	private static ZobristKeyBuilder lastBuilder;
 	
+	private final int boardSize;
 	private final long[][] piecesTable;
 	private final long[] enPassantKeys;
 	private final long[] castlingKeys;
@@ -25,6 +26,7 @@ public class ZobristKeyBuilder {
 	}
 	
 	private ZobristKeyBuilder(int boardSize) {
+		this.boardSize = boardSize;
 		Random random = new Random(0);
 		piecesTable = new long[boardSize][Piece.values().length];
 		populatePiecesTable(random);
@@ -37,7 +39,7 @@ public class ZobristKeyBuilder {
 
 	public long get(Board<?> board) {
 		long result = 0;
-		for (int pos = 0; pos < board.getDimension().getSize(); pos++) {
+		for (int pos = 0; pos < boardSize; pos++) {
 			final Piece piece = board.getPiece(pos);
 			if (piece != null) {
 				result ^= piecesTable[pos][piece.ordinal()];

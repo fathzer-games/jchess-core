@@ -22,42 +22,42 @@ class AttackDetector {
 	}
 	
 	public boolean isAttacked(int position, Color color) {
-		final BoardExplorer explorer = board.getCoordinatesSystem().buildExplorer(position);
+		final BoardExplorer explorer = board.getExplorer();
 
 		// check for knight
-		if (check(explorer, PieceKind.KNIGHT.getDirections(), 1, color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {
+		if (check(explorer, position, PieceKind.KNIGHT.getDirections(), 1, color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {
 			return true;
 		}
 		// check for KING threads
-		if (check(explorer, PieceKind.KING.getDirections(), 1, color, p -> PieceKind.KING.equals(p.getKind()))) {
+		if (check(explorer, position, PieceKind.KING.getDirections(), 1, color, p -> PieceKind.KING.equals(p.getKind()))) {
 			return true;
 		}
 		
 		// check for others horizontal or vertical threads from ROOK and QUEEN
-		if (check(explorer, PieceKind.ROOK.getDirections(), Integer.MAX_VALUE, color, p -> PieceKind.ROOK.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
+		if (check(explorer, position, PieceKind.ROOK.getDirections(), Integer.MAX_VALUE, color, p -> PieceKind.ROOK.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
 			return true;
 		}
 		
 		// check for others diagonal threads from BISHOP and QUEEN
-		if (check(explorer, PieceKind.BISHOP.getDirections(), Integer.MAX_VALUE, color, p -> PieceKind.BISHOP.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
+		if (check(explorer, position, PieceKind.BISHOP.getDirections(), Integer.MAX_VALUE, color, p -> PieceKind.BISHOP.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
 			return true;
 		}
 
 		// Finally check for pawns threats
 		Collection<Direction> directions = Color.BLACK.equals(color) ? BLACK_PAWN_THREAT_DIRECTIONS : WHITE_PAWN_THREAT_DIRECTIONS;
-		return check(explorer, directions, 1, color, p -> PieceKind.PAWN.equals(p.getKind()));
+		return check(explorer, position, directions, 1, color, p -> PieceKind.PAWN.equals(p.getKind()));
 	}
 	
-	private boolean check(BoardExplorer explorer, Collection<Direction> directions, int maxIteration, Color color, Predicate<Piece> validator) {
-		return directions.stream().anyMatch(d -> check(explorer, d, maxIteration, color, validator));
+	private boolean check(BoardExplorer explorer, int index, Collection<Direction> directions, int maxIteration, Color color, Predicate<Piece> validator) {
+		return directions.stream().anyMatch(d -> check(explorer, index, d, maxIteration, color, validator));
 	}
 	
-	private boolean check(BoardExplorer explorer, Direction direction, int maxIteration, Color color, Predicate<Piece> validator)  {
-		explorer.start(direction);
+	private boolean check(BoardExplorer explorer, int index, Direction direction, int maxIteration, Color color, Predicate<Piece> validator)  {
+		explorer.setPosition(index);
+		explorer.setDirection(direction);
 		int iteration = 0;
-		while (explorer.hasNext()) {
-			final int target = explorer.next();
-			final Piece piece = board.getPiece(target);
+		while (explorer.next()) {
+			final Piece piece = explorer.getPiece();
 			boolean isFree = piece==null;
 			if (!isFree && piece.getColor().equals(color)) {
 				return validator.test(piece);

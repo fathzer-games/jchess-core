@@ -77,8 +77,7 @@ public class CompactMoveList implements ChessGameState {
 		
 		@Override
 		public String toString() {
-			throw new UnsupportedOperationException();
-//TODO			return ""+getFrom()+"-"+getTo()+(promotedTo()==null?"":promotedTo().toString());
+			return ""+getFrom()+"-"+getTo()+(promotedTo()==null?"":promotedTo().toString());
 		}
 	}
 

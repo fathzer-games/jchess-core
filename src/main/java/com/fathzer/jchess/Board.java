@@ -14,6 +14,8 @@ public interface Board<M> {
 	*/
 	CoordinatesSystem getCoordinatesSystem();
 	
+	BoardExplorer getExplorer();
+	
 	Color getActiveColor();
 	
 	/** Gets the enPassant cell

@@ -8,6 +8,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
+import java.util.Arrays;
 import java.util.function.IntFunction;
 
 /** A class to detect pinned pieces.
@@ -19,14 +20,17 @@ public class PinnedDetector implements IntFunction<Direction> {
 	 
 	public PinnedDetector(Board<Move> board) {
 		final Color color = board.getActiveColor();
-		final BoardExplorer exp = board.getCoordinatesSystem().buildExplorer(board.getKingPosition(color));
-		pinedMap = new Direction[board.getDimension().getSize()];
+		final BoardExplorer exp = ((ChessBoard)board).getBoard().getExplorer();
+		final int startPos = board.getKingPosition(color);
+		pinedMap = ((ChessBoard)board).getBoard().getPinnedMap();
+		Arrays.fill(pinedMap, null);
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
-			exp.start(d);
-			while (exp.hasNext()) {
-				final int pos = exp.next();
-				final Piece p = board.getPiece(pos);
+			exp.setPosition(startPos);
+			exp.setDirection(d);
+			while (exp.next()) {
+				final Piece p = exp.getPiece();
 				if (p!=null) {
+					final int pos = exp.getIndex();
 					// We found a piece, if it is in the defender's team, it will be pined if there's an attacker in the same direction before any other piece.
 					if (color.equals(p.getColor()) && hasAttacker(exp, board, color.opposite(), d)) {
 						pinedMap[pos] = d;
@@ -38,9 +42,8 @@ public class PinnedDetector implements IntFunction<Direction> {
 	}
 	
 	private boolean hasAttacker(BoardExplorer exp, Board<Move> board, Color attackerColor, Direction direction) {
-		while (exp.hasNext()) {
-			final int pos = exp.next();
-			final Piece p = board.getPiece(pos);
+		while (exp.next()) {
+			final Piece p = exp.getPiece();
 			// We found a piece, it is an attacker if it is not in the defender's team,
 			// and it can attack the king (it is a sliding piece, and it slides in the right direction).
 			if (p!=null) {
