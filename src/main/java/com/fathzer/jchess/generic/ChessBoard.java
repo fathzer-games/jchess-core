@@ -331,17 +331,18 @@ public abstract class ChessBoard implements Board<Move> {
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final InternalBoardExplorer exp = new SkipFirstExplorer(getCoordinatesSystem(), pos);
+		final BoardExplorer exp = board.getExplorer();
 		if (Color.WHITE==catchingColor) {
-			return isCatcheableEnPassant(exp, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, SOUTH_WEST, WHITE_PAWN);
+			return isCatcheableEnPassant(exp, pos, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, pos, SOUTH_WEST, WHITE_PAWN);
 		} else {
-			return isCatcheableEnPassant(exp, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, NORTH_WEST, BLACK_PAWN);
+			return isCatcheableEnPassant(exp, pos, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, pos, NORTH_WEST, BLACK_PAWN);
 		}
 	}
 
-	private boolean isCatcheableEnPassant(final InternalBoardExplorer exp, final Direction direction, Piece catchingPawn) {
-		exp.start(direction);
-		return exp.hasNext() && board.is(exp.next(), catchingPawn);
+	private boolean isCatcheableEnPassant(final BoardExplorer exp, int index, final Direction direction, Piece catchingPawn) {
+		exp.setPosition(index);
+		exp.setDirection(direction);
+		return exp.next() && catchingPawn==exp.getPiece();
 	}
 	
 	private void clearEnPassant() {

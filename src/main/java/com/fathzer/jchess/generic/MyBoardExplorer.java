@@ -11,8 +11,6 @@ class MyBoardExplorer implements BoardExplorer {
 	private final CoordinatesSystem cs;
 	private final Piece[] pieces;
 	@Getter
-	private int startPosition;
-	@Getter
 	private int index;
 	@Getter
 	private Piece piece;
@@ -27,16 +25,15 @@ class MyBoardExplorer implements BoardExplorer {
 		this.cs = cs;
 		this.pieces = pieces;
 		setDirection(null);
-		reset(startPosition);
+		setPosition(startPosition);
 	}
 	
 	@Override
-	public void reset(int index) {
-		this.startPosition = index;
-		this.index = startPosition;
-		piece = pieces[startPosition];
-		this.row = cs.getRow(startPosition);
-		this.column = cs.getColumn(startPosition);
+	public void setPosition(int index) {
+		this.index = index;
+		piece = pieces[index];
+		this.row = cs.getRow(index);
+		this.column = cs.getColumn(index);
 	}
 	
 	@Override

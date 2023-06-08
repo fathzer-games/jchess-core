@@ -94,7 +94,7 @@ public class BoardRepresentation {
 				b.append('\n');
 			}
 			b.append(getDimension().getHeight() - i);
-			exp.reset(coordinatesSystem.getIndex(i, 0));
+			exp.setPosition(coordinatesSystem.getIndex(i, 0));
 			do {
 				b.append(' ');
 				b.append(getNotation(exp.getPiece()));
@@ -123,8 +123,10 @@ public class BoardRepresentation {
 		}
 	}
 
-
 	BoardExplorer getExplorer() {
-		return new MyBoardExplorer(pieces, coordinatesSystem, 0);
+		return getExplorer(0);
+	}
+	BoardExplorer getExplorer(int pos) {
+		return new MyBoardExplorer(pieces, coordinatesSystem, pos);
 	}
 }

@@ -21,7 +21,6 @@ It appears to be the case for all platforms I've tested. So, the test is deactiv
 To activate this test, which is pretty long (8s on my small J4125 powered machine), set the **rndGenTest** system property to true.
 
 ## TODO
-- Remove InternalBoardExplorer and use BoardExplorer instead.
 - Finish FENParser for Chess960
 - Not sure CompactMoveList.sort is really useful, even if it is effectively called (It does not seems to use any capture information
 - General things ... if it does not alter performance too much:

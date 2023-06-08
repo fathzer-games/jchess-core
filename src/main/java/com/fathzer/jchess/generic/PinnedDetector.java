@@ -25,7 +25,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 		pinedMap = ((ChessBoard)board).getBoard().getPinnedMap();
 		Arrays.fill(pinedMap, null);
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
-			exp.reset(startPos);
+			exp.setPosition(startPos);
 			exp.setDirection(d);
 			while (exp.next()) {
 				final Piece p = exp.getPiece();
