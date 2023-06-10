@@ -2,8 +2,8 @@ package com.fathzer.jchess.generic;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Direction;
+import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
@@ -20,13 +20,11 @@ public class PinnedDetector implements IntFunction<Direction> {
 	 
 	public PinnedDetector(Board<Move> board) {
 		final Color color = board.getActiveColor();
-		final BoardExplorer exp = ((ChessBoard)board).getBoard().getExplorer();
-		final int startPos = board.getKingPosition(color);
+		final DirectionExplorer exp = board.getDirectionExplorer(board.getKingPosition(color));
 		pinedMap = ((ChessBoard)board).getBoard().getPinnedMap();
 		Arrays.fill(pinedMap, null);
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
-			exp.setPosition(startPos);
-			exp.setDirection(d);
+			exp.start(d);
 			while (exp.next()) {
 				final Piece p = exp.getPiece();
 				if (p!=null) {
@@ -41,7 +39,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 		}
 	}
 	
-	private boolean hasAttacker(BoardExplorer exp, Color attackerColor, Direction direction) {
+	private boolean hasAttacker(DirectionExplorer exp, Color attackerColor, Direction direction) {
 		while (exp.next()) {
 			final Piece p = exp.getPiece();
 			// We found a piece, it is an attacker if it is not in the defender's team,

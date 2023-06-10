@@ -95,9 +95,9 @@ class ChessBoardTest {
 		// Test Pawn move
 		Board<Move> board = FENParser.from("r1b1k2r/1pppqp1p/2n2n1b/pP6/2N1Q3/B2B3N/P2PPPp1/R3K2R w KQkq a6 2 10");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final Board<Move> copy = board.create();
 		// Test valid enPassant is set
 		assertEquals(board.getCoordinatesSystem().getIndex("a6"), board.getEnPassant());
+		final Board<Move> copy = board.create();
 		// Test en-passant catch clears the caught pawn and enPassant position
 		copy.copy(board);
 		copy.move(new SimpleMove(cs, "b5","a6"));

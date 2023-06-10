@@ -14,6 +14,7 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Castling.Side;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
+import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -27,7 +28,7 @@ import lombok.Getter;
 
 public abstract class ChessBoard implements Board<Move> {
 	@Getter
-	final FastBoardRepresentation board;
+	final BoardRepresentation board;
 	@Getter
 	private int enPassant;
 	@Getter
@@ -104,7 +105,12 @@ public abstract class ChessBoard implements Board<Move> {
 	public BoardExplorer getExplorer() {
 		return board.getExplorer();
 	}
-	
+
+	@Override
+	public DirectionExplorer getDirectionExplorer(int index) {
+		return board.getDirectionExplorer(index);
+	}
+
 	/** Makes a move.
 	 * <br>WARNING, this method does not verify the move is valid.
 	 * @param move a Move.
@@ -332,17 +338,16 @@ public abstract class ChessBoard implements Board<Move> {
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final BoardExplorer exp = board.getExplorer();
+		final DirectionExplorer exp = board.getDirectionExplorer(pos);
 		if (Color.WHITE==catchingColor) {
-			return isCatcheableEnPassant(exp, pos, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, pos, SOUTH_WEST, WHITE_PAWN);
+			return isCatcheableEnPassant(exp, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, SOUTH_WEST, WHITE_PAWN);
 		} else {
-			return isCatcheableEnPassant(exp, pos, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, pos, NORTH_WEST, BLACK_PAWN);
+			return isCatcheableEnPassant(exp, NORTH_EAST, BLACK_PAWN) || isCatcheableEnPassant(exp, NORTH_WEST, BLACK_PAWN);
 		}
 	}
 
-	private boolean isCatcheableEnPassant(final BoardExplorer exp, int index, final Direction direction, Piece catchingPawn) {
-		exp.setPosition(index);
-		exp.setDirection(direction);
+	private boolean isCatcheableEnPassant(final DirectionExplorer exp, final Direction direction, Piece catchingPawn) {
+		exp.start(direction);
 		return exp.next() && catchingPawn==exp.getPiece();
 	}
 	

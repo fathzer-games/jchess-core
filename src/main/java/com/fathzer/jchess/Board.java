@@ -15,6 +15,7 @@ public interface Board<M> {
 	CoordinatesSystem getCoordinatesSystem();
 	
 	BoardExplorer getExplorer();
+	DirectionExplorer getDirectionExplorer(int index);
 	
 	Color getActiveColor();
 	

@@ -7,6 +7,7 @@ import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
+import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
@@ -14,7 +15,7 @@ import com.fathzer.jchess.ZobristKeyBuilder;
 
 import lombok.Getter;
 
-public class BoardRepresentation {
+public abstract class BoardRepresentation {
 	@Getter
 	private final Dimension dimension;
 	@Getter
@@ -22,19 +23,18 @@ public class BoardRepresentation {
 	@Getter
 	private final ZobristKeyBuilder zobrist;
 
-	private final Piece[] pieces;
+	protected final Piece[] pieces;
 	@Getter
 	private final Direction[] pinnedMap;
 	private final Piece[] backup;
 	private final int[] kingPositions=new int[2];
 	private final int[] kingPositionBackup=new int[2];
 	
-	public BoardRepresentation(Dimension dimension, List<PieceWithPosition> pieces) {
-		this.dimension = dimension;
-		this.coordinatesSystem = new DefaultCoordinatesSystem(dimension);
-		final int size = dimension.getHeight()*dimension.getWidth();
-		zobrist = ZobristKeyBuilder.get(size);
-		this.pieces = new Piece[size];
+	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension, List<PieceWithPosition> pieces) {
+		this.dimension = coordinatesSystem.getDimension();
+		this.coordinatesSystem = coordinatesSystem;
+		zobrist = ZobristKeyBuilder.get(arrayDimension);
+		this.pieces = new Piece[arrayDimension];
 		this.backup = new Piece[this.pieces.length];
 		this.pinnedMap = new Direction[this.pieces.length];
 		for (PieceWithPosition p : pieces) {
@@ -76,25 +76,22 @@ public class BoardRepresentation {
 		return kingPositions[color.ordinal()];
 	}
 	
-	void updateKingPosition(Color kingsColor, int index) {
+	public void updateKingPosition(Color kingsColor, int index) {
 		kingPositions[kingsColor.ordinal()] = index;
 	}
 	
 	@Override
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
-		final BoardExplorer exp = getExplorer();
-		exp.setDirection(Direction.EAST);
 		for (int i = 0; i < getDimension().getHeight() ; i++) {
 			if (i!=0) {
 				b.append('\n');
 			}
 			b.append(getDimension().getHeight() - i);
-			exp.setPosition(coordinatesSystem.getIndex(i, 0));
-			do {
+			for (int j = 0; j < getDimension().getWidth(); j++) {
 				b.append(' ');
-				b.append(getNotation(exp.getPiece()));
-			} while (exp.next());
+				b.append(getNotation(getPiece(coordinatesSystem.getIndex(i, j))));
+			}
 		}
 		b.append(getLastLine());
 		return b.toString();
@@ -119,10 +116,6 @@ public class BoardRepresentation {
 		}
 	}
 
-	BoardExplorer getExplorer() {
-		return getExplorer(0);
-	}
-	BoardExplorer getExplorer(int pos) {
-		return new MyBoardExplorer(pieces, coordinatesSystem, pos);
-	}
+	public abstract BoardExplorer getExplorer();
+	public abstract DirectionExplorer getDirectionExplorer(int pos);
 }

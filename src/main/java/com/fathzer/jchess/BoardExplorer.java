@@ -3,13 +3,16 @@ package com.fathzer.jchess;
 /** A class that allows to browse board content.
  */
 public interface BoardExplorer {
-	/** Set the position of the explorer.
-	 * @param index The position. The behavior is unspecified ff the index is not in the board.
-	 * @see CoordinatesSystem 
+	/** Gets the current cell's index.
+	 * @return an int
 	 */
-	void setPosition(int index);
-	void setDirection(Direction direction);
-	boolean next();
 	int getIndex();
+	/** Gets the piece in the current cell.
+	 * @return A piece or null if is empty
+	 */
 	Piece getPiece();
+	/** Moves to next cell
+	 * @return false if there's no more cell
+	 */
+	boolean next();
 }

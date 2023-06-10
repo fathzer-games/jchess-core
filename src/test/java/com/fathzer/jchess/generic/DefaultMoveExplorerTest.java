@@ -9,9 +9,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
+import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.util.BiIntPredicate;
@@ -28,34 +28,34 @@ class DefaultMoveExplorerTest {
 		final BiIntPredicate v = (s,d) -> board.getPiece(d)==null || !board.getPiece(d).getColor().equals(board.getPiece(s).getColor());
 		
 		ChessGameState moves = new BasicMoveList();
+		final DirectionExplorer exp = board.getDirectionExplorer(-1);
 		// The rook in a1 can't move
-		int index = cs.getIndex("a1");
-		final BoardExplorer exp = board.getExplorer();
-		explorer.addMoves(moves, exp, index, NORTH, Integer.MAX_VALUE, v);
-		explorer.addMoves(moves, exp, index, SOUTH, Integer.MAX_VALUE, v);
-		explorer.addMoves(moves, exp, index, WEST, Integer.MAX_VALUE, v);
-		explorer.addMoves(moves, exp, index, EAST, Integer.MAX_VALUE, v);
+		exp.reset(cs.getIndex("a1"));
+		explorer.addMoves(moves, exp, NORTH, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, SOUTH, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, WEST, Integer.MAX_VALUE, v);
+		explorer.addMoves(moves, exp, EAST, Integer.MAX_VALUE, v);
 		assertEquals(0, moves.size(), U.to(moves, cs).toString());
 
 		// The bishop in d3 can only move to c4
-		index = cs.getIndex("d3");
-		explorer.addMoves(moves, exp, index, NORTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, SOUTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, SOUTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, NORTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
+		exp.reset(cs.getIndex("d3"));
+		explorer.addMoves(moves, exp, NORTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, SOUTH_WEST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, SOUTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
+		explorer.addMoves(moves, exp, NORTH_EAST, Integer.MAX_VALUE, v, DEFAULT);
 		assertEquals(Set.of("c4"), U.to(moves, cs));
 
 		moves = new BasicMoveList();
 		// The bishop in c6 can make 6 moves
-		index = cs.getIndex("c6");
-		explorer.addMoves(moves, exp, index, KNIGHT1, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT2, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT3, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT4, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT5, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT6, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT7, 1, v, DEFAULT);
-		explorer.addMoves(moves, exp, index, KNIGHT8, 1, v, DEFAULT);
+		exp.reset(cs.getIndex("c6"));
+		explorer.addMoves(moves, exp, KNIGHT1, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT2, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT3, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT4, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT5, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT6, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT7, 1, v, DEFAULT);
+		explorer.addMoves(moves, exp, KNIGHT8, 1, v, DEFAULT);
 		assertEquals(Set.of("a7","b8","d8","e5","d4","b4"), U.to(moves, cs));
 	}
 }

@@ -1,15 +1,15 @@
-package com.fathzer.jchess.generic;
+package com.fathzer.jchess.generic.basic;
 
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Dimension;
 
 import lombok.Getter;
 
-class DefaultCoordinatesSystem implements CoordinatesSystem {
+class BasicCoordinatesSystem implements CoordinatesSystem {
 	@Getter
 	private final Dimension dimension;
 	
-	DefaultCoordinatesSystem(Dimension dimension) {
+	BasicCoordinatesSystem(Dimension dimension) {
 		this.dimension = dimension;
 	}
 
