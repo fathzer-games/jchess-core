@@ -20,14 +20,14 @@ class MoveValidator {
 
 		final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
 		final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
-		this.kingValidator = isCheck ? (s,d) -> isDestCellOk(board, s, d) && kingSafeAfterMove.test(s, d) : (s,d) -> isDestCellOk(board, s, d) && !attacks.isAttacked(d, opponent);
-		this.defaultValidator = (s,d) -> isDestCellOk(board, s, d) && optimizedKingSafe.test(s, d);
+		this.kingValidator = isCheck ? (s,d) -> isDestCellOk(board, d) && kingSafeAfterMove.test(s, d) : (s,d) -> isDestCellOk(board, d) && !attacks.isAttacked(d, opponent);
+		this.defaultValidator = (s,d) -> isDestCellOk(board, d) && optimizedKingSafe.test(s, d);
 		this.pawnNoCatchValidator = (s,d) -> board.getPiece(d)==null && optimizedKingSafe.test(s, d);
 		this.pawnCatchValidator = new PawnCatchValidator(board, kingSafeAfterMove, optimizedKingSafe);
 	}
 	
-	private boolean isDestCellOk(Board<Move> board, int s, int d) {
-		return board.getPiece(d)==null || !board.getPiece(d).getColor().equals(board.getPiece(s).getColor());
+	private boolean isDestCellOk(Board<Move> board, int d) {
+		return board.getPiece(d)==null || !board.getPiece(d).getColor().equals(board.getActiveColor());
 	}
 
 	/** Gets a predicate that checks the destination is free and king is safe (used when pawn is moving vertically).
