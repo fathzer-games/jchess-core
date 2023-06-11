@@ -120,9 +120,20 @@ public class StandardChessRules implements ChessRules {
 		if (piece!=null) {
 			tools.exp.reset(from);
 			if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
-				piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addAllMoves(list, tools.exp, d, tools.mv.getDefault()));
+				final Direction pinnedDirection = tools.checkManager.apply(from);
+				if (pinnedDirection==null) {
+					piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addAllMoves(list, tools.exp, d, tools.mv.getDefault()));
+				} else {
+					if (piece.getKind().isSliding(pinnedDirection)) {
+						Tools.EXPLORER.addAllMoves(list, tools.exp, pinnedDirection, tools.mv.getDefault());
+						Tools.EXPLORER.addAllMoves(list, tools.exp, pinnedDirection.getOpposite(), tools.mv.fastValidator);
+					}
+				}
 			} else if (PieceKind.KNIGHT.equals(piece.getKind())) {
-				piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addMove(list, tools.exp, d, tools.mv.getDefault()));
+				if (tools.checkManager.apply(from)==null) {
+					// A pinned knight can never move 
+					piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addMove(list, tools.exp, d, tools.mv.fastValidator));
+				}
 			} else if (PieceKind.KING.equals(piece.getKind())) {
 				addKingMoves(list, piece, tools);
 			} else if (PieceKind.PAWN.equals(piece.getKind())) {

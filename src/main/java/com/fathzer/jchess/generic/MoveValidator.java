@@ -9,17 +9,19 @@ import com.fathzer.jchess.util.BiIntPredicate;
 
 class MoveValidator {
 	private final BiIntPredicate defaultValidator;
+	final BiIntPredicate fastValidator;
 	private final BiIntPredicate kingValidator;
 	private final BiIntPredicate pawnCatchValidator;
 	private final BiIntPredicate pawnNoCatchValidator;
 
 	MoveValidator(Board<Move> board, AttackDetector attacks, PinnedDetector detector) {
 		final Color opponent = board.getActiveColor().opposite();
-		boolean isCheck = detector.getCheckCount()>0;
+		final boolean isCheck = detector.getCheckCount()>0;
 		final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
 
 		final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
 		final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
+		this.fastValidator = (s,d) -> isDestCellOk(board, d) && (!isCheck || kingSafeAfterMove.test(s,d));
 		this.kingValidator = isCheck ? (s,d) -> isDestCellOk(board, d) && kingSafeAfterMove.test(s, d) : (s,d) -> isDestCellOk(board, d) && !attacks.isAttacked(d, opponent);
 		this.defaultValidator = (s,d) -> isDestCellOk(board, d) && optimizedKingSafe.test(s, d);
 		this.pawnNoCatchValidator = (s,d) -> board.getPiece(d)==null && optimizedKingSafe.test(s, d);
