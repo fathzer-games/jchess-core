@@ -18,7 +18,7 @@ class PinnedDetectorTest {
 	void test() {
 		Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final PinnedDetector dd = new PinnedDetector(board);
+		PinnedDetector dd = new PinnedDetector(board);
 		final BoardExplorer exp = board.getExplorer();
 		do {
 			assertNull(dd.apply(exp.getIndex()));
@@ -30,5 +30,17 @@ class PinnedDetectorTest {
 		assertEquals(Direction.NORTH, dd2.apply(cs.getIndex("e2")));
 		assertEquals(Direction.NORTH_WEST, dd2.apply(cs.getIndex("d2")));
 		assertFalse(IntStream.range(0, 64).filter(p -> p!=51 && p!=52).anyMatch(p -> dd2.apply(p)!=null));
+		
+		board = FENParser.from("4k3/8/8/8/8/8/3PP3/r3K2R w K - 0 1");
+		dd = new PinnedDetector(board);
+		assertEquals(1, dd.getCheckCount());
+
+		board = FENParser.from("4k3/8/8/8/8/3n4/3PP3/4K2R w K - 0 1");
+		dd = new PinnedDetector(board);
+		assertEquals(1, dd.getCheckCount());
+
+		board = FENParser.from("4k3/8/8/8/8/8/3r2q1/4K3 w - - 1 2");
+		dd = new PinnedDetector(board);
+		assertEquals(0, dd.getCheckCount());
 	}
 }

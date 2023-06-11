@@ -13,8 +13,8 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
 class AttackDetector {
-	private static final List<Direction> BLACK_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.NORTH_EAST, Direction.NORTH_WEST);
-	private static final List<Direction> WHITE_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
+	static final List<Direction> BLACK_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.NORTH_EAST, Direction.NORTH_WEST);
+	static final List<Direction> WHITE_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
 	private final Board<?> board;
 
 	public AttackDetector(Board<?> board) {

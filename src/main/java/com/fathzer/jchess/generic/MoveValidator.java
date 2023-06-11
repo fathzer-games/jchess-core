@@ -13,9 +13,9 @@ class MoveValidator {
 	private final BiIntPredicate pawnCatchValidator;
 	private final BiIntPredicate pawnNoCatchValidator;
 
-	MoveValidator(Board<Move> board, AttackDetector attacks, boolean isCheck) {
+	MoveValidator(Board<Move> board, AttackDetector attacks, PinnedDetector detector) {
 		final Color opponent = board.getActiveColor().opposite();
-		final PinnedDetector detector = isCheck ? null : new PinnedDetector(board);
+		boolean isCheck = detector.getCheckCount()>0;
 		final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
 
 		final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);

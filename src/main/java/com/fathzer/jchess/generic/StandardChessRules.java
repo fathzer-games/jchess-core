@@ -15,8 +15,6 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.DefaultMoveExplorer.MoveGenerator;
 
-import lombok.Getter;
-
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
@@ -39,16 +37,18 @@ public class StandardChessRules implements ChessRules {
 		private AttackDetector attacks;
 		private MoveValidator mv;
 		private DirectionExplorer exp;
-		@Getter
-		private boolean check;
+		private PinnedDetector checkManager;
 		
 		public Tools(Board<Move> board) {
 			this.board = board;
 			this.attacks = new AttackDetector(board);
 			this.exp = board.getDirectionExplorer(-1);
-			Color color = board.getActiveColor();
-			this.check = attacks.isAttacked(board.getKingPosition(color), color.opposite());
-			this.mv = new MoveValidator(board, attacks, check);
+			this.checkManager = new PinnedDetector(board);
+			this.mv = new MoveValidator(board, attacks, checkManager);
+		}
+		
+		boolean isCheck() {
+			return checkManager.getCheckCount()>0;
 		}
 	}
 	
@@ -137,7 +137,7 @@ public class StandardChessRules implements ChessRules {
 		// StandardMoves => King can't go to attacked cell
 		PieceKind.KING.getDirections().stream().forEach(d->Tools.EXPLORER.addMove(moves, tools.exp, d, tools.mv.getKing()));
 		// Castlings
-		if (!tools.check) {
+		if (!tools.isCheck()) {
 			// No castlings allowed when you're in check
 			if (Color.WHITE==piece.getColor()) {
 				tryCastling(moves, tools, Castling.WHITE_KING_SIDE);
