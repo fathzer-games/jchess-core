@@ -2,8 +2,15 @@ package com.fathzer.jchess.generic;
 
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
+import com.fathzer.jchess.Move;
+
+import lombok.Getter;
+
+import java.util.function.BiPredicate;
+
+import com.fathzer.jchess.Board;
+import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.ChessGameState;
-import com.fathzer.jchess.util.BiIntPredicate;
 
 public class DefaultMoveExplorer {
 	@FunctionalInterface
@@ -12,51 +19,66 @@ public class DefaultMoveExplorer {
 	}
 	
 	public static final MoveGenerator DEFAULT = ChessGameState::add;
+	@Getter
+	private Board<Move> board;
+	@Getter
+	private ChessGameState moves;
+	@Getter
+	private BoardExplorer from;
+	@Getter
+	private DirectionExplorer to;
+	private PinnedDetector checkManager;
+	MoveValidator mv;
 	
-	public void addMove(ChessGameState moves, DirectionExplorer explorer, Direction direction, BiIntPredicate validator)  {
-		addMove(moves, explorer, direction, validator, DEFAULT);
+	public DefaultMoveExplorer(Board<Move> board) {
+		this.board = board;
+		this.moves = board.newMoveList();
+		this.from = board.getExplorer();
+		this.to = board.getDirectionExplorer(-1);
+		this.checkManager = new PinnedDetector(board);
+		this.mv = new MoveValidator(board, new AttackDetector(board), checkManager);
 	}
 
-	public void addMove(ChessGameState moves, DirectionExplorer explorer, Direction direction, BiIntPredicate validator, MoveGenerator moveGenerator)  {
-		explorer.start(direction);
-		if (explorer.next()) {
-			final int from = explorer.getStartPosition();
-			final int to = explorer.getIndex();
-			if (validator.test(from, to)) {
-				moveGenerator.generate(moves, from, to);
-			}
+	boolean isCheck() {
+		return checkManager.getCheckCount() > 0;
+	}
+
+	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator)  {
+		addMove(direction, validator, DEFAULT);
+	}
+
+	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator, MoveGenerator moveGenerator)  {
+		to.start(direction);
+		if (to.next() && validator.test(from, to)) {
+			moveGenerator.generate(moves, from.getIndex(), to.getIndex());
 		}
 	}
 
-	public void addAllMoves(ChessGameState moves, DirectionExplorer explorer, Direction direction, BiIntPredicate validator)  {
-		explorer.start(direction);
-		while (explorer.next()) {
-			final int from = explorer.getStartPosition();
-			final int to = explorer.getIndex();
+	public void addAllMoves(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator)  {
+		to.start(direction);
+		while (to.next()) {
 			if (validator.test(from, to)) {
-				DEFAULT.generate(moves, from, to);
+				DEFAULT.generate(moves, from.getIndex(), to.getIndex());
 			}
-			if (explorer.getPiece()!=null) {
+			if (to.getPiece()!=null) {
 				break;
 			}
 		}
 	}
 
-	public void addMoves(ChessGameState moves, DirectionExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator)  {
-		addMoves(moves, explorer, direction, maxIteration, validator, DEFAULT);
+	public void addMoves(Direction direction, int maxIteration, BiPredicate<BoardExplorer, BoardExplorer> validator)  {
+		addMoves(direction, maxIteration, validator, DEFAULT);
 	}
 
-	public void addMoves(ChessGameState moves, DirectionExplorer explorer, Direction direction, int maxIteration, BiIntPredicate validator, MoveGenerator moveGenerator)  {
-		explorer.start(direction);
+	public void addMoves(Direction direction, int maxIteration, BiPredicate<BoardExplorer, BoardExplorer> validator, MoveGenerator moveGenerator)  {
+		to.start(direction);
 		int iteration = 0;
-		while (explorer.next()) {
-			final int from = explorer.getStartPosition();
-			final int to = explorer.getIndex();
+		while (to.next()) {
 			if (validator.test(from, to)) {
-				moveGenerator.generate(moves, from, to);
+				moveGenerator.generate(moves, from.getIndex(), to.getIndex());
 			}
 			iteration++;
-			if (iteration>=maxIteration || explorer.getPiece()!=null) {
+			if (iteration>=maxIteration || to.getPiece()!=null) {
 				break;
 			}
 		}

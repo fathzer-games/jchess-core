@@ -2,11 +2,8 @@ package com.fathzer.jchess;
 
 /** A class that allows to browse board content in a specific direction.
  */
-public interface DirectionExplorer {
+public interface DirectionExplorer extends BoardExplorer {
 	void reset(int index);
 	void start(Direction direction);
-	boolean next();
-	Piece getPiece();
-	int getIndex();
 	int getStartPosition();
 }

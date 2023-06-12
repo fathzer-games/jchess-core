@@ -1,12 +1,14 @@
 package com.fathzer.jchess.generic;
 
+import java.util.function.BiPredicate;
+
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.util.BiIntPredicate;
+import com.fathzer.jchess.BoardExplorer;
 
 /** A move validator that verifies the king is safe after the move is played.
  */
-public class KingSafeAfterMoveValidator implements BiIntPredicate {
+public class KingSafeAfterMoveValidator implements BiPredicate<BoardExplorer, BoardExplorer> {
 	private final Board<?> board;
 	private final AttackDetector detector;
 	
@@ -20,9 +22,9 @@ public class KingSafeAfterMoveValidator implements BiIntPredicate {
 	}
 
 	@Override
-	public boolean test(int source, int dest) {
-		final Color movingColor = board.getPiece(source).getColor();
-		board.moveCellsOnly(source, dest);
+	public boolean test(BoardExplorer source, BoardExplorer dest) {
+		final Color movingColor = source.getPiece().getColor();
+		board.moveCellsOnly(source.getIndex(), dest.getIndex());
 		final boolean result = !detector.isAttacked(board.getKingPosition(movingColor), movingColor.opposite());
 		board.restoreMoveCellsOnly();
 		return result; 

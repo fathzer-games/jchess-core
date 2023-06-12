@@ -20,7 +20,6 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.Direction;
-import com.fathzer.jchess.DirectionExplorer;
 
 public class StandardChessRules implements ChessRules {
 	public static final ChessRules INSTANCE = new StandardChessRules();
@@ -30,27 +29,6 @@ public class StandardChessRules implements ChessRules {
 			return false;
 		}
 	};
-	
-	private static class Tools {
-		private static final DefaultMoveExplorer EXPLORER = new DefaultMoveExplorer();
-		private Board<Move> board;
-		private AttackDetector attacks;
-		private MoveValidator mv;
-		private DirectionExplorer exp;
-		private PinnedDetector checkManager;
-		
-		public Tools(Board<Move> board) {
-			this.board = board;
-			this.attacks = new AttackDetector(board);
-			this.exp = board.getDirectionExplorer(-1);
-			this.checkManager = new PinnedDetector(board);
-			this.mv = new MoveValidator(board, attacks, checkManager);
-		}
-		
-		boolean isCheck() {
-			return checkManager.getCheckCount()>0;
-		}
-	}
 	
 	protected StandardChessRules() {
 		// Nothing to do
@@ -69,31 +47,32 @@ public class StandardChessRules implements ChessRules {
 
 	@Override
 	public ChessGameState getState(Board<Move> board) {
-		final ChessGameState list = board.newMoveList();
+		final DefaultMoveExplorer tools = new DefaultMoveExplorer(board);
+		final ChessGameState list = tools.getMoves();
 		if (isInsufficientMaterial(board)) {
 			list.setStatus(Status.DRAW);
 			return list;
 		}
-		return buildMoves(board, list);
+		return buildMoves(tools);
 	}
 
-	private ChessGameState buildMoves(Board<Move> board, final ChessGameState list) {
-		final Tools tools = new Tools(board);
-		final Color color = board.getActiveColor();
-		BoardExplorer exp = board.getExplorer();
+	private ChessGameState buildMoves(DefaultMoveExplorer tools) {
+		final Color color = tools.getBoard().getActiveColor();
+		final ChessGameState moves = tools.getMoves();
+		final BoardExplorer exp = tools.getFrom();
 		do {
 			if (exp.getPiece()!=null && color==exp.getPiece().getColor()) {
-				addPossibleMoves(list, tools, exp.getIndex(), exp.getPiece());
+				addPossibleMoves(tools);
 			}
 		} while (exp.next());
-		if (list.size()==0) {
+		if (moves.size()==0) {
 			if (tools.isCheck()) {
-				list.setStatus(board.getActiveColor().equals(Color.WHITE) ? Status.BLACK_WON : Status.WHITE_WON);
+				moves.setStatus(color.equals(Color.WHITE) ? Status.BLACK_WON : Status.WHITE_WON);
 			} else {
-				list.setStatus(Status.DRAW);
+				moves.setStatus(Status.DRAW);
 			}
 		}
-		return list;
+		return moves;
 	}
 
 	protected boolean isInsufficientMaterial(Board<Move> board) {
@@ -116,48 +95,47 @@ public class StandardChessRules implements ChessRules {
 		return whiteKnightOrBishopCount <= 1 && blackKnightOrBishopCount <= 1;
 	}
 
-	private void addPossibleMoves(ChessGameState list, Tools tools, int from, Piece piece) {
-		if (piece!=null) {
-			tools.exp.reset(from);
-			if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
-				piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addAllMoves(list, tools.exp, d, tools.mv.getDefault()));
-			} else if (PieceKind.KNIGHT.equals(piece.getKind())) {
-				piece.getKind().getDirections().stream().forEach(d->Tools.EXPLORER.addMove(list, tools.exp, d, tools.mv.getDefault()));
-			} else if (PieceKind.KING.equals(piece.getKind())) {
-				addKingMoves(list, piece, tools);
-			} else if (PieceKind.PAWN.equals(piece.getKind())) {
-				addPawnMoves(list, tools, piece);
-			} else {
-				throw new IllegalArgumentException("Unknown piece kind: "+piece.getKind());
-			}
+	private void addPossibleMoves(DefaultMoveExplorer tools) {
+		final Piece piece = tools.getFrom().getPiece();
+		tools.getTo().reset(tools.getFrom().getIndex());
+		if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
+			piece.getKind().getDirections().stream().forEach(d->tools.addAllMoves(d, tools.mv.getDefault()));
+		} else if (PieceKind.KNIGHT.equals(piece.getKind())) {
+			piece.getKind().getDirections().stream().forEach(d->tools.addMove(d, tools.mv.getDefault()));
+		} else if (PieceKind.KING.equals(piece.getKind())) {
+			addKingMoves(tools);
+		} else if (PieceKind.PAWN.equals(piece.getKind())) {
+			addPawnMoves(tools);
+		} else {
+			throw new IllegalArgumentException("Unknown piece kind: "+piece.getKind());
 		}
 	}
 	
-	private void addKingMoves(ChessGameState moves, Piece piece, Tools tools) {
+	private void addKingMoves(DefaultMoveExplorer tools) {
 		// StandardMoves => King can't go to attacked cell
-		PieceKind.KING.getDirections().stream().forEach(d->Tools.EXPLORER.addMove(moves, tools.exp, d, tools.mv.getKing()));
+		PieceKind.KING.getDirections().stream().forEach(d->tools.addMove(d, tools.mv.getKing()));
 		// Castlings
 		if (!tools.isCheck()) {
 			// No castlings allowed when you're in check
-			if (Color.WHITE==piece.getColor()) {
-				tryCastling(moves, tools, Castling.WHITE_KING_SIDE);
-				tryCastling(moves, tools, Castling.WHITE_QUEEN_SIDE);
+			if (Color.WHITE==tools.getFrom().getPiece().getColor()) {
+				tryCastling(tools, Castling.WHITE_KING_SIDE);
+				tryCastling(tools, Castling.WHITE_QUEEN_SIDE);
 			} else {
-				tryCastling(moves, tools, Castling.BLACK_KING_SIDE);
-				tryCastling(moves, tools, Castling.BLACK_QUEEN_SIDE);
+				tryCastling(tools, Castling.BLACK_KING_SIDE);
+				tryCastling(tools, Castling.BLACK_QUEEN_SIDE);
 			}
 		}
 	}
 	
-	private void tryCastling(ChessGameState moves, Tools tools, Castling castling) {
-		if (tools.board.hasCastling(castling)) {
-			final int kingPosition = tools.exp.getStartPosition(); 
-			final int kingDestination = tools.board.getKingDestination(castling);
-			final int rookPosition = tools.board.getInitialRookPosition(castling);
+	private void tryCastling(DefaultMoveExplorer tools, Castling castling) {
+		if (tools.getBoard().hasCastling(castling)) {
+			final int kingPosition = tools.getFrom().getIndex(); 
+			final int kingDestination = tools.getBoard().getKingDestination(castling);
+			final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
-			if (getFreeCells(kingPosition, rookPosition, kingDestination, rookDestination).allMatch(p-> tools.board.getPiece(p)==null) &&
-			!isThreatened(tools.board, castling.getColor().opposite(), getSafeCells(kingPosition, kingDestination))) {
-				addCastling(moves, kingPosition, rookPosition, kingDestination, rookDestination);
+			if (getFreeCells(kingPosition, rookPosition, kingDestination, rookDestination).allMatch(p-> tools.getBoard().getPiece(p)==null) &&
+			!isThreatened(tools.getBoard(), castling.getColor().opposite(), getSafeCells(kingPosition, kingDestination))) {
+				addCastling(tools.getMoves(), kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
 	}
@@ -193,11 +171,11 @@ public class StandardChessRules implements ChessRules {
 		}
 	}
 
-	private void addPawnMoves(ChessGameState moves, Tools tools, Piece piece) {
-		final boolean black = Color.BLACK == piece.getColor();
+	private void addPawnMoves(DefaultMoveExplorer tools) {
+		final boolean black = Color.BLACK == tools.getFrom().getPiece().getColor();
 		// Take care of promotion when generating move
-		final int promotionRow = black?tools.board.getDimension().getHeight()-1:0;
-		final IntPredicate promoted = i -> tools.board.getCoordinatesSystem().getRow(i)==promotionRow;
+		final int promotionRow = black?tools.getBoard().getDimension().getHeight()-1:0;
+		final IntPredicate promoted = i -> tools.getBoard().getCoordinatesSystem().getRow(i)==promotionRow;
 		final MoveGenerator generator = (m, f, t) -> {
 			if (promoted.test(t)) {
 				m.add(f, t, black ? Piece.BLACK_KNIGHT : Piece.WHITE_KNIGHT);
@@ -208,20 +186,20 @@ public class StandardChessRules implements ChessRules {
 				DefaultMoveExplorer.DEFAULT.generate(m, f, t);
 			}
 		};
-		final int startRow = black ? 1 : tools.board.getDimension().getHeight()-2;
-		final int countAllowed = tools.board.getCoordinatesSystem().getRow(tools.exp.getStartPosition()) == startRow ? 2 : 1;
+		final int startRow = black ? 1 : tools.getBoard().getDimension().getHeight()-2;
+		final int countAllowed = tools.getBoard().getCoordinatesSystem().getRow(tools.getFrom().getIndex()) == startRow ? 2 : 1;
 		if (black) {
 			// Standard moves (no catch)
-			Tools.EXPLORER.addMoves(moves, tools.exp, Direction.SOUTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
+			tools.addMoves(Direction.SOUTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
 			// Catches (including En-passant)
-			Tools.EXPLORER.addMove(moves, tools.exp, Direction.SOUTH_EAST, tools.mv.getPawnCatch(), generator);
-			Tools.EXPLORER.addMove(moves, tools.exp, Direction.SOUTH_WEST, tools.mv.getPawnCatch(), generator);
+			tools.addMove(Direction.SOUTH_EAST, tools.mv.getPawnCatch(), generator);
+			tools.addMove(Direction.SOUTH_WEST, tools.mv.getPawnCatch(), generator);
 		} else {
 			// Standard moves (no catch)
-			Tools.EXPLORER.addMoves(moves, tools.exp, Direction.NORTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
+			tools.addMoves(Direction.NORTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
 			// Catches (including En-passant)
-			Tools.EXPLORER.addMove(moves, tools.exp, Direction.NORTH_EAST, tools.mv.getPawnCatch(), generator);
-			Tools.EXPLORER.addMove(moves, tools.exp, Direction.NORTH_WEST, tools.mv.getPawnCatch(), generator);
+			tools.addMove(Direction.NORTH_EAST, tools.mv.getPawnCatch(), generator);
+			tools.addMove(Direction.NORTH_WEST, tools.mv.getPawnCatch(), generator);
 		}
 	}
 	

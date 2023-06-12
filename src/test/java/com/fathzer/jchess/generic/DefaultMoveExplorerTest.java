@@ -9,6 +9,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.Cell;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.DirectionExplorer;
@@ -57,5 +58,9 @@ class DefaultMoveExplorerTest {
 		explorer.addMoves(moves, exp, KNIGHT7, 1, v, DEFAULT);
 		explorer.addMoves(moves, exp, KNIGHT8, 1, v, DEFAULT);
 		assertEquals(Set.of("a7","b8","d8","e5","d4","b4"), U.to(moves, cs));
+	}
+	
+	private static class ACell implements Cell {
+		
 	}
 }
