@@ -8,8 +8,14 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.util.BiIntPredicate;
 
 class MoveValidator {
+//	@FunctionalInterface
+//	public interface Validator {
+//		boolean test(Piece )
+//	}
+	
 	private final BiPredicate<BoardExplorer, BoardExplorer> defaultValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> kingValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnCatchValidator;
@@ -20,11 +26,11 @@ class MoveValidator {
 		boolean isCheck = detector.getCheckCount()>0;
 		final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
 
-		final BiPredicate<BoardExplorer, BoardExplorer> kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
-		final BiPredicate<BoardExplorer, BoardExplorer> optimizedKingSafe = (s,d) -> !defenderDetector.test(s.getIndex()) || kingSafeAfterMove.test(s,d);
-		this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && kingSafeAfterMove.test(s, d) : (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
-		this.defaultValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && optimizedKingSafe.test(s, d);
-		this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null && optimizedKingSafe.test(s, d);
+		final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
+		final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
+		this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && kingSafeAfterMove.test(s.getIndex(), d.getIndex()) : (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
+		this.defaultValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && optimizedKingSafe.test(s.getIndex(), d.getIndex());
+		this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null && optimizedKingSafe.test(s.getIndex(), d.getIndex());
 		this.pawnCatchValidator = new PawnCatchValidator(board, kingSafeAfterMove, optimizedKingSafe);
 	}
 	

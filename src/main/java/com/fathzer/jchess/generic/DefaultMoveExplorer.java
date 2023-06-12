@@ -39,6 +39,10 @@ public class DefaultMoveExplorer {
 		this.mv = new MoveValidator(board, new AttackDetector(board), checkManager);
 	}
 
+	void clearMoves() {
+		this.moves = board.newMoveList();
+	}
+	
 	boolean isCheck() {
 		return checkManager.getCheckCount() > 0;
 	}

@@ -27,4 +27,10 @@ class BasicBoardExplorer implements BoardExplorer {
 		}
 		return result;
 	}
+
+	@Override
+	public void reset(int index) {
+		this.index = index;
+		this.piece = pieces[index];
+	}
 }
