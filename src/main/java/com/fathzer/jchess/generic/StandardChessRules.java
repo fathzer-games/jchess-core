@@ -126,7 +126,6 @@ public class StandardChessRules implements ChessRules {
 			}
 		}
 	}
-	
 	private void tryCastling(DefaultMoveExplorer tools, Castling castling) {
 		if (tools.getBoard().hasCastling(castling)) {
 			final int kingPosition = tools.getFrom().getIndex(); 
@@ -134,7 +133,7 @@ public class StandardChessRules implements ChessRules {
 			final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (getFreeCells(kingPosition, rookPosition, kingDestination, rookDestination).allMatch(p-> tools.getBoard().getPiece(p)==null) &&
-			!isThreatened(tools.getBoard(), castling.getColor().opposite(), getSafeCells(kingPosition, kingDestination))) {
+			!tools.mv.isThreatened(castling.getColor().opposite(), getSafeCells(kingPosition, kingDestination))) {
 				addCastling(tools.getMoves(), kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
@@ -204,11 +203,6 @@ public class StandardChessRules implements ChessRules {
 	}
 	
 	private boolean isThreatened(Board<Move> board, Color color, int position) {
-		return new AttackDetector(board).isAttacked(position, color);
-	}
-	
-	private boolean isThreatened(Board<Move> board, Color color, IntStream positions) {
-		final AttackDetector d = new AttackDetector(board);
-		return positions.anyMatch(pos -> d.isAttacked(pos, color));
+		return new AttackDetector(board.getDirectionExplorer(-1)).isAttacked(position, color);
 	}
 }

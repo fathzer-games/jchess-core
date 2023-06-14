@@ -36,7 +36,7 @@ public class DefaultMoveExplorer {
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
 		this.checkManager = new PinnedDetector(board);
-		this.mv = new MoveValidator(board, new AttackDetector(board), checkManager);
+		this.mv = new MoveValidator(board, checkManager);
 	}
 
 	void clearMoves() {

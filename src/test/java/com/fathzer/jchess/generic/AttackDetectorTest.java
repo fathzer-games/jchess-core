@@ -10,14 +10,14 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 
-class ThreatDetectorTest {
+class AttackDetectorTest {
 
 	@Test
 	void test() {
 		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
-		AttackDetector explorer = new AttackDetector(board);
+		AttackDetector explorer = new AttackDetector(board.getDirectionExplorer(-1));
 		assertTrue(explorer.isAttacked(cs.getIndex("e8"), Color.WHITE), "d6 knight is a threat");
 		assertTrue(explorer.isAttacked(cs.getIndex("d1"), Color.BLACK), "c2 pawn is a threat");
 		assertTrue(explorer.isAttacked(cs.getIndex("b1"), Color.BLACK), "c2 pawn is a threat");
@@ -31,7 +31,7 @@ class ThreatDetectorTest {
 	void speedTest() {
 		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		AttackDetector explorer = new AttackDetector(board);
+		AttackDetector explorer = new AttackDetector(board.getDirectionExplorer(-1));
 		for (int i=0;i<100000;i++) {
 			explorer.isAttacked(cs.getIndex("e8"), Color.WHITE);
 			explorer.isAttacked(cs.getIndex("d1"), Color.BLACK);

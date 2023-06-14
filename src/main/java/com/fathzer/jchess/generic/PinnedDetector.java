@@ -19,6 +19,7 @@ import java.util.function.IntFunction;
 public class PinnedDetector implements IntFunction<Direction> {
 	private Direction[] pinedMap;
 	private int checkCount = 0;
+	private boolean hasPinned;
 	 
 	public PinnedDetector(Board<Move> board) {
 		//TODO Maybe stopping search after 2 checks could be enough as all pieces are pinned (test if it has a real impact on performance - My guess is it has not)
@@ -38,6 +39,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 					if (color.equals(p.getColor())) {
 						if (hasAttacker(exp, color.opposite(), d)) {
 							pinedMap[pos] = d;
+							hasPinned = true;
 						}
 					} else if (isAttacker(p, d, near)) {
 						// If it is in opponent's team, and able to move in that direction, king is in check
@@ -96,5 +98,9 @@ public class PinnedDetector implements IntFunction<Direction> {
 	 */
 	public int getCheckCount() {
 		return checkCount;
+	}
+	
+	public boolean hasPinned() {
+		return hasPinned;
 	}
 }

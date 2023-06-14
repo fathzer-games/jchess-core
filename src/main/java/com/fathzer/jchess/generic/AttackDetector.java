@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.fathzer.games.Color;
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
@@ -15,15 +14,16 @@ import com.fathzer.jchess.PieceKind;
 class AttackDetector {
 	static final List<Direction> BLACK_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.NORTH_EAST, Direction.NORTH_WEST);
 	static final List<Direction> WHITE_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
-	private final Board<?> board;
 
-	public AttackDetector(Board<?> board) {
-		this.board = board;
+	private final DirectionExplorer explorer;
+	
+	public AttackDetector(DirectionExplorer explorer) {
+		this.explorer = explorer;
 	}
 	
 	public boolean isAttacked(int position, Color color) {
-		final DirectionExplorer explorer = board.getDirectionExplorer(position);
-
+		explorer.reset(position);
+		
 		// check for knight
 		if (checkNear(explorer, PieceKind.KNIGHT.getDirections(), color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {
 			return true;

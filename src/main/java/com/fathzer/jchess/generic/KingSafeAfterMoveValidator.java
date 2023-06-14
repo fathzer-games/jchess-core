@@ -9,10 +9,6 @@ import com.fathzer.jchess.util.BiIntPredicate;
 public class KingSafeAfterMoveValidator implements BiIntPredicate {
 	private final Board<?> board;
 	private final AttackDetector detector;
-	
-	public KingSafeAfterMoveValidator(Board<?> board) {
-		this(board, new AttackDetector(board));
-	}
 
 	public KingSafeAfterMoveValidator(Board<?> board, AttackDetector detector) {
 		this.board = board;
