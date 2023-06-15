@@ -18,7 +18,7 @@ class MoveValidator {
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnNoCatchValidator;
 	private final AttackDetector attacks;
 	
-	MoveValidator(Board<Move> board, PinnedDetector detector) {
+	MoveValidator(ChessBoard board, PinnedDetector detector) {
 		final Color opponent = board.getActiveColor().opposite();
 		this.attacks = new AttackDetector(board.getDirectionExplorer(-1));
 		final boolean isCheck = detector.getCheckCount()>0;

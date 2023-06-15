@@ -88,7 +88,4 @@ public interface Board<M> {
 	 * @return a new move list
 	 */
 	ChessGameState newMoveList();
-	
-	void moveCellsOnly(int from, int to);
-	void restoreMoveCellsOnly();
 }

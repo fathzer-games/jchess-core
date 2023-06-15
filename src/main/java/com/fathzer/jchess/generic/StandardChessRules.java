@@ -47,7 +47,8 @@ public class StandardChessRules implements ChessRules {
 
 	@Override
 	public ChessGameState getState(Board<Move> board) {
-		final DefaultMoveExplorer tools = new DefaultMoveExplorer(board);
+		//FIXME This cast is ugly. It's the result of not having getState in Board class! 
+		final DefaultMoveExplorer tools = new DefaultMoveExplorer((ChessBoard) board);
 		final ChessGameState list = tools.getMoves();
 		if (isInsufficientMaterial(board)) {
 			list.setStatus(Status.DRAW);

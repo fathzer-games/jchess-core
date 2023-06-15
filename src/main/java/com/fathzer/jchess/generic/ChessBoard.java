@@ -161,7 +161,6 @@ public abstract class ChessBoard implements Board<Move> {
 		key ^= board.getZobrist().getTurnKey();
 	}
 	
-	@Override
 	public void moveCellsOnly (int from, int to) {
 		board.save();
 		final Piece p = board.getPiece(from);
@@ -177,7 +176,6 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 	}
 	
-	@Override
 	public void restoreMoveCellsOnly() {
 		board.restore();
 	}

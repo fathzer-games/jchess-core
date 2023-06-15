@@ -9,11 +9,9 @@ import java.util.function.BiPredicate;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.util.U;
 
@@ -27,7 +25,7 @@ class DefaultMoveExplorerTest {
 	
 	@Test
 	void test() {
-		Board<Move> board = FENParser.from("r1b1k2r/1pppqppp/2n2n1b/pP6/4Q3/3B1P1N/P1PPP1P1/RNB1K2R w KQq a6 0 1");
+		ChessBoard board = (ChessBoard) FENParser.from("r1b1k2r/1pppqppp/2n2n1b/pP6/4Q3/3B1P1N/P1PPP1P1/RNB1K2R w KQq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		
 		DefaultMoveExplorer explorer = new DefaultMoveExplorer(board);
@@ -51,7 +49,7 @@ class DefaultMoveExplorerTest {
 		assertEquals(Set.of("c4"), U.to(explorer.getMoves(), cs));
 
 		// The knight in c6 can make 6 moves
-		explorer = new DefaultMoveExplorer(FENParser.from("r1b1k2r/1pppqppp/2n2n1b/pP6/4Q3/3B1P1N/P1PPP1P1/RNB1K2R b KQq - 0 1"));
+		explorer = new DefaultMoveExplorer((ChessBoard) FENParser.from("r1b1k2r/1pppqppp/2n2n1b/pP6/4Q3/3B1P1N/P1PPP1P1/RNB1K2R b KQq - 0 1"));
 		reset(explorer, "c6");
 		explorer.addMove(KNIGHT1, v, DEFAULT);
 		explorer.addMove(KNIGHT2, v, DEFAULT);

@@ -30,7 +30,7 @@ public class DefaultMoveExplorer {
 	private PinnedDetector checkManager;
 	MoveValidator mv;
 	
-	public DefaultMoveExplorer(Board<Move> board) {
+	public DefaultMoveExplorer(ChessBoard board) {
 		this.board = board;
 		this.moves = board.newMoveList();
 		this.from = board.getExplorer();
