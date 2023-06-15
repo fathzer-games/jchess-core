@@ -2,7 +2,6 @@ package com.fathzer.jchess.generic;
 
 import java.util.function.BiPredicate;
 
-import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
@@ -20,21 +19,16 @@ class PawnCatchValidator implements BiPredicate<BoardExplorer, BoardExplorer> {
 	
 	@Override
 	public boolean test(BoardExplorer from, BoardExplorer to) {
-		final Color targetColor;
-		final BiIntPredicate kingSafeAfterMove;
 		if (board.getEnPassant()==to.getIndex()) {
-			targetColor = board.getCoordinatesSystem().getRow(to.getIndex())==2 ? Color.BLACK : Color.WHITE;
 			// Warning, the caught pawn can be a defender of the king
-			kingSafeAfterMove = basicKingSafeAfterMove;
+			return basicKingSafeAfterMove.test(from.getIndex(), to.getIndex());
 		} else if (to.getPiece()==null) {
 			// Can't catch no piece
 			return false;
 		} else {
 			// Standard piece catch
-			targetColor = to.getPiece().getColor();
-			kingSafeAfterMove = optimizedKingSafeAfterMove;
+			return !to.getPiece().getColor().equals(board.getActiveColor()) && optimizedKingSafeAfterMove.test(from.getIndex(), to.getIndex());
 		}
-		return !from.getPiece().getColor().equals(targetColor) && kingSafeAfterMove.test(from.getIndex(), to.getIndex());
 	}
 
 }

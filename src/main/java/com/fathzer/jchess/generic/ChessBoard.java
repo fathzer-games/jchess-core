@@ -27,10 +27,12 @@ import com.fathzer.jchess.standard.CompactMoveList;
 import lombok.Getter;
 
 public abstract class ChessBoard implements Board<Move> {
+	private final DirectionExplorer exp;
 	@Getter
-	final BoardRepresentation board;
+	private final BoardRepresentation board;
 	@Getter
 	private int enPassant;
+	private int enPassantDeletePawnIndex;
 	@Getter
 	private Color activeColor;
 	private int castlings;
@@ -63,6 +65,7 @@ public abstract class ChessBoard implements Board<Move> {
 			throw new NullPointerException();
 		}
 		this.board = new FastBoardRepresentation(dimension, pieces);
+		this.exp = getDirectionExplorer(-1);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
 		this.enPassant = -1;
@@ -78,7 +81,7 @@ public abstract class ChessBoard implements Board<Move> {
 			if (expected != board.getPiece(pawnCell)) {
 				throw new IllegalArgumentException("Attacked enPassant pawn is missing");
 			}
-			setEnPassant(enPassantIndex, activeColor);
+			setEnPassant(enPassantIndex, activeColor, pawnCell);
 		}
 		if (halfMoveCount<0) {
 			throw new IllegalArgumentException("Half move count can't be negative");
@@ -237,11 +240,9 @@ public abstract class ChessBoard implements Board<Move> {
 	}
 	
 	private void fastPawnMove(int to, Color playingColor) {
-		final boolean whiteMove = Color.WHITE.equals(playingColor);
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
-			final CoordinatesSystem cs = board.getCoordinatesSystem();
-			board.setPiece(whiteMove ? cs.nextRow(enPassant) : cs.previousRow(to), null);
+			board.setPiece(enPassantDeletePawnIndex, null);
 		}
 	}
 	
@@ -294,8 +295,7 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
-			final boolean whiteMove = WHITE == pawn.getColor();
-			final int pos = whiteMove ? board.getCoordinatesSystem().nextRow(enPassant) : board.getCoordinatesSystem().previousRow(enPassant);
+			final int pos = enPassantDeletePawnIndex;
 			key ^= board.getZobrist().getKey(pos, board.getPiece(pos));
 			board.setPiece(pos, null);
 		}
@@ -304,7 +304,7 @@ public abstract class ChessBoard implements Board<Move> {
 		if (Math.abs(rowOffset)==2) {
 			// Make en-passant available for opponent
 			final boolean whiteMove = WHITE == pawn.getColor();
-			setEnPassant(whiteMove ? board.getCoordinatesSystem().nextRow(to) : board.getCoordinatesSystem().previousRow(to), pawn.getColor().opposite());
+			setEnPassant(whiteMove ? board.getCoordinatesSystem().nextRow(to) : board.getCoordinatesSystem().previousRow(to), pawn.getColor().opposite(), to);
 		} else {
 			clearEnPassant();
 		}
@@ -322,21 +322,22 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 	}
 	
-	private void setEnPassant(int pos, Color catchingColor) {
+	private void setEnPassant(int pos, Color catchingColor, int deletedPawn) {
 		if (enPassant>=0) {
 			// clear previous en passant key
 			key ^= board.getZobrist().getKey(enPassant);
 		}
 		if (isCatcheableEnPassant(pos, catchingColor)) {
 			this.enPassant = pos;
-			key ^= board.getZobrist().getKey(enPassant);
+			enPassantDeletePawnIndex = deletedPawn;
+			key ^= board.getZobrist().getKey(pos);
 		} else {
 			clearEnPassant();
 		}
 	}
 	
 	private boolean isCatcheableEnPassant(int pos, Color catchingColor) {
-		final DirectionExplorer exp = board.getDirectionExplorer(pos);
+		exp.reset(pos);
 		if (Color.WHITE==catchingColor) {
 			return isCatcheableEnPassant(exp, SOUTH_EAST, WHITE_PAWN) || isCatcheableEnPassant(exp, SOUTH_WEST, WHITE_PAWN);
 		} else {
@@ -382,6 +383,7 @@ public abstract class ChessBoard implements Board<Move> {
 		if (other instanceof ChessBoard) {
 			this.activeColor = other.getActiveColor();
 			this.enPassant = other.getEnPassant();
+			this.enPassantDeletePawnIndex = ((ChessBoard)other).enPassantDeletePawnIndex;
 			this.halfMoveCount = other.getHalfMoveCount();
 			this.moveNumber = other.getMoveNumber();
 			this.castlings = ((ChessBoard)other).castlings;

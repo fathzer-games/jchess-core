@@ -93,6 +93,14 @@ class StandardChessRulesTest {
 	}
 	
 	@Test
+	void enPassantPinned() {
+		final Board<Move> board = FENParser.from("2Q1B3/8/8/KP4p1/1R3pPk/5R2/4P3/8 b - g3 0 1");
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		List<Move> moves = getMoves(board);
+		assertEquals(0, moves.size(), "Should have no possible moves but obtain "+toString(moves, cs));
+	}
+	
+	@Test
 	void checkTest() {
 		// Piece not involved in check can't move
 		// Queen can't move, catching white knight does not fix check

@@ -22,8 +22,7 @@ class MoveValidator {
 		final Color opponent = board.getActiveColor().opposite();
 		this.attacks = new AttackDetector(board.getDirectionExplorer(-1));
 		final boolean isCheck = detector.getCheckCount()>0;
-		final boolean hasPinned = detector.hasPinned();
-		if (isCheck || hasPinned || board.getEnPassant()>=0) {
+		if (isCheck || detector.hasPinned()) {
 			final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
 			final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
 			final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
@@ -35,7 +34,11 @@ class MoveValidator {
 			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece());
 			this.kingValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
 			this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null;
-			this.pawnCatchValidator = (s,d) -> d.getPiece()!=null && d.getPiece().getColor().equals(opponent);
+			if (board.getEnPassant()>=0) {
+				this.pawnCatchValidator = new PawnCatchValidator(board, new KingSafeAfterMoveValidator(board, attacks), (s,d)->true);
+			} else {
+				this.pawnCatchValidator = (s,d) -> d.getPiece()!=null && d.getPiece().getColor().equals(opponent);
+			}
 		}
 	}
 	

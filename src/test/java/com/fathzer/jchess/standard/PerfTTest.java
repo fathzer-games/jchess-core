@@ -5,17 +5,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import com.fathzer.games.perft.Divide;
 import com.fathzer.games.perft.PerfT;
 import com.fathzer.games.perft.PerfTParser;
 import com.fathzer.games.perft.PerfTResult;
 import com.fathzer.games.perft.PerfTTestData;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
@@ -49,7 +53,7 @@ class PerfTTest {
 		if (test.getSize()>=depth) {
 //			try {
 				final PerfTResult<Move> divide = perfT.divide(depth);
-				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+divide);
+				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 //				if (count != test.getCount(depth)) {
 //					System.out.println("Error for "+test.getFen()+" expected "+test.getCount(depth)+" got "+count);
 //				} else {
@@ -66,5 +70,14 @@ class PerfTTest {
 		try (InputStream stream = getClass().getResourceAsStream("/Perft.txt")) {
 			return new PerfTParser().withStartPositionPrefix("position fen").read(stream, StandardCharsets.UTF_8);
 		}
+	}
+	
+	private String toString(Collection<Divide<Move>> divides, CoordinatesSystem cs) {
+		return divides.stream().map(d -> toString(d, cs)).collect(Collectors.joining(", ", "[", "]"));
+		
+	}
+	
+	private String toString(Divide<Move> d, CoordinatesSystem cs) {
+		return d.getMove().toString(cs)+": "+d.getCount();
 	}
 }
