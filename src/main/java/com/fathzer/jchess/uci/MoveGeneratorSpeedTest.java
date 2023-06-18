@@ -5,11 +5,11 @@ import java.util.List;
 import com.fathzer.games.perft.PerfT;
 import com.fathzer.games.perft.PerfTTestData;
 
-class AbstractMoveGeneratorSpeedTest {
+class MoveGeneratorSpeedTest {
 	private List<PerfTTestData> tests;
 	private boolean cancelled;
 
-	protected AbstractMoveGeneratorSpeedTest(List<PerfTTestData> tests) {
+	protected MoveGeneratorSpeedTest(List<PerfTTestData> tests) {
 		this.tests = tests;
 	}
 	
