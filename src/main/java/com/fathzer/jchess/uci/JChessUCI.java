@@ -67,7 +67,7 @@ public class JChessUCI extends UCI {
 	}
 
 	private void doPerfStat(int depth, final int parallelism, int cutTime) {
-		final MoveGeneratorSpeedTest test = new MoveGeneratorSpeedTest(readTests());
+		final MoveGeneratorSpeedTest2 test = new MoveGeneratorSpeedTest2(readTests());
 		final TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
