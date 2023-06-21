@@ -28,17 +28,17 @@ class AttackDetector {
 		if (checkNear(explorer, PieceKind.KNIGHT.getDirections(), color, p -> PieceKind.KNIGHT.equals(p.getKind()))) {
 			return true;
 		}
-		// check for KING threads
+		// check for KING threats
 		if (checkNear(explorer, PieceKind.KING.getDirections(), color, p -> PieceKind.KING.equals(p.getKind()))) {
 			return true;
 		}
 		
-		// check for others horizontal or vertical threads from ROOK and QUEEN
+		// check for others horizontal or vertical threats from ROOK and QUEEN
 		if (check(explorer, PieceKind.ROOK.getDirections(), color, p -> PieceKind.ROOK.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
 			return true;
 		}
 		
-		// check for others diagonal threads from BISHOP and QUEEN
+		// check for others diagonal threats from BISHOP and QUEEN
 		if (check(explorer, PieceKind.BISHOP.getDirections(), color, p -> PieceKind.BISHOP.equals(p.getKind()) || PieceKind.QUEEN.equals(p.getKind()))) {
 			return true;
 		}
