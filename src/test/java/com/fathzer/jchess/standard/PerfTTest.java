@@ -13,11 +13,14 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.perft.Divide;
 import com.fathzer.games.perft.PerfT;
 import com.fathzer.games.perft.PerfTParser;
 import com.fathzer.games.perft.PerfTResult;
 import com.fathzer.games.perft.PerfTTestData;
+import com.fathzer.games.util.ContextualizedExecutor;
+import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.CopyBasedMoveGenerator;
@@ -37,22 +40,24 @@ class PerfTTest {
 			log.info("PerfT test depth is set to {}",depth);
 		}
 		final Iterator<PerfTTestData> iterator = readTests().iterator();
-		while (iterator.hasNext()) {
-			final PerfTTestData test = iterator.next();
-			try {
-				doTest(test, depth);
-			} catch (Exception e) {
-				fail("Exception on "+test.getStartPosition(),e);
+		try (ContextualizedExecutor<MoveGenerator<Move>> exec =new ContextualizedExecutor<>(PhysicalCores.count())) {
+			while (iterator.hasNext()) {
+				final PerfTTestData test = iterator.next();
+				try {
+					doTest(exec, test, depth);
+				} catch (Exception e) {
+					fail("Exception on "+test.getStartPosition(),e);
+				}
 			}
 		}
 	}
 
-	private void doTest(PerfTTestData test, int depth) {
+	private void doTest(ContextualizedExecutor<MoveGenerator<Move>> exec, PerfTTestData test, int depth) {
 		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
-		final PerfT<Move> perfT = new PerfT<>(() -> new CopyBasedMoveGenerator<>(StandardChessRules.PERFT, board));
+		final PerfT<Move> perfT = new PerfT<>(exec);
 		if (test.getSize()>=depth) {
 //			try {
-				final PerfTResult<Move> divide = perfT.divide(depth);
+				final PerfTResult<Move> divide = perfT.divide(depth, () -> new CopyBasedMoveGenerator<>(StandardChessRules.PERFT, board));
 				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 //				if (count != test.getCount(depth)) {
 //					System.out.println("Error for "+test.getFen()+" expected "+test.getCount(depth)+" got "+count);

@@ -12,6 +12,7 @@ import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Rules;
 import com.fathzer.games.ai.AbstractAI;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -40,7 +41,7 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		this.rules = rules;
 		this.evaluator = evaluator;
 		this.sessions = new LinkedList<>();
-		this.parallelism = 0;
+		this.parallelism = 1;
 		this.openingLibrary = null;
 	}
 	
@@ -78,29 +79,27 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 //			}
 //		};
 		evaluator.setViewPoint(board.getActiveColor());
-		final AbstractAI<Move> internal = new Negamax<>() {
-			@Override
-			public MoveGenerator<Move> buildMoveGenerator() {
-				return new InstrumentedMoveGenerator(rules, board, stat);
+		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(parallelism)) {
+			final AbstractAI<Move> internal = new Negamax<>(() -> new InstrumentedMoveGenerator(rules, board, stat), exec) {
+				@Override
+				public int evaluate() {
+					return evaluator.evaluate(((CopyBasedMoveGenerator<Move>)getMoveGenerator()).getBoard());
+				}
+			};
+			synchronized (this) {
+				this.sessions.add(internal);
 			}
-			@Override
-			public int evaluate() {
-				return evaluator.evaluate(((CopyBasedMoveGenerator<Move>)getMoveGenerator()).getBoard());
-			}
-		};
-		synchronized (this) {
-			this.sessions.add(internal);
+			log.debug("--- Start evaluation for {} ---",FENParser.to(board));
+			final long start = System.currentTimeMillis();
+			List<Evaluation<Move>> bestMoves = internal.getBestMoves(depth, size, accuracy);
+			sessions.remove(internal);
+			final long duration = System.currentTimeMillis()-start;
+			log.trace("{} move generations, {} moves generated, {} moves played, {} evaluations ({} duplicated) for {} moves at depth {} by {} threads in {}ms -> {}",
+					stat.moveGenerations.get(), stat.generatedMoves.get(), stat.movesPlayed.get(), stat.evalCount.get(), stat.evalAgainCount, bestMoves.size(),
+					depth, parallelism, duration, bestMoves.get(0).getValue());
+			log.debug(bestMoves.toString());
+			return bestMoves;
 		}
-		log.debug("--- Start evaluation for {} ---",FENParser.to(board));
-		final long start = System.currentTimeMillis();
-		List<Evaluation<Move>> bestMoves = internal.getBestMoves(depth, size, accuracy);
-		sessions.remove(internal);
-		final long duration = System.currentTimeMillis()-start;
-		log.trace("{} move generations, {} moves generated, {} moves played, {} evaluations ({} duplicated) for {} moves at depth {} by {} threads in {}ms -> {}",
-				stat.moveGenerations.get(), stat.generatedMoves.get(), stat.movesPlayed.get(), stat.evalCount.get(), stat.evalAgainCount, bestMoves.size(),
-				depth, internal.getParallelism(), duration, bestMoves.get(0).getValue());
-		log.debug(bestMoves.toString());
-		return bestMoves;
 	}
 	
 	private static class InstrumentedMoveGenerator extends CopyBasedMoveGenerator<Move> {

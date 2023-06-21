@@ -67,7 +67,7 @@ public class JChessUCI extends UCI {
 	}
 
 	private void doPerfStat(int depth, final int parallelism, int cutTime) {
-		final MoveGeneratorSpeedTest2 test = new MoveGeneratorSpeedTest2(readTests());
+		final MoveGeneratorSpeedTest test = new MoveGeneratorSpeedTest(readTests());
 		final TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
@@ -98,7 +98,7 @@ public class JChessUCI extends UCI {
 	}
 	
 	private static List<PerfTTestData> readTests() {
-		try (InputStream stream = MoveGeneratorSpeedTest.class.getResourceAsStream("/Perft.txt")) {
+		try (InputStream stream = JChessUCI.class.getResourceAsStream("/Perft.txt")) {
 			return new PerfTParser().withStartPositionPrefix("position fen").read(stream, StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);

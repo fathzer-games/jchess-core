@@ -12,6 +12,7 @@ import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AbstractAI;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -24,14 +25,9 @@ import com.fathzer.jchess.standard.CompactMoveList;
 
 class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
-		return new AbstractAI<Move>() {
+		return new AbstractAI<Move>(null,null) {
 			@Override
 			public List<Evaluation<Move>> getBestMoves(int depth, Iterator<Move> possibleMoves, int size, int accuracy) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public MoveGenerator<Move> buildMoveGenerator() {
 				throw new UnsupportedOperationException();
 			}
 
@@ -122,26 +118,22 @@ assertEquals(19, moves.size());
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final ChessEvaluator basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
-		AbstractAI<Move> ai = new Negamax<>() {
-			@Override
-			public MoveGenerator<Move> buildMoveGenerator() {
-				return new CopyBasedMoveGenerator<>(StandardChessRules.INSTANCE, board);
+		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(1)) {
+			AbstractAI<Move> ai = new Negamax<>(() -> new CopyBasedMoveGenerator<>(StandardChessRules.INSTANCE, board), exec) {
+				@Override
+				public int evaluate() {
+					return basicEvaluator.evaluate(board);
+				}
+			};
+			CompactMoveList l = new CompactMoveList();
+			l.add(cs.getIndex("h1"), cs.getIndex("g1"));
+			l.add(cs.getIndex("f2"), cs.getIndex("f3"));
+			l.add(cs.getIndex("f2"), cs.getIndex("f4"));
+			final List<Evaluation<Move>> eval = ai.getBestMoves(4, l.iterator(), Integer.MAX_VALUE, 0);
+			assertEquals(3, eval.size());
+			for (Evaluation<Move> e : eval) {
+				assertEquals(-getMateScore(1), e.getValue());
 			}
-
-			@Override
-			public int evaluate() {
-				return basicEvaluator.evaluate(board);
-			}
-		};
-		ai.setParallelism(1);
-		CompactMoveList l = new CompactMoveList();
-		l.add(cs.getIndex("h1"), cs.getIndex("g1"));
-		l.add(cs.getIndex("f2"), cs.getIndex("f3"));
-		l.add(cs.getIndex("f2"), cs.getIndex("f4"));
-		final List<Evaluation<Move>> eval = ai.getBestMoves(4, l.iterator(), Integer.MAX_VALUE, 0);
-		assertEquals(3, eval.size());
-		for (Evaluation<Move> e : eval) {
-			assertEquals(-getMateScore(1), e.getValue());
 		}
 	}
 }
