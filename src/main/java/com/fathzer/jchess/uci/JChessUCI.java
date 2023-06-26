@@ -7,13 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.NumberFormat;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fathzer.games.perft.PerfTParser;
 import com.fathzer.games.perft.PerfTTestData;
@@ -42,64 +37,12 @@ public class JChessUCI extends UCI {
 	
 	public JChessUCI() {
 		super(new JChessUCIEngine());
-		addCommand(this::doPerfStat,"perf");
-	}
-	protected void doPerfStat(String[] tokens) {
-		if (! (getEngine() instanceof UCIMoveGeneratorProvider)) {
-			debug("perf is not supported by this engine");
-		}
-		final Optional<Integer> depth = parseInt(tokens, 0, null);
-		if (depth.isEmpty()) {
-			return;
-		}
-		final AtomicInteger cutTime = new AtomicInteger(Integer.MAX_VALUE);
-		final AtomicInteger parallelism = new AtomicInteger(1);
-		Arrays.stream(tokens).skip(1).forEach(token -> {
-			if (token.startsWith("c")) {
-				cutTime.set(parseInt(token.substring(1)));
-			} else if (token.startsWith("p")) {
-				parallelism.set(parseInt(token.substring(1)));
-			} else {
-				debug("Token "+token+" ignored");
-			}
-		});
-		doPerfStat(depth.get(), parallelism.get(), cutTime.get());
-	}
-
-	private void doPerfStat(int depth, final int parallelism, int cutTime) {
-		final MoveGeneratorSpeedTest test = new MoveGeneratorSpeedTest(readTests());
-		final TimerTask task = new TimerTask() {
-			@Override
-			public void run() {
-				doStop(null);
-			}
-		};
-		doBackground(() -> {
-			final Timer timer = new Timer();
-			timer.schedule(task, 1000L*cutTime);
-			try {
-				final long start = System.currentTimeMillis();
-				long sum = test.run(depth, parallelism, getEngine());
-				final long duration = System.currentTimeMillis() - start;
-				out("perf: "+f(sum)+" moves in "+f(duration)+"ms ("+f(sum*1000/duration)+" mv/s) (using "+parallelism+" thread(s))");
-			} finally {
-				timer.cancel();
-			}
-			
-		}, test::cancel);
 	}
 	
-	private int parseInt(String string) {
-		return parseInt(new String[] {string}, 0, null).get();
-	}
-	
-	private static String f(long num) {
-		return NumberFormat.getInstance().format(num);
-	}
-	
-	private static List<PerfTTestData> readTests() {
+	@Override
+	protected Collection<PerfTTestData> readTestData() {
 		try (InputStream stream = JChessUCI.class.getResourceAsStream("/Perft.txt")) {
-			return new PerfTParser().withStartPositionPrefix("position fen").read(stream, StandardCharsets.UTF_8);
+			return new PerfTParser().withStartPositionPrefix("position fen").withStartPositionCustomizer(s -> s+" 0 1").read(stream, StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
