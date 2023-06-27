@@ -72,6 +72,10 @@ class MoveValidator {
 		return this.kingValidator;
 	}
 	
+	public boolean isAttacked(int position, Color attacker) {
+		return attacks.isAttacked(position, attacker);
+	}
+	
 	public boolean isThreatened(Color color, IntStream positions) {
 		return positions.anyMatch(pos -> attacks.isAttacked(pos, color));
 	}

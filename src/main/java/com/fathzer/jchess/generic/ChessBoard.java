@@ -164,8 +164,11 @@ public abstract class ChessBoard implements Board<Move> {
 		key ^= board.getZobrist().getTurnKey();
 	}
 	
-	public void moveCellsOnly (int from, int to) {
+	void saveCells() {
 		board.save();
+	}
+	
+	void moveOnlyCells (int from, int to) {
 		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
 		Castling castling = null;
@@ -179,7 +182,7 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 	}
 	
-	public void restoreMoveCellsOnly() {
+	void restoreCells() {
 		board.restore();
 	}
 	private Castling onKingMove(int from, int to, Color playingColor, boolean cellsOnly) {

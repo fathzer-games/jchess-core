@@ -1,10 +1,6 @@
 package com.fathzer.jchess.generic;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.IntPredicate;
-import java.util.stream.IntStream;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
@@ -148,8 +144,8 @@ public class StandardChessRules implements ChessRules {
 			final int kingDestination = tools.getBoard().getKingDestination(castling);
 			final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
-			if (getFreeCells(kingPosition, rookPosition, kingDestination, rookDestination).allMatch(p-> tools.getBoard().getPiece(p)==null) &&
-			!tools.mv.isThreatened(castling.getColor().opposite(), getSafeCells(kingPosition, kingDestination))) {
+			if (areCastlingCellsFree(tools.getFrom(), kingDestination, rookPosition, rookDestination) &&
+					areCastlingCellsSafe(tools.mv, tools.getBoard().getActiveColor().opposite(), kingPosition, kingDestination)) {
 				addCastling(tools.getMoves(), kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
@@ -167,23 +163,45 @@ public class StandardChessRules implements ChessRules {
 		moves.add(kingPosition, kingDestination);
 	}
 	
-	private IntStream getFreeCells(int kingPosition, int rookPosition, int kingDestination, int rookDestination) {
-		final List<Integer> positions = Arrays.asList(kingDestination,kingPosition,rookPosition,rookDestination);
-		Collections.sort(positions);
-		return IntStream.range(positions.get(0), positions.get(3)).filter(i-> i!=rookPosition && i!=kingPosition);
-	}
-
-	/** Gets the positions that should be safe (not attacked) to have the castling allowed.
-	 * @return an int stream. Please note that the king's cell is not returned in this array as the check state is verified before this method is called.
-	 */
-	private IntStream getSafeCells(int kingPosition, int kingDestination) {
-		if (kingPosition==kingDestination) {
-			return IntStream.empty();
-		} else if (kingPosition<kingDestination) {
-			return IntStream.range(kingPosition+1, kingDestination+1);
-		} else {
-			return IntStream.range(kingDestination, kingPosition);
+	private boolean areCastlingCellsFree(BoardExplorer exp, int kingDestination, int rookPosition, int rookDestination) {
+		final int kingPosition = exp.getIndex();
+		final int min = Math.min(Math.min(kingPosition, kingDestination), Math.min(rookPosition, rookDestination));
+		final int last = Math.max(Math.max(kingPosition, kingDestination), Math.max(rookPosition, rookDestination));
+		exp.reset(min);
+		for (int i=min; i<=last; i = exp.getIndex()) {
+			if (i!=kingPosition && i!=rookPosition && exp.getPiece()!=null) {
+				exp.reset(kingPosition);
+				return false;
+			}
+			exp.next();
 		}
+		exp.reset(kingPosition);
+		return true;
+	}
+	
+	/** Checks the positions that should be safe (not attacked) to have the castling allowed.
+	 * @param mv A move validator to be used to check if positions are safe
+	 * @param attacker The color of the attacker of cell 
+	 * @param kingPosition Current king's position
+	 * @param kingDestination King's destination
+	 * @return true if safe. Please note that the king's cell is not checked in this method because the check state is verified before this method is called.
+	 */
+	private boolean areCastlingCellsSafe(MoveValidator mv, Color attacker, int kingPosition, int kingDestination) {
+		if (kingPosition<kingDestination) {
+			for (int i = kingPosition+1; i <= kingDestination; i++) {
+				if (mv.isAttacked(i, attacker)) {
+					return false;
+				}
+			}
+		} else if (kingPosition!=kingDestination) {
+			// Warning, in chess960, king can stay at in position during castling
+			for (int i = kingDestination; i < kingPosition; i++) {
+				if (mv.isAttacked(i, attacker)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	private void addPawnMoves(DefaultMoveExplorer tools) {
