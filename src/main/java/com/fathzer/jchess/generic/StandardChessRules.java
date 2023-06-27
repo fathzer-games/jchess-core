@@ -49,8 +49,8 @@ public class StandardChessRules implements ChessRules {
 	public ChessGameState getState(Board<Move> board) {
 		//FIXME This cast is ugly. It's the result of not having getState in Board class! 
 		final DefaultMoveExplorer tools = new DefaultMoveExplorer((ChessBoard) board);
-		final ChessGameState list = tools.getMoves();
 		if (isInsufficientMaterial(board)) {
+			final ChessGameState list = tools.getMoves();
 			list.setStatus(Status.DRAW);
 			return list;
 		}
@@ -61,13 +61,21 @@ public class StandardChessRules implements ChessRules {
 		final Color color = tools.getBoard().getActiveColor();
 		final ChessGameState moves = tools.getMoves();
 		final BoardExplorer exp = tools.getFrom();
-		do {
-			if (exp.getPiece()!=null && color==exp.getPiece().getColor()) {
-				addPossibleMoves(tools);
-			}
-		} while (exp.next());
+		if (tools.getCheckCount()>1) {
+			// If double check, only king can move
+			final int kingPosition = tools.getBoard().getKingPosition(color);
+			exp.reset(kingPosition);
+			tools.getTo().reset(kingPosition);
+			addKingMoves(tools);
+		} else {
+			do {
+				if (exp.getPiece()!=null && color==exp.getPiece().getColor()) {
+					addPossibleMoves(tools);
+				}
+			} while (exp.next());
+		}
 		if (moves.size()==0) {
-			if (tools.isCheck()) {
+			if (tools.getCheckCount()>0) {
 				moves.setStatus(color.equals(Color.WHITE) ? Status.BLACK_WON : Status.WHITE_WON);
 			} else {
 				moves.setStatus(Status.DRAW);
@@ -100,9 +108,13 @@ public class StandardChessRules implements ChessRules {
 		final Piece piece = tools.getFrom().getPiece();
 		tools.getTo().reset(tools.getFrom().getIndex());
 		if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
-			piece.getKind().getDirections().stream().forEach(d->tools.addAllMoves(d, tools.mv.getDefault()));
+			for (Direction d:piece.getKind().getDirections()) {
+				tools.addAllMoves(d, tools.mv.getDefault());
+			}
 		} else if (PieceKind.KNIGHT.equals(piece.getKind())) {
-			piece.getKind().getDirections().stream().forEach(d->tools.addMove(d, tools.mv.getDefault()));
+			for (Direction d:PieceKind.KNIGHT.getDirections()) {
+				tools.addMove(d, tools.mv.getDefault());
+			}
 		} else if (PieceKind.KING.equals(piece.getKind())) {
 			addKingMoves(tools);
 		} else if (PieceKind.PAWN.equals(piece.getKind())) {
@@ -113,10 +125,13 @@ public class StandardChessRules implements ChessRules {
 	}
 	
 	private void addKingMoves(DefaultMoveExplorer tools) {
+		// We can think remember the free safe cells could be reused in castling //TODO
 		// StandardMoves => King can't go to attacked cell
-		PieceKind.KING.getDirections().stream().forEach(d->tools.addMove(d, tools.mv.getKing()));
+		for (Direction d:PieceKind.KING.getDirections()) {
+			tools.addMove(d, tools.mv.getKing());
+		}
 		// Castlings
-		if (!tools.isCheck()) {
+		if (tools.getCheckCount()==0) {
 			// No castlings allowed when you're in check
 			if (Color.WHITE==tools.getFrom().getPiece().getColor()) {
 				tryCastling(tools, Castling.WHITE_KING_SIDE);

@@ -7,7 +7,7 @@ import com.fathzer.jchess.Piece;
 
 import lombok.Getter;
 
-public class SkipFirstExplorer implements DirectionExplorer {
+public class BasicDirectionExplorer implements DirectionExplorer {
 	private final Piece[] pieces;
 	private final CoordinatesSystem cs;
 	@Getter
@@ -22,7 +22,7 @@ public class SkipFirstExplorer implements DirectionExplorer {
 	private int rowIncrement;
 	private int columnIncrement;
 	
-	public SkipFirstExplorer(Piece[] pieces, CoordinatesSystem cs, int startPosition) {
+	public BasicDirectionExplorer(Piece[] pieces, CoordinatesSystem cs, int startPosition) {
 		this.pieces = pieces;
 		this.cs = cs;
 		this.startPosition = startPosition;

@@ -20,6 +20,9 @@ This depth is 1 by default (to limit Github's resources consumption - Every push
 It appears to be the case for all platforms I've tested. So, the test is deactivate by default.  
 To activate this test, which is pretty long (8s on my small J4125 powered machine), set the **rndGenTest** system property to true.
 
+### Some performance tips
+Some code may seem not very elegant as it can use "old fashion" *for* structures and no stream. Remember, Stream is cool, but a little bit slower than *for* (stream allocate an object). For instance removing streams from AttackDetector increases speed by 30%!
+
 ## TODO
 - Finish FENParser for Chess960
 - Not sure CompactMoveList.sort is really useful, even if it is effectively called (It does not seems to use any capture information

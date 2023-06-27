@@ -5,9 +5,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.Color;
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.util.BiIntPredicate;
 
@@ -26,13 +24,13 @@ class MoveValidator {
 			final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
 			final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
 			final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
-			this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && kingSafeAfterMove.test(s.getIndex(), d.getIndex()) : (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
-			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && optimizedKingSafe.test(s.getIndex(), d.getIndex());
+			this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && kingSafeAfterMove.test(s.getIndex(), d.getIndex()) : (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
+			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && optimizedKingSafe.test(s.getIndex(), d.getIndex());
 			this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null && optimizedKingSafe.test(s.getIndex(), d.getIndex());
 			this.pawnCatchValidator = new PawnCatchValidator(board, kingSafeAfterMove, optimizedKingSafe);
 		} else {
-			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece());
-			this.kingValidator = (s,d) -> isDestBoardExplorerOk(board, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
+			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece());
+			this.kingValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
 			this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null;
 			if (board.getEnPassant()>=0) {
 				this.pawnCatchValidator = new PawnCatchValidator(board, new KingSafeAfterMoveValidator(board, attacks), (s,d)->true);
@@ -42,8 +40,8 @@ class MoveValidator {
 		}
 	}
 	
-	private boolean isDestBoardExplorerOk(Board<Move> board, Piece p) {
-		return p==null || !p.getColor().equals(board.getActiveColor());
+	private boolean isDestBoardExplorerOk(Color color, Piece p) {
+		return p==null || p.getColor().equals(color);
 	}
 
 	/** Gets a predicate that checks the destination is free and king is safe (used when pawn is moving vertically).
@@ -67,7 +65,7 @@ class MoveValidator {
 		return this.defaultValidator;
 	}
 
-	/** Gets a predicate that checks the destination is free or occupied by the opposite color and king is safe after it won move (used for king)
+	/** Gets a predicate that checks the destination is free or occupied by the opposite color and king is safe after it moves (used for king)
 	 * @return a BiPredicate<BoardExplorer, BoardExplorer>
 	 */
 	public BiPredicate<BoardExplorer, BoardExplorer> getKing() {

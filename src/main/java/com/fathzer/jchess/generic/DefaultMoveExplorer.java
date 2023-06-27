@@ -43,8 +43,8 @@ public class DefaultMoveExplorer {
 		this.moves = board.newMoveList();
 	}
 	
-	boolean isCheck() {
-		return checkManager.getCheckCount() > 0;
+	public int getCheckCount() {
+		return checkManager.getCheckCount();
 	}
 
 	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator)  {

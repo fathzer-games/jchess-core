@@ -19,6 +19,6 @@ public class BasicBoardRepresentation extends BoardRepresentation {
 
 	@Override
 	public DirectionExplorer getDirectionExplorer(int pos) {
-		return new SkipFirstExplorer(pieces, getCoordinatesSystem(), pos);
+		return new BasicDirectionExplorer(pieces, getCoordinatesSystem(), pos);
 	}
 }

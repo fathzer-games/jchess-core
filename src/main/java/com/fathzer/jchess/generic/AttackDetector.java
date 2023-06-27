@@ -49,11 +49,21 @@ class AttackDetector {
 	}
 	
 	private boolean check(DirectionExplorer explorer, Collection<Direction> directions, Color color, Predicate<Piece> validator) {
-		return directions.stream().anyMatch(d -> check(explorer, d, color, validator));
+		for (Direction d:directions) {
+			if (check(explorer, d, color, validator)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean checkNear(DirectionExplorer explorer, Collection<Direction> directions, Color color, Predicate<Piece> validator) {
-		return directions.stream().anyMatch(d -> checkNear(explorer, d, color, validator));
+		for (Direction d:directions) {
+			if (checkNear(explorer, d, color, validator)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean check(DirectionExplorer explorer, Direction direction, Color color, Predicate<Piece> validator)  {
