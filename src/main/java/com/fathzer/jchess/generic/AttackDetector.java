@@ -1,8 +1,7 @@
 package com.fathzer.jchess.generic;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
+import java.util.EnumSet;
 import java.util.function.Predicate;
 
 import com.fathzer.games.Color;
@@ -12,8 +11,8 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
 class AttackDetector {
-	static final List<Direction> BLACK_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.NORTH_EAST, Direction.NORTH_WEST);
-	static final List<Direction> WHITE_PAWN_THREAT_DIRECTIONS = Arrays.asList(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
+	static final Collection<Direction> BLACK_PAWN_THREAT_DIRECTIONS = EnumSet.of(Direction.NORTH_EAST, Direction.NORTH_WEST);
+	static final Collection<Direction> WHITE_PAWN_THREAT_DIRECTIONS = EnumSet.of(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
 
 	private final DirectionExplorer explorer;
 	

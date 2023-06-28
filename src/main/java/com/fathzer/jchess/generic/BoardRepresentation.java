@@ -28,7 +28,6 @@ public abstract class BoardRepresentation {
 	private final Direction[] pinnedMap;
 	private final Piece[] backup;
 	private final int[] kingPositions=new int[2];
-	private final int[] kingPositionBackup=new int[2];
 	
 	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension, List<PieceWithPosition> pieces) {
 		this.dimension = coordinatesSystem.getDimension();
@@ -60,12 +59,10 @@ public abstract class BoardRepresentation {
 	
 	public void save() {
 		System.arraycopy(this.pieces, 0, backup, 0, pieces.length);
-		System.arraycopy(this.kingPositions, 0, this.kingPositionBackup, 0, kingPositions.length);
 	}
 	
 	public void restore() {
 		System.arraycopy(backup, 0, this.pieces, 0, pieces.length);
-		System.arraycopy(kingPositionBackup, 0, this.kingPositions, 0, kingPositions.length);
 	}
 
 	void setPiece(int index, Piece piece) {

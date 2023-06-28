@@ -87,4 +87,12 @@ public class DefaultMoveExplorer {
 			}
 		}
 	}
+	
+	public boolean hasPinned() {
+		return checkManager.hasPinned();
+	}
+
+	public Direction getPinnedDirection(int index) {
+		return checkManager.apply(index);
+	}
 }

@@ -133,7 +133,7 @@ public abstract class ChessBoard implements Board<Move> {
 		} else {
 			this.clearEnPassant();
 			if (PieceKind.KING.equals(movedPiece.getKind())) {
-				castling = onKingMove(from, to, movedPiece.getColor(), false);
+				castling = onKingMove(from, to, movedPiece.getColor());
 			} else if (castlings!=0 && PieceKind.ROOK.equals(movedPiece.getKind())) {
 				// Erase castling if needed when rook moves
 				onRookEvent(from);
@@ -168,24 +168,20 @@ public abstract class ChessBoard implements Board<Move> {
 		board.save();
 	}
 	
-	void moveOnlyCells (int from, int to) {
+	int moveOnlyCells (int from, int to) {
 		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
-		Castling castling = null;
+		if (PieceKind.KING.equals(p.getKind())) {
+			return fastKingMove(from, to, playingColor);
+		}
 		if (PieceKind.PAWN.equals(p.getKind())) {
 			fastPawnMove(to, playingColor);
-		} else if (PieceKind.KING.equals(p.getKind())) {
-			castling = onKingMove(from, to, playingColor, true);
 		}
-		if (castling==null) {
-			move(from,to, true);
-		}
+		move(from,to, true);
+		return getKingPosition(playingColor);
 	}
-	
-	void restoreCells() {
-		board.restore();
-	}
-	private Castling onKingMove(int from, int to, Color playingColor, boolean cellsOnly) {
+
+	private int fastKingMove(int from, int to, Color playingColor) {
 		final Castling castling = getCastling(from, to, playingColor);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
@@ -193,14 +189,29 @@ public abstract class ChessBoard implements Board<Move> {
 			// Move the rook too
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
-			movePieces(from, to, initialRookPosition, rookDest, cellsOnly);
+			movePieces(from, to, initialRookPosition, rookDest, true);
+		} else {
+			move(from,to, true);
 		}
-		if (!cellsOnly) {
-			final boolean whitePlaying = WHITE.equals(playingColor);
-			eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
-					whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
+		return to;
+	}
 
+	void restoreCells() {
+		board.restore();
+	}
+	private Castling onKingMove(int from, int to, Color playingColor) {
+		final Castling castling = getCastling(from, to, playingColor);
+		if (castling!=null) {
+			// Castling => Get the correct king's destination
+			to = getKingDestination(castling); 
+			// Move the rook too
+			final int rookDest = to + castling.getSide().getRookOffset();
+			final int initialRookPosition = getInitialRookPosition(castling);
+			movePieces(from, to, initialRookPosition, rookDest, false);
 		}
+		final boolean whitePlaying = WHITE.equals(playingColor);
+		eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
+				whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
 		board.updateKingPosition(playingColor, to);
 		return castling;
 	}
