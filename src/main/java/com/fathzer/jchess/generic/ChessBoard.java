@@ -42,6 +42,7 @@ public abstract class ChessBoard implements Board<Move> {
 	private int moveNumber;
 	@Getter
 	private long key;
+	private final int[] kingPositions=new int[2];
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
 		this(Dimension.STANDARD, pieces);
@@ -82,6 +83,12 @@ public abstract class ChessBoard implements Board<Move> {
 				throw new IllegalArgumentException("Attacked enPassant pawn is missing");
 			}
 			setEnPassant(enPassantIndex, activeColor, pawnCell);
+		}
+		for (PieceWithPosition p : pieces) {
+			if (PieceKind.KING.equals(p.getPiece().getKind())) {
+				final int dest = board.getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
+				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
+			}
 		}
 		if (halfMoveCount<0) {
 			throw new IllegalArgumentException("Half move count can't be negative");
@@ -212,7 +219,7 @@ public abstract class ChessBoard implements Board<Move> {
 		final boolean whitePlaying = WHITE.equals(playingColor);
 		eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
 				whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
-		board.updateKingPosition(playingColor, to);
+		kingPositions[playingColor.ordinal()] = to;
 		return castling;
 	}
 	
@@ -403,6 +410,7 @@ public abstract class ChessBoard implements Board<Move> {
 			this.castlings = ((ChessBoard)other).castlings;
 			this.board.copy(((ChessBoard)other).board);
 			this.key = other.getKey();
+			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
 		} else {
 			throw new UnsupportedOperationException();
 		}
@@ -410,7 +418,7 @@ public abstract class ChessBoard implements Board<Move> {
 	
 	@Override
 	public int getKingPosition(Color color) {
-		return board.getKingPosition(color);
+		return kingPositions[color.ordinal()];
 	}
 
 	@Override

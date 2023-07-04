@@ -21,11 +21,25 @@ It appears to be the case for all platforms I've tested. So, the test is deactiv
 To activate this test, which is pretty long (8s on my small J4125 powered machine), set the **rndGenTest** system property to true.
 
 ### Some performance tips
-Some code may seem not very elegant as it can use "old fashion" *for* structures and no stream. Remember, Stream is cool, but a little bit slower than *for* (stream allocate an object). For instance removing streams from AttackDetector increases speed by 30%!
+- Why not using bitmaps?  
+The idea is to have a library that can also be used for non 8x8 chess variants, like [Capablanca chess](https://en.wikipedia.org/wiki/Capablanca_chess). The bitmap based [chesslib](https://github.com/bhlangonijr/chesslib) library, which is not really optimized (it generates all moves and then verify they are legal), is currently about 40% faster than this one: 21.8M moves/s vs 15.4M moves/s using this project's perft data set with a depth of 4 using 4 threads on my J4125 Mini PC.
+- Some optimization implemented  
+    - This library uses a 8x10 [mailbox representation](https://www.chessprogramming.org/Mailbox) (with borders pseudo pieces at each side of the rows). This allow 20% speed improvement compared to a basic 8x8 representation.
+    - Most of the time there's no check and no pinned piece. Then, no need to check if moves leave the king attacked (except for king and *en-passant* moves).
+    - If a piece is pinned, no need to test if other pieces moves leave the king attacked (except for king and *en-passant* moves).
+    - If double check situations, only king can move.
+    - The old style code is (sometime) better:  
+Some code may seem not very elegant as it uses "old fashion" *for* structures instead of streams. Remember, Stream is cool, but a little bit slower than *for* (stream allocate an object, and object allocation is the usually the enemy of performance). For instance removing streams from AttackDetector class increases speed by 30%!
+- Some unexplored optimization ideas
+    - When a piece is pinned, only moves in direction of the attacking piece or in the opposite direction are valid.
+    - When a knight is pinned, it can't move.
+    - In check situations, the only valid moves are the one that intersects the attacks (or catch the piece).
 
 ## TODO
-- Finish FENParser for Chess960
 - Not sure CompactMoveList.sort is really useful, even if it is effectively called (It does not seems to use any capture information
+- Finish FENParser for Chess960
+- Use zobrist key in AI!!!
+- Implement Capablanca chess
 - General things ... if it does not alter performance too much:
     - Is it a good idea to separate ChessBoards and rules? Would it be better to have newGame and getState methods in ChessBoard? It seems we often need rules and Board.  
 A way could be to change Rules to something like Game or Board and only have genericity on Move.

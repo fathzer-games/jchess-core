@@ -2,14 +2,12 @@ package com.fathzer.jchess.generic;
 
 import java.util.List;
 
-import com.fathzer.games.Color;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.ZobristKeyBuilder;
 
@@ -23,11 +21,11 @@ public abstract class BoardRepresentation {
 	@Getter
 	private final ZobristKeyBuilder zobrist;
 
+	@Getter
 	protected final Piece[] pieces;
 	@Getter
 	private final Direction[] pinnedMap;
 	private final Piece[] backup;
-	private final int[] kingPositions=new int[2];
 	
 	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension, List<PieceWithPosition> pieces) {
 		this.dimension = coordinatesSystem.getDimension();
@@ -42,9 +40,6 @@ public abstract class BoardRepresentation {
 				throw new IllegalArgumentException ("More than one piece at "+dest+": "+this.pieces[dest]+"/"+p.getPiece());
 			}
 			this.pieces[dest]=p.getPiece();
-			if (PieceKind.KING.equals(p.getPiece().getKind())) {
-				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
-			}
 		}
 	}
 	
@@ -53,7 +48,6 @@ public abstract class BoardRepresentation {
 	}
 	
 	public void copy(BoardRepresentation other) {
-		System.arraycopy(other.kingPositions, 0, kingPositions, 0, kingPositions.length);
 		System.arraycopy(other.pieces, 0, pieces, 0, pieces.length);
 	}
 	
@@ -67,14 +61,6 @@ public abstract class BoardRepresentation {
 
 	void setPiece(int index, Piece piece) {
 		this.pieces[index] = piece;
-	}
-	
-	public int getKingPosition(Color color) {
-		return kingPositions[color.ordinal()];
-	}
-	
-	public void updateKingPosition(Color kingsColor, int index) {
-		kingPositions[kingsColor.ordinal()] = index;
 	}
 	
 	@Override
