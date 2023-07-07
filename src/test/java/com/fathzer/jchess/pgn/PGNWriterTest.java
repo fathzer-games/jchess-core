@@ -3,7 +3,6 @@ package com.fathzer.jchess.pgn;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
@@ -14,10 +13,9 @@ class PGNWriterTest {
 
 	@Test
 	void test() {
-		final ChessRules rules = StandardChessRules.INSTANCE;
-		final Board<Move> board = rules.newGame();
+		final Board<Move> board = StandardChessRules.INSTANCE.newGame();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final GameHistory history = new GameHistory(rules, board);
+		final GameHistory history = new GameHistory(board);
 		history.add(new SimpleMove(cs, "e2", "e4"));
 		history.add(new SimpleMove(cs, "e7", "e5"));
 		history.add(new SimpleMove(cs, "d1", "h5"));

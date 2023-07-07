@@ -8,6 +8,9 @@ import java.util.Collection;
 import java.util.List;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.GameState;
+import com.fathzer.games.UndoMoveManager;
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
@@ -17,6 +20,7 @@ import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ChessGameState;
+import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
@@ -24,25 +28,18 @@ import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 import com.fathzer.jchess.standard.CompactMoveList;
 
-import lombok.Getter;
-
-public abstract class ChessBoard implements Board<Move> {
+public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 	private final DirectionExplorer exp;
-	@Getter
 	private final BoardRepresentation board;
-	@Getter
+	private int[] kingPositions;
 	private int enPassant;
 	private int enPassantDeletePawnIndex;
-	@Getter
 	private Color activeColor;
 	private int castlings;
-	@Getter
 	private int halfMoveCount;
-	@Getter
 	private int moveNumber;
-	@Getter
 	private long key;
-	private final int[] kingPositions=new int[2];
+	private UndoMoveManager<ChessBoardState> undoManager;
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
 		this(Dimension.STANDARD, pieces);
@@ -50,6 +47,28 @@ public abstract class ChessBoard implements Board<Move> {
 
 	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces) {
 		this(dimension, pieces,Color.WHITE, Castling.ALL, -1, 0, 1);
+	}
+	
+	private void save(ChessBoardState state) {
+		state.enPassant = this.enPassant;
+		state.enPassantDeletePawnIndex = this.enPassantDeletePawnIndex;
+		state.castlings = this.castlings;
+		state.moveNumber = this.moveNumber;
+		state.halfMoveCount = this.halfMoveCount;
+		state.key = this.key;
+		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
+		System.arraycopy(board.getPieces(), 0, state.cells, 0, state.cells.length);
+	}
+	
+	private void restore(ChessBoardState state) {
+		this.enPassant = state.enPassant;
+		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
+		this.castlings = state.castlings;
+		this.moveNumber = state.moveNumber;
+		this.halfMoveCount = state.halfMoveCount;
+		this.key = state.key;
+		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
+		System.arraycopy(state.cells, 0, board.getPieces(), 0, state.cells.length);
 	}
 
 	/** Constructor.
@@ -66,6 +85,7 @@ public abstract class ChessBoard implements Board<Move> {
 			throw new NullPointerException();
 		}
 		this.board = new FastBoardRepresentation(dimension, pieces);
+		this.undoManager = new UndoMoveManager<>(() -> new ChessBoardState(this.board.getPieces().length), this::save, this::restore);
 		this.exp = getDirectionExplorer(-1);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
@@ -84,6 +104,7 @@ public abstract class ChessBoard implements Board<Move> {
 			}
 			setEnPassant(enPassantIndex, activeColor, pawnCell);
 		}
+		this.kingPositions = new int[2];
 		for (PieceWithPosition p : pieces) {
 			if (PieceKind.KING.equals(p.getPiece().getKind())) {
 				final int dest = board.getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
@@ -120,6 +141,15 @@ public abstract class ChessBoard implements Board<Move> {
 	public DirectionExplorer getDirectionExplorer(int index) {
 		return board.getDirectionExplorer(index);
 	}
+	
+	public ChessRules getRules() {
+		return StandardChessRules.INSTANCE;
+	}
+	
+	@Override
+	public GameState<Move> getState() {
+		return getRules().getState(this);
+	}
 
 	/** Makes a move.
 	 * <br>WARNING, this method does not verify the move is valid.
@@ -127,7 +157,8 @@ public abstract class ChessBoard implements Board<Move> {
 	 * @throws IllegalArgumentException if there's no piece at move.getFrom().
 	 */
 	@Override
-	public void move(Move move) {
+	public void makeMove(Move move) {
+		this.undoManager.beforeMove();
 		final int from = move.getFrom();
 		int to = move.getTo();
 		Piece movedPiece = board.getPiece(from);
@@ -169,6 +200,12 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 		activeColor = movedPiece.getColor().opposite();
 		key ^= board.getZobrist().getTurnKey();
+	}
+	
+	@Override
+	public void unmakeMove() {
+		this.undoManager.undo();
+		this.activeColor = this.activeColor.opposite();
 	}
 	
 	void saveCells() {
@@ -420,10 +457,44 @@ public abstract class ChessBoard implements Board<Move> {
 	public int getKingPosition(Color color) {
 		return kingPositions[color.ordinal()];
 	}
+	
+	@Override
+	public Color getActiveColor() {
+		return activeColor;
+	}
+
+	@Override
+	public int getEnPassant() {
+		return this.enPassant;
+	}
+	
+	@Override
+	public long getKey() {
+		return key;
+	}
+	
+	@Override
+	public int getHalfMoveCount() {
+		return halfMoveCount;
+	}
+	
+	@Override
+	public int getMoveNumber() {
+		return moveNumber;
+	}
+	
+	@Override
+	public boolean isCheck() {
+		return getRules().isCheck(this);
+	}
 
 	@Override
 	public ChessGameState newMoveList() {
 		//TODO MoveList can represent move with bigger board
 		return Dimension.STANDARD.equals(board.getDimension()) ? new CompactMoveList() : new BasicMoveList();
+	}
+
+	BoardRepresentation getBoard() {
+		return board;
 	}
 }

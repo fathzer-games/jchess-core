@@ -23,7 +23,7 @@ import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
-import com.fathzer.jchess.CopyBasedMoveGenerator;
+import com.fathzer.jchess.CustomizedRulesMoveGenerator;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.StandardChessRules;
@@ -57,7 +57,11 @@ class PerfTTest {
 		final PerfT<Move> perfT = new PerfT<>(exec);
 		if (test.getSize()>=depth) {
 //			try {
-				final PerfTResult<Move> divide = perfT.divide(depth, () -> new CopyBasedMoveGenerator<>(StandardChessRules.PERFT, board));
+				final PerfTResult<Move> divide = perfT.divide(depth, () -> {
+					Board<Move> b = board.create();
+					b.copy(board);
+					return new CustomizedRulesMoveGenerator(StandardChessRules.PERFT, b);
+				});
 				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 //				if (count != test.getCount(depth)) {
 //					System.out.println("Error for "+test.getFen()+" expected "+test.getCount(depth)+" got "+count);

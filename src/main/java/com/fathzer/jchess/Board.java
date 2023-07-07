@@ -1,11 +1,12 @@
 package com.fathzer.jchess;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.MoveGenerator;
 
 /** A chess board.
  * @param <M> The class that represents a move.
  */
-public interface Board<M> {
+public interface Board<M> extends MoveGenerator<M> {
 	Dimension getDimension();
 	/** Many methods in this interface use an int index to identify a position on the board.
 	 * Don't make any assumptions on how these values are related to row and columns.
@@ -27,8 +28,8 @@ public interface Board<M> {
 	int getHalfMoveCount();
 	int getMoveNumber();
 	int getKingPosition(Color color);
-	void move(M move);
 	boolean hasCastling(Castling c);
+	boolean isCheck();
 
 	/** Gets the initial rook position of a castling.
 	 * @param castling The castling
@@ -69,7 +70,7 @@ public interface Board<M> {
 
 	long getKey();
 
-	/** Creates an empty board of the same class as this.
+	/** Creates a copy of this board of the same class as this.
 	 * @return a new Board.
 	 */
 	default Board<M> create() {

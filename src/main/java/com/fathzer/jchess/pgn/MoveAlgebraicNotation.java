@@ -12,7 +12,6 @@ import java.util.stream.StreamSupport;
 import com.fathzer.games.GameState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
-import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
@@ -21,7 +20,6 @@ import com.fathzer.jchess.PieceKind;
 /** A class to get move <a href="https://en.wikipedia.org/wiki/Algebraic_notation_(chess)">Algebraic notation</a> of moves.
  */
 public class MoveAlgebraicNotation {
-	private final ChessRules rules;
 	private String checkSymbol = "+";
 	private String checkmateSymbol = "#";
 	private char captureSymbol = 'x';
@@ -30,10 +28,6 @@ public class MoveAlgebraicNotation {
 	private Function<Piece, String> promotionSymbolBuilder = p -> "="+p.getNotation().toUpperCase();
 	private boolean playMove;
 	
-	public MoveAlgebraicNotation(ChessRules rules) {
-		this.rules = rules;
-	}
-
 	/** Gets the algebraic notation of a move.
 	 * <br>If sideEffect attribute is true, move is played on the board
 	 * @param board The board before the move occurs
@@ -43,7 +37,7 @@ public class MoveAlgebraicNotation {
 	 */
 	public String get(Board<Move> board, Move move) {
 		final StringBuilder builder = new StringBuilder();
-		final GameState<Move> state = rules.getState(board);
+		final GameState<Move> state = board.getState();
 		// First, keep only moves with the right destination
 		// This list will allow us to check if the move is valid and if it needs disambiguation
 		final int to = move.getTo();
@@ -58,7 +52,7 @@ public class MoveAlgebraicNotation {
 		} else {
 			builder.append(encodeMove(board, move, candidates));
 		}
-		final Optional<String> afterMove = afterMove(board, move, rules);
+		final Optional<String> afterMove = afterMove(board, move);
 		if (afterMove.isPresent()) {
 			builder.append(afterMove.get());
 		}
@@ -139,22 +133,21 @@ public class MoveAlgebraicNotation {
 		}
 	}
 	
-	private Optional<String> afterMove(Board<Move> board, Move move, ChessRules rules) {
-		final Board<Move> after;
-		if (playMove) {
-			after = board;
-		} else {
-			after = board.create();
-			after.copy(board);
-		}
-		after.move(move);
-		final GameState<Move> state = rules.getState(after);
-		if (state.getStatus()!=DRAW && state.size()==0) {
-			return Optional.of(checkmateSymbol);
-		} else if (rules.isCheck(after)) {
-			return Optional.of(checkSymbol);
-		} else {
-			return Optional.empty();
+	private Optional<String> afterMove(Board<Move> board, Move move) {
+		board.makeMove(move);
+		try {
+			final GameState<Move> state = board.getState();
+			if (state.getStatus()!=DRAW && state.size()==0) {
+				return Optional.of(checkmateSymbol);
+			} else if (board.isCheck()) {
+				return Optional.of(checkSymbol);
+			} else {
+				return Optional.empty();
+			}
+		} finally {
+			if (!playMove) {
+				board.unmakeMove();
+			}
 		}
 	}
 

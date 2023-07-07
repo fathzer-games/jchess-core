@@ -11,13 +11,12 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.SimpleMove;
 import com.fathzer.jchess.fen.FENParser;
-import com.fathzer.jchess.generic.StandardChessRules;
 
 class MoveAlgebraicNotationTest {
 
 	@Test
 	void test() {
-		final MoveAlgebraicNotation san = new MoveAlgebraicNotation(StandardChessRules.INSTANCE);
+		final MoveAlgebraicNotation san = new MoveAlgebraicNotation();
 		
 		Board<Move> board = FENParser.from("rnbqkbnr/pppp1ppp/8/4p3/3P3P/8/PPP1PPP1/RNBQKBNR b KQkq d3 0 2");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
@@ -68,7 +67,7 @@ class MoveAlgebraicNotationTest {
 	
 	@Test
 	void testCustom() {
-		final MoveAlgebraicNotation san = new MoveAlgebraicNotation(StandardChessRules.INSTANCE);
+		final MoveAlgebraicNotation san = new MoveAlgebraicNotation();
 		san.withCaptureSymbol(':').withCastlingSymbolBuilder(s -> s==Castling.Side.KING?"0-0":"0-0-0");
 		san.withCheckSymbol("ch").withCheckmateSymbol("++");
 		san.withEnPassantSymbol("").withPromotionSymbolBuilder(p->p.getNotation().toUpperCase());

@@ -54,5 +54,6 @@ Then, we can imagine adding some useful methods to ChessBoard like isCheck.
     - Use killer moves in Alpha beta pruning moves sort?
 
 ## Known bugs
+- JChessUCIEngine play move at the end of go, which I think is a mistake
 - Draw by repetition is not implemented
 - com.fathzer.jchess.generic.BasicMove is not thread safe

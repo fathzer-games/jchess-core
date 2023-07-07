@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.fathzer.games.Rules;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
@@ -26,8 +25,8 @@ public class PGNWriter {
 		@Getter
 		private final List<String> anMoves;
 		
-		private String getResult(Rules<Board<Move>, Move> rules) {
-			final Status state = rules.getState(board).getStatus();
+		private String getResult() {
+			final Status state = board.getState().getStatus();
 			if (state==DRAW) {
 				return "1/2-1/2";
 			} else if (state==WHITE_WON) {
@@ -51,7 +50,7 @@ public class PGNWriter {
 		result.add(getField("White", headers.getWhiteName()));
 		result.add(getField("Black", headers.getBlackName()));
 		final ResultAndMoves movesAndResult = getMovesAndResult(history);
-		result.add(getField("Result", movesAndResult.getResult(history.getRules())));
+		result.add(getField("Result", movesAndResult.getResult()));
 		result.addAll(initialPosition);
 		result.add("");
 		result.addAll(movesAndResult.getAnMoves());
@@ -76,7 +75,7 @@ public class PGNWriter {
 
 	private ResultAndMoves getMovesAndResult(GameHistory history) {
 		final LinkedList<String> result = new LinkedList<>();
-		final MoveAlgebraicNotation an = new MoveAlgebraicNotation(history.getRules()).withPlayMove(true);
+		final MoveAlgebraicNotation an = new MoveAlgebraicNotation().withPlayMove(true);
 		final Board<Move> board = history.getStartBoard().create();
 		board.copy(history.getStartBoard());
 		final StringBuilder buf = new StringBuilder();

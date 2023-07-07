@@ -57,7 +57,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	}
 	
 	private void setLevel(String level) {
-		int depth;
+		final int depth;
 		if (SILLY_LEVEL.equals(level)) {
 			depth = 4;
 		} else if (AVERAGE_LEVEL.equals(level)) {
@@ -76,7 +76,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	
 	@Override
 	public void move(UCIMove move) {
-		board.move(toMove(board.getCoordinatesSystem(), move, board.getActiveColor()));
+		board.makeMove(toMove(board.getCoordinatesSystem(), move, board.getActiveColor()));
 	}
 	
 	public static Move toMove(CoordinatesSystem cs, UCIMove move, Color color) {
@@ -116,7 +116,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 			@Override
 			public UCIMove get() {
 				final Move best = engine.apply(board);
-				board.move(best);
+				board.makeMove(best);
 				return toMove(board.getCoordinatesSystem(), best);
 			}
 

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
@@ -16,8 +17,8 @@ import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.ChessRules;
+import com.fathzer.jchess.CustomizedRulesMoveGenerator;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.standard.CompactMoveList;
 
@@ -71,21 +72,20 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 
 	public List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy) {
 		final Stat stat = new Stat();
-//		evaluator.setViewPoint(null);
-//		final AbstractAI<Move> internal = new AlphaBeta<>() {
-//			@Override
-//			public GameContext<Move> buildContext() {
-//				return new Context(rules, evaluator::evaluate, board, stat);
-//			}
-//		};
 		evaluator.setViewPoint(board.getActiveColor());
 		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(parallelism)) {
-			final AbstractAI<Move> internal = new Negamax<>(() -> new InstrumentedMoveGenerator(rules, board, stat), exec) {
+			final Supplier<MoveGenerator<Move>> supplier = () -> {
+				Board<Move> b = board.create();
+				b.copy(board);
+				return new InstrumentedMoveGenerator(rules, b, stat);
+			};
+			final AbstractAI<Move> internal = new Negamax<>(supplier, exec) {
 				@Override
 				public int evaluate() {
-					return evaluator.evaluate(((CopyBasedMoveGenerator<Move>)getMoveGenerator()).getBoard());
+					return evaluator.evaluate(((CustomizedRulesMoveGenerator)getMoveGenerator()).getBoard());
 				}
 			};
+
 			synchronized (this) {
 				this.sessions.add(internal);
 			}
@@ -102,7 +102,7 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		}
 	}
 	
-	private static class InstrumentedMoveGenerator extends CopyBasedMoveGenerator<Move> {
+	private static class InstrumentedMoveGenerator extends CustomizedRulesMoveGenerator {
 		private Stat stat;
 
 		public InstrumentedMoveGenerator(Rules<Board<Move>, Move> rules, Board<Move> board, Stat stat) {

@@ -21,7 +21,7 @@ class ChessBoardTest {
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final ChessGameState moves = board.newMoveList();
 		moves.add(cs.getIndex("d1"), cs.getIndex("c1"));
-		board.move(moves.get(0));
+		board.makeMove(moves.get(0));
 		assertEquals(Piece.WHITE_ROOK, board.getPiece(cs.getIndex("d1")));
 		assertEquals(Piece.WHITE_KING, board.getPiece(cs.getIndex("c1")));
 	}

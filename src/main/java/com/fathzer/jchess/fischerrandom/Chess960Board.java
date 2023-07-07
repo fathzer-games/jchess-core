@@ -9,6 +9,7 @@ import java.util.List;
 import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
+import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.PieceKind;
@@ -37,6 +38,11 @@ public class Chess960Board extends ChessBoard {
 		}
 	}
 	
+	@Override
+	public ChessRules getRules() {
+		return FischerRandomRules.INSTANCE;
+	}
+
 	@Override
 	public Board<Move> create() {
 		return new Chess960Board(Collections.emptyList(), Color.WHITE, Collections.emptyList(), new int[4], -1, 0, 1);

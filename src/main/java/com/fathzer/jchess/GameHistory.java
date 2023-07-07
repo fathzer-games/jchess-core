@@ -5,17 +5,15 @@ import java.util.List;
 
 public class GameHistory {
 	private final Board<Move> startBoard;
-	private final ChessRules rules;
 	private final List<Move> moves;
 
-	public GameHistory(ChessRules rules, Board<Move> board) {
-		this(rules, board, new LinkedList<>());
+	public GameHistory(Board<Move> board) {
+		this(board, new LinkedList<>());
 	}
 
-	public GameHistory(ChessRules rules, Board<Move> board, List<Move> moves) {
+	public GameHistory(Board<Move> board, List<Move> moves) {
 		this.startBoard = board.create();
 		this.startBoard.copy(board);
-		this.rules = rules;
 		this.moves = moves;
 	}
 
@@ -29,9 +27,5 @@ public class GameHistory {
 
 	public List<Move> getMoves() {
 		return moves;
-	}
-
-	public ChessRules getRules() {
-		return rules;
 	}
 }

@@ -38,7 +38,7 @@ public class CopyBasedMoveGenerator<M> implements MoveGenerator<M> {
 		}
 		board.copy(previous);
 //System.out.println("Make move "+move+" on thread "+Thread.currentThread()+" at depth "+currentDepth);
-		board.move(move);
+		board.makeMove(move);
 	}
 	
 	@Override

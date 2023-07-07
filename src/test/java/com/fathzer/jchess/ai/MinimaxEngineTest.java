@@ -69,7 +69,8 @@ show(moves, cs);
 		assertEquals(getMateScore(1), max);
 		assertTrue(moves.get(3).getValue()<max);
 		moves.stream().limit(3).forEach(m -> assertEquals(max, m.getValue()));
-//fail("enough!");		
+//fail("enough!");
+
 		// Mat in 1 with blacks
 		System.out.println("------------------");
 		moves = mme4.getBestMoves(FENParser.from("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5"), Integer.MAX_VALUE, 0);
