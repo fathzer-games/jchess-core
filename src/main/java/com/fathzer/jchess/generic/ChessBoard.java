@@ -19,14 +19,12 @@ import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.ChessRules;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
-import com.fathzer.jchess.standard.CompactMoveList;
 
 public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 	private final DirectionExplorer exp;
@@ -497,11 +495,11 @@ public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 		return getRules().isCheck(this);
 	}
 
-	@Override
-	public ChessGameState newMoveList() {
-		//TODO MoveList can represent move with bigger board
-		return Dimension.STANDARD.equals(board.getDimension()) ? new CompactMoveList() : new BasicMoveList();
-	}
+//	@Override
+//	public ChessGameState newMoveList() {
+//		//TODO MoveList can represent move with bigger board
+//		return Dimension.STANDARD.equals(board.getDimension()) ? new CompactMoveList() : new BasicMoveList();
+//	}
 
 	BoardRepresentation getBoard() {
 		return board;

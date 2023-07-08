@@ -168,7 +168,7 @@ public class MovesBuilder {
 				m.add(new BasicMove(f, t, black ? Piece.BLACK_ROOK : Piece.WHITE_ROOK));
 				m.add(new BasicMove(f, t, black ? Piece.BLACK_BISHOP : Piece.WHITE_BISHOP));
 			} else {
-				InternalMoveBuilder.DEFAULT.generate(m, f, t);
+				m.add(new BasicMove(f, t));
 			}
 		};
 		final int startRow = black ? 1 : tools.getBoard().getDimension().getHeight()-2;

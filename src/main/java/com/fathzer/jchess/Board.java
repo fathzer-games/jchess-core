@@ -84,9 +84,4 @@ public interface Board<M> extends MoveGenerator<M> {
 	default void copy(Board<M> board) {
 		throw new UnsupportedOperationException();
 	}
-
-	/** Creates a new empty move list.
-	 * @return a new move list
-	 */
-	ChessGameState newMoveList();
 }
