@@ -14,6 +14,9 @@ class UCITest {
 	
 	@Test
 	void test() throws InterruptedException {
+		//FIXME
+		// This is clearly not a test (no assertion)!
+		// The worse is it does not respect the uci protocol (should wait for go return before sending a new position)
 		MyUCI uci = new MyUCI();
 		Thread thread = new Thread(uci);
 		thread.setDaemon(true);
@@ -66,11 +69,6 @@ class UCITest {
 		protected void out(CharSequence message) {
 			replies.add(message.toString());
 			super.out(message);
-		}
-		
-		public String getNextReply() {
-			waitSomething(replies);
-			return replies.poll();
 		}
 	}
 }

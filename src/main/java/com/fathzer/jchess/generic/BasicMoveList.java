@@ -29,7 +29,7 @@ public class BasicMoveList implements ChessGameState {
 
 	@Override
 	public void add(int from, int to) {
-		moves.add(BasicMove.get(from, to));
+		moves.add(new BasicMove(from, to));
 	}
 
 	@Override

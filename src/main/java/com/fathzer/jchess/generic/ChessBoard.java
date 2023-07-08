@@ -8,9 +8,9 @@ import java.util.Collection;
 import java.util.List;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.GameState;
 import com.fathzer.games.UndoMoveManager;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
@@ -31,6 +31,7 @@ import com.fathzer.jchess.standard.CompactMoveList;
 public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 	private final DirectionExplorer exp;
 	private final BoardRepresentation board;
+	private final MovesBuilder movesBuilder;
 	private int[] kingPositions;
 	private int enPassant;
 	private int enPassantDeletePawnIndex;
@@ -120,6 +121,7 @@ public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 		}
 		this.moveNumber = moveNumber;
 		this.key = board.getZobrist().get(this);
+		this.movesBuilder = new MovesBuilder(this);
 	}
 	
 	@Override
@@ -147,8 +149,13 @@ public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 	}
 	
 	@Override
-	public GameState<Move> getState() {
-		return getRules().getState(this);
+	public List<Move> getMoves() {
+		return movesBuilder.getMoves();
+	}
+
+	@Override
+	public Status getStatus() {
+		return movesBuilder.getStatus();
 	}
 
 	/** Makes a move.
@@ -158,13 +165,13 @@ public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 	 */
 	@Override
 	public void makeMove(Move move) {
-		this.undoManager.beforeMove();
 		final int from = move.getFrom();
 		int to = move.getTo();
 		Piece movedPiece = board.getPiece(from);
 		if (movedPiece==null) {
 			throw new IllegalArgumentException("No piece at "+from);
 		}
+		this.undoManager.beforeMove();
 		Castling castling = null;
 		if (PieceKind.PAWN.equals(movedPiece.getKind())) {
 			pawnMove(from, to, move.promotedTo());
@@ -200,12 +207,14 @@ public abstract class ChessBoard implements Board<Move>, MoveGenerator<Move> {
 		}
 		activeColor = movedPiece.getColor().opposite();
 		key ^= board.getZobrist().getTurnKey();
+		movesBuilder.clear();
 	}
 	
 	@Override
 	public void unmakeMove() {
 		this.undoManager.undo();
 		this.activeColor = this.activeColor.opposite();
+		this.movesBuilder.clear();
 	}
 	
 	void saveCells() {

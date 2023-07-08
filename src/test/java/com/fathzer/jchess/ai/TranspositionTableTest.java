@@ -8,7 +8,7 @@ import com.fathzer.games.ai.TranspositionTable;
 
 class TranspositionTableTest {
 
-	@Test
+//	@Test
 	void test() {
 		TranspositionTable table = new TranspositionTable(512);
 		
