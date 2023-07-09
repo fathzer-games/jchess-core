@@ -120,8 +120,7 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		public List<Move> getMoves() {
 			stat.moveGenerations.incrementAndGet();
 			final List<Move> moves = board.getMoves();
-//TODO Incredible, sorting makes it very, very slow
-//			moves.sort(cmp);
+			moves.sort(cmp);
 			stat.generatedMoves.addAndGet(moves.size());
 			return moves;
 		}

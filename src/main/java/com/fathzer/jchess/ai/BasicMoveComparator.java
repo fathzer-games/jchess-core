@@ -17,7 +17,8 @@ public class BasicMoveComparator implements Comparator<Move> {
 
 	@Override
 	public int compare(Move m1, Move m2) {
-		return getValue(m1) - getValue(m2);
+		// Important sort from higher to lower scores
+		return getValue(m2) - getValue(m1);
 	}
 
 	private int getValue(Move m) {
