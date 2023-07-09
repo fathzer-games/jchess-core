@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
 		return new AbstractAI<Move>(null,null) {
 			@Override
-			public List<Evaluation<Move>> getBestMoves(int depth, Iterator<Move> possibleMoves, int size, int accuracy) {
+			public List<Evaluation<Move>> getBestMoves(int depth, List<Move> possibleMoves, int size, int accuracy) {
 				throw new UnsupportedOperationException();
 			}
 
@@ -129,7 +128,7 @@ assertEquals(19, moves.size());
 			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f4")));
-			final List<Evaluation<Move>> eval = ai.getBestMoves(4, l.iterator(), Integer.MAX_VALUE, 0);
+			final List<Evaluation<Move>> eval = ai.getBestMoves(4, l, Integer.MAX_VALUE, 0);
 			assertEquals(3, eval.size());
 			for (Evaluation<Move> e : eval) {
 				assertEquals(-getMateScore(1), e.getValue());

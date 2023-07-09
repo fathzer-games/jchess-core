@@ -1,6 +1,7 @@
 package com.fathzer.jchess.ai;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -18,7 +19,6 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -98,11 +98,17 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		}
 	}
 	
-	@AllArgsConstructor
 	private static class InstrumentedMoveGenerator implements MoveGenerator<Move> {
 		@Getter
-		private Board<Move> board;
-		private Stat stat;
+		private final Board<Move> board;
+		private final Stat stat;
+		private final Comparator<Move> cmp;
+
+		public InstrumentedMoveGenerator(Board<Move> board, Stat stat) {
+			this.board = board;
+			this.stat = stat;
+			this.cmp = new BasicMoveComparator(board);
+		}
 
 		@Override
 		public void makeMove(Move move) {
@@ -113,13 +119,11 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		@Override
 		public List<Move> getMoves() {
 			stat.moveGenerations.incrementAndGet();
-			final List<Move> state = board.getMoves();
-//FIXME Should sort the moves
-//			if (state instanceof CompactMoveList) {
-//				state.sort(i -> ((CompactMoveList)state).fastEvaluate(i, getBoard()));
-//			}
-			stat.generatedMoves.addAndGet(state.size());
-			return state;
+			final List<Move> moves = board.getMoves();
+//TODO Incredible, sorting makes it very, very slow
+//			moves.sort(cmp);
+			stat.generatedMoves.addAndGet(moves.size());
+			return moves;
 		}
 
 		@Override

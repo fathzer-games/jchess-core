@@ -19,6 +19,7 @@ public class InternalMoveBuilder {
 		void generate(List<Move> moves, int from, int to);
 	}
 	
+	private static final int MAX_POSSIBLE_MOVES = 218;
 	public static final MoveGenerator DEFAULT = (moves, from, to) -> moves.add(new BasicMove(from,to));
 	@Getter
 	private Board<Move> board;
@@ -33,7 +34,7 @@ public class InternalMoveBuilder {
 	
 	public InternalMoveBuilder(ChessBoard board) {
 		this.board = board;
-		this.moves = new ArrayList<>();
+		this.moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
 		this.checkManager = new PinnedDetector(board);
