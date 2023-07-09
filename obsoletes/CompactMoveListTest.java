@@ -18,13 +18,13 @@ class CompactMoveListTest {
 		Move m = list.get(0);
 		assertEquals(18, m.getTo());
 		assertEquals(10, m.getFrom());
-		assertNull(m.promotedTo());
+		assertNull(m.getPromotion());
 		
 		list.add(55 ,63, Piece.WHITE_QUEEN);
 		m = list.get(1);
 		assertEquals(63, m.getTo());
 		assertEquals(55, m.getFrom());
-		assertEquals(Piece.WHITE_QUEEN, m.promotedTo());
+		assertEquals(Piece.WHITE_QUEEN, m.getPromotion());
 	}
 	
 	@Test
@@ -36,7 +36,7 @@ class CompactMoveListTest {
 		list.sort(i -> list.get(i).getTo());
 		list.sort(i -> list.get(i).getTo());
 		assertArrayEquals(new int[] {3,2,1}, IntStream.range(0, list.size()).map(i -> list.get(i).getTo()).toArray());
-		assertEquals(Piece.BLACK_QUEEN, list.get(0).promotedTo());
+		assertEquals(Piece.BLACK_QUEEN, list.get(0).getPromotion());
 	}
 
 

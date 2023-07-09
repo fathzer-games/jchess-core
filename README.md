@@ -41,9 +41,6 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
 - Use zobrist key in AI!!!
 - Implement Capablanca chess
 - General things ... if it does not alter performance too much:
-    - Is it a good idea to separate ChessBoards and rules? Would it be better to have newGame and getState methods in ChessBoard? It seems we often need rules and Board.  
-A way could be to change Rules to something like Game or Board and only have genericity on Move.
-Then, we can imagine adding some useful methods to ChessBoard like isCheck.
     - Could it be a good idea to have the ChessBoard able to rewind moves?
     - Move generation improvements:
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.

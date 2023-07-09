@@ -19,7 +19,6 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
-import com.fathzer.jchess.generic.StandardChessRules;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
 
@@ -96,7 +95,7 @@ public class JChessUCI extends UCI {
 	
 	private void speedTest(String[] args) {
 		final long start = System.currentTimeMillis();
-		final JChessEngine engine = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), 6);
+		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
 		if (args.length!=0) {
 			engine.setParallelism(Integer.parseInt(args[0]));
 		}

@@ -7,21 +7,16 @@ import java.util.Optional;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ZobristProvider;
 import com.fathzer.games.perft.TestableMoveGeneratorSupplier;
-import com.fathzer.games.Rules;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.ChessGameState;
 import com.fathzer.jchess.CoordinatesSystem;
-import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
-import com.fathzer.jchess.generic.StandardChessRules;
-import com.fathzer.jchess.standard.CompactMoveList;
+import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.uci.option.ComboOption;
 import com.fathzer.jchess.uci.option.Option;
 import com.fathzer.jchess.uci.option.SpinOption;
@@ -35,7 +30,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private JChessEngine engine;
 	
 	public JChessUCIEngine() {
-		engine = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), 6);
+		engine = new JChessEngine(new BasicEvaluator(), 6);
 	}
 	
 	@Override
@@ -91,18 +86,16 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	}
 	
 	private static Move toMove(int from, int to, String promotionAsFen) {
-		final ChessGameState lst = new CompactMoveList();
 		if (promotionAsFen==null) {
-			lst.add(from, to);
+			return new BasicMove(from, to);
 		} else {
 			final Optional<Piece> o = Arrays.stream(com.fathzer.jchess.Piece.values()).filter(x->promotionAsFen.equals(x.getNotation())).findAny();
 			if (o.isEmpty()) {
 				throw new NoSuchElementException(promotionAsFen+" is not a valid piece notation");
 			} else {
-				lst.add(from, to, o.get());				
+				return new BasicMove(from, to, o.get());				
 			}
 		}
-		return lst.get(0);
 	}
 
 	@Override
@@ -129,29 +122,20 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	}
 	
 	private static UCIMove toMove(CoordinatesSystem cs, Move move) {
-		final String promotion = move.promotedTo()==null ? null : move.promotedTo().getNotation().toLowerCase();
+		final String promotion = move.getPromotion()==null ? null : move.getPromotion().getNotation().toLowerCase();
 		return new UCIMove(cs.getAlgebraicNotation(move.getFrom()), cs.getAlgebraicNotation(move.getTo()), promotion);
 	}
 
 	@Override
 	public MoveGenerator<Move> get() {
-		return new MyMoveGenerator(StandardChessRules.PERFT, board);
+		Board<Move> copy = board.create();
+		copy.copy(board);
+		return copy;
 	}
 	
 	@Override
 	public String toUCI(Move move) {
 		return toMove(board.getCoordinatesSystem(), move).toString();
-	}
-
-	private static class MyMoveGenerator extends CopyBasedMoveGenerator<Move> implements MoveGenerator<Move>, ZobristProvider {
-		public MyMoveGenerator(Rules<Board<Move>, Move> rules, Board<Move> board) {
-			super(rules, board);
-		}
-
-		@Override
-		public long getZobristKey() {
-			return getBoard().getKey();
-		}
 	}
 
 	@Override

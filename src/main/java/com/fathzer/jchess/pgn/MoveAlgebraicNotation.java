@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.fathzer.games.GameState;
+import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -37,7 +37,7 @@ public class MoveAlgebraicNotation {
 	 */
 	public String get(Board<Move> board, Move move) {
 		final StringBuilder builder = new StringBuilder();
-		final GameState<Move> state = board.getState();
+		final List<Move> state = board.getMoves();
 		// First, keep only moves with the right destination
 		// This list will allow us to check if the move is valid and if it needs disambiguation
 		final int to = move.getTo();
@@ -65,16 +65,16 @@ public class MoveAlgebraicNotation {
 		buf.append(cs.getAlgebraicNotation(move.getFrom()));
 		buf.append('-');
 		buf.append(cs.getAlgebraicNotation(move.getTo()));
-		if (move.promotedTo()!=null) {
+		if (move.getPromotion()!=null) {
 			buf.append('=');
-			buf.append(move.promotedTo().getNotation());
+			buf.append(move.getPromotion().getNotation());
 		}
 		return buf;
 	}
 
 	private boolean checkValidMove(Move move, List<Move> candidates) {
 		final int from = move.getFrom();
-		return candidates.stream().anyMatch(m -> m.getFrom()==from && m.promotedTo()==move.promotedTo());
+		return candidates.stream().anyMatch(m -> m.getFrom()==from && m.getPromotion()==move.getPromotion());
 	}
 
 	private CharSequence encodeMove(Board<Move> board, Move move, List<Move> candidates) {
@@ -95,8 +95,8 @@ public class MoveAlgebraicNotation {
 				builder.append(enPassantSymbol);
 			}
 			// Add promotion if needed
-			if (move.promotedTo()!=null) {
-				builder.append(promotionSymbolBuilder.apply(move.promotedTo()));
+			if (move.getPromotion()!=null) {
+				builder.append(promotionSymbolBuilder.apply(move.getPromotion()));
 			}
 		} else {
 			// Add piece symbol
@@ -136,8 +136,8 @@ public class MoveAlgebraicNotation {
 	private Optional<String> afterMove(Board<Move> board, Move move) {
 		board.makeMove(move);
 		try {
-			final GameState<Move> state = board.getState();
-			if (state.getStatus()!=DRAW && state.size()==0) {
+			final Status status = board.getStatus();
+			if (status!=DRAW && board.getMoves().size()==0) {
 				return Optional.of(checkmateSymbol);
 			} else if (board.isCheck()) {
 				return Optional.of(checkSymbol);

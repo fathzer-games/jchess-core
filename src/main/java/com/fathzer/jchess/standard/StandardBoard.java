@@ -11,6 +11,7 @@ import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.generic.MovesBuilder;
 
 public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 	
@@ -19,6 +20,11 @@ public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 		castlings.forEach(this::checkCastling);
 	}
 	
+	@Override
+	protected MovesBuilder buildMovesBuilder() {
+		return new MovesBuilder(this);
+	}
+
 	@Override
 	public Board<Move> create() {
 		return new StandardBoard(Collections.emptyList(), Color.WHITE, Collections.emptyList(), -1, 0, 1);

@@ -7,7 +7,6 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
@@ -25,7 +24,7 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 	
 	@Override
 	public Move apply(Board<Move> board) {
-		GameState<Move> possibleMoves = board.getState(); 
+		List<Move> possibleMoves = board.getMoves(); 
 		List<Evaluation<Move>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
 			final Move mv = possibleMoves.get(i);
 			return new Evaluation<>(mv, evaluate(mv));
@@ -41,7 +40,7 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 		this.board.makeMove(move);
 		try {
 			// Gets the opponent responses
-			final GameState<Move> moves = this.board.getState();
+			final List<Move> moves = this.board.getMoves();
 			int max = 0;
 			for (int i = 0; i < moves.size(); i++) {
 				// For all opponent responses

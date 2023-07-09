@@ -19,7 +19,7 @@ public class SimpleMove implements Move {
 	}
 
 	@Override
-	public Piece promotedTo() {
+	public Piece getPromotion() {
 		return promoted;
 	}
 }

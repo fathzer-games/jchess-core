@@ -26,12 +26,12 @@ public class PGNWriter {
 		private final List<String> anMoves;
 		
 		private String getResult() {
-			final Status state = board.getState().getStatus();
-			if (state==DRAW) {
+			final Status status = board.getStatus();
+			if (status==DRAW) {
 				return "1/2-1/2";
-			} else if (state==WHITE_WON) {
+			} else if (status==WHITE_WON) {
 				return "1-0";
-			} else if (state==BLACK_WON) {
+			} else if (status==BLACK_WON) {
 				return "1-0";
 			} else {
 				return "*";

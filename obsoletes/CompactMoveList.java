@@ -71,13 +71,13 @@ public class CompactMoveList implements ChessGameState {
 		}
 
 		@Override
-		public Piece promotedTo() {
+		public Piece getPromotion() {
 			return promotedTo(code);
 		}
 		
 		@Override
 		public String toString() {
-			return ""+getFrom()+"-"+getTo()+(promotedTo()==null?"":promotedTo().toString());
+			return ""+getFrom()+"-"+getTo()+(getPromotion()==null?"":getPromotion().toString());
 		}
 	}
 

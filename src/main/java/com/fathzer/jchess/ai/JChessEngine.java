@@ -8,20 +8,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.fathzer.games.GameState;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.Rules;
+import com.fathzer.games.Status;
 import com.fathzer.games.ai.AbstractAI;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.ChessRules;
-import com.fathzer.jchess.CustomizedRulesMoveGenerator;
 import com.fathzer.jchess.fen.FENParser;
-import com.fathzer.jchess.standard.CompactMoveList;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class JChessEngine implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
 	private final ChessEvaluator evaluator;
-	private final ChessRules rules;
 	@Setter
 	private int depth;
 	@Setter
@@ -37,9 +34,8 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	private Collection<AbstractAI<Move>> sessions;
 	private Function<Board<Move>, Move> openingLibrary;
 	
-	public JChessEngine(ChessRules rules, ChessEvaluator evaluator, int depth) {
+	public JChessEngine(ChessEvaluator evaluator, int depth) {
 		this.depth = depth;
-		this.rules = rules;
 		this.evaluator = evaluator;
 		this.sessions = new LinkedList<>();
 		this.parallelism = 1;
@@ -77,12 +73,12 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 			final Supplier<MoveGenerator<Move>> supplier = () -> {
 				Board<Move> b = board.create();
 				b.copy(board);
-				return new InstrumentedMoveGenerator(rules, b, stat);
+				return new InstrumentedMoveGenerator(b, stat);
 			};
 			final AbstractAI<Move> internal = new Negamax<>(supplier, exec) {
 				@Override
 				public int evaluate() {
-					return evaluator.evaluate(((CustomizedRulesMoveGenerator)getMoveGenerator()).getBoard());
+					return evaluator.evaluate(((InstrumentedMoveGenerator)getMoveGenerator()).getBoard());
 				}
 			};
 
@@ -102,29 +98,38 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		}
 	}
 	
-	private static class InstrumentedMoveGenerator extends CustomizedRulesMoveGenerator {
+	@AllArgsConstructor
+	private static class InstrumentedMoveGenerator implements MoveGenerator<Move> {
+		@Getter
+		private Board<Move> board;
 		private Stat stat;
-
-		public InstrumentedMoveGenerator(Rules<Board<Move>, Move> rules, Board<Move> board, Stat stat) {
-			super(rules, board);
-			this.stat = stat;
-		}
 
 		@Override
 		public void makeMove(Move move) {
 			stat.movesPlayed.incrementAndGet();
-			super.makeMove(move);
+			board.makeMove(move);
 		}
 
 		@Override
-		public GameState<Move> getState() {
+		public List<Move> getMoves() {
 			stat.moveGenerations.incrementAndGet();
-			final GameState<Move> state = super.getState();
-			if (state instanceof CompactMoveList) {
-				state.sort(i -> ((CompactMoveList)state).fastEvaluate(i, getBoard()));
-			}
+			final List<Move> state = board.getMoves();
+//FIXME Should sort the moves
+//			if (state instanceof CompactMoveList) {
+//				state.sort(i -> ((CompactMoveList)state).fastEvaluate(i, getBoard()));
+//			}
 			stat.generatedMoves.addAndGet(state.size());
 			return state;
+		}
+
+		@Override
+		public void unmakeMove() {
+			board.unmakeMove();
+		}
+
+		@Override
+		public Status getStatus() {
+			return board.getStatus();
 		}
 	}
 	

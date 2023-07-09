@@ -2,6 +2,7 @@ package com.fathzer.jchess.ai;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -16,12 +17,10 @@ import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
-import com.fathzer.jchess.CopyBasedMoveGenerator;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
-import com.fathzer.jchess.generic.StandardChessRules;
-import com.fathzer.jchess.standard.CompactMoveList;
+import com.fathzer.jchess.generic.BasicMove;
 
 class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
@@ -39,7 +38,7 @@ class MinimaxEngineTest {
 	
 	@Test
 	void blackPlayingTest() {
-		final JChessEngine mme4 = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), 3);
+		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 3);
 		final Board<Move> board = FENParser.from("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5");
 		final List<Evaluation<Move>> moves = mme4.getBestMoves(board, Integer.MAX_VALUE, 0);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
@@ -57,7 +56,7 @@ show(moves, cs);
 	@Test
 	void test() {
 		List<Evaluation<Move>> moves;
-		final JChessEngine mme4 = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), 4);
+		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 4);
 		
 		// 3 possible Mats in 1 with whites
 		Board<Move> board = FENParser.from("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
@@ -105,7 +104,7 @@ show(moves, cs);
 		// Check in 3
 		System.out.println("------------------");
 		board = FENParser.from("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
-		moves = new JChessEngine(StandardChessRules.INSTANCE, new BasicEvaluator(), 6).getBestMoves(board, 3, 100);
+		moves = new JChessEngine(new BasicEvaluator(), 6).getBestMoves(board, 3, 100);
 show(moves,cs);
 assertEquals(19, moves.size());
 		mv = moves.get(0).getContent();
@@ -120,16 +119,16 @@ assertEquals(19, moves.size());
 		final ChessEvaluator basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
 		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(1)) {
-			AbstractAI<Move> ai = new Negamax<>(() -> new CopyBasedMoveGenerator<>(StandardChessRules.INSTANCE, board), exec) {
+			AbstractAI<Move> ai = new Negamax<>(() -> getCopy(board), exec) {
 				@Override
 				public int evaluate() {
 					return basicEvaluator.evaluate(board);
 				}
 			};
-			CompactMoveList l = new CompactMoveList();
-			l.add(cs.getIndex("h1"), cs.getIndex("g1"));
-			l.add(cs.getIndex("f2"), cs.getIndex("f3"));
-			l.add(cs.getIndex("f2"), cs.getIndex("f4"));
+			List<Move> l = new ArrayList<>();
+			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
+			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
+			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f4")));
 			final List<Evaluation<Move>> eval = ai.getBestMoves(4, l.iterator(), Integer.MAX_VALUE, 0);
 			assertEquals(3, eval.size());
 			for (Evaluation<Move> e : eval) {
@@ -137,4 +136,11 @@ assertEquals(19, moves.size());
 			}
 		}
 	}
+	
+	public static MoveGenerator<Move> getCopy(Board<Move> board) {
+		Board<Move> copy = board.create();
+		copy.copy(board);
+		return copy;
+	}
+
 }

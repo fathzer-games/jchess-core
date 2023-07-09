@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -49,17 +50,24 @@ class PerfTTest {
 			}
 		}
 	}
+	
+	@Test
+	void help() {
+		try (ContextualizedExecutor<MoveGenerator<Move>> exec =new ContextualizedExecutor<>(PhysicalCores.count())) {
+			final Board<Move> board = FENParser.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
+			final PerfT<Move> perfT = new PerfT<>(exec);
+			final PerfTResult<Move> divide = perfT.divide(2, copy(board));
+			System.out.println("Leaves: "+ divide.getNbLeaves());
+			System.out.println("Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
+		}
+	}
 
 	private void doTest(ContextualizedExecutor<MoveGenerator<Move>> exec, PerfTTestData test, int depth) {
 		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
 		final PerfT<Move> perfT = new PerfT<>(exec);
 		if (test.getSize()>=depth) {
 //			try {
-				final PerfTResult<Move> divide = perfT.divide(depth, () -> {
-					Board<Move> b = board.create();
-					b.copy(board);
-					return b;
-				});
+				final PerfTResult<Move> divide = perfT.divide(depth, copy(board));
 				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 //				if (count != test.getCount(depth)) {
 //					System.out.println("Error for "+test.getFen()+" expected "+test.getCount(depth)+" got "+count);
@@ -71,6 +79,14 @@ class PerfTTest {
 //				throw e;
 //			}
 		}
+	}
+
+	private Supplier<MoveGenerator<Move>> copy(final Board<Move> board) {
+		return () -> {
+			Board<Move> b = board.create();
+			b.copy(board);
+			return b;
+		};
 	}
 
 	private List<PerfTTestData> readTests() throws IOException {
