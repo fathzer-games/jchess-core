@@ -216,7 +216,7 @@ public class MovesBuilder {
 	}
 
 	private Status buildStatus() {
-		if (isInsufficientMaterial() || board.getHalfMoveCount()>50 || isDrawByRepetition()) {
+		if (isInsufficientMaterial() || board.getHalfMoveCount()>=100 || isDrawByRepetition()) {
 			return Status.DRAW;
 		}
 		if (board.getMoves().isEmpty()) {

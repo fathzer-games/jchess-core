@@ -27,11 +27,11 @@ class ChessBoardTest {
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
 		// Test King move erases castling possibility
-		board.makeMove(new SimpleMove(cs, "e8","d8"));
-		assertFalse(board.hasCastling(Castling.BLACK_QUEEN_SIDE));
-		assertFalse(board.hasCastling(Castling.BLACK_KING_SIDE));
-		assertEquals(Piece.BLACK_KING,board.getPiece(cs.getIndex("d8")));
-		assertNull(board.getPiece(cs.getIndex("e8")));
+		board.makeMove(new SimpleMove(cs, "e1","d1"));
+		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
+		assertFalse(board.hasCastling(Castling.WHITE_KING_SIDE));
+		assertEquals(Piece.WHITE_KING,board.getPiece(cs.getIndex("d1")));
+		assertNull(board.getPiece(cs.getIndex("e1")));
 		board.unmakeMove();
 
 		// Test castling moves the pieces has it should

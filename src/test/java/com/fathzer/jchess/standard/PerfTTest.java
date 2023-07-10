@@ -51,8 +51,8 @@ class PerfTTest {
 		}
 	}
 	
-	@Test
-	void help() {
+//	@Test
+	void showDivide() {
 		try (ContextualizedExecutor<MoveGenerator<Move>> exec =new ContextualizedExecutor<>(PhysicalCores.count())) {
 			final Board<Move> board = FENParser.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
 			final PerfT<Move> perfT = new PerfT<>(exec);

@@ -57,14 +57,14 @@ public interface Board<M> extends MoveGenerator<M>, ZobristProvider {
 	 * @return The castling if the move is a castling, null if it is a king standard move.
 	 * <br>The default implementation, returns true if the king moves more than 1 cell or on a cell occupied by a rook of the same color).
 	 */
-	default Castling getCastling(int from, int to, Color playingColor) {
+	default Castling getCastling(int from, int to) {
 		final int offset = Math.abs(to-from);
 		boolean castling = offset>=2 && (getCoordinatesSystem().getRow(from)==getCoordinatesSystem().getRow(to));
 		if (!castling) {
-			final Piece rook = Color.WHITE.equals(playingColor) ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
+			final Piece rook = Color.WHITE.equals(getActiveColor()) ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
 			castling = rook.equals(getPiece(to));
 		}
-		return castling ? Castling.get(playingColor, to>from) : null;
+		return castling ? Castling.get(getActiveColor(), to>from) : null;
 	}
 	
 	Piece getPiece(int position);

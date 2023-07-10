@@ -173,7 +173,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 		} else {
 			this.clearEnPassant();
 			if (PieceKind.KING.equals(movedPiece.getKind())) {
-				castling = onKingMove(from, to, movedPiece.getColor());
+				castling = onKingMove(from, to);
 			} else if (castlings!=0 && PieceKind.ROOK.equals(movedPiece.getKind())) {
 				// Erase castling if needed when rook moves
 				onRookEvent(from);
@@ -220,7 +220,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
 		if (PieceKind.KING.equals(p.getKind())) {
-			return fastKingMove(from, to, playingColor);
+			return fastKingMove(from, to);
 		}
 		if (PieceKind.PAWN.equals(p.getKind())) {
 			fastPawnMove(to, playingColor);
@@ -229,8 +229,8 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 		return getKingPosition(playingColor);
 	}
 
-	private int fastKingMove(int from, int to, Color playingColor) {
-		final Castling castling = getCastling(from, to, playingColor);
+	private int fastKingMove(int from, int to) {
+		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
 			to = getKingDestination(castling); 
@@ -247,8 +247,8 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 	void restoreCells() {
 		board.restore();
 	}
-	private Castling onKingMove(int from, int to, Color playingColor) {
-		final Castling castling = getCastling(from, to, playingColor);
+	private Castling onKingMove(int from, int to) {
+		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
 			to = getKingDestination(castling); 
@@ -257,10 +257,10 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 			final int initialRookPosition = getInitialRookPosition(castling);
 			movePieces(from, to, initialRookPosition, rookDest, false);
 		}
-		final boolean whitePlaying = WHITE.equals(playingColor);
+		final boolean whitePlaying = WHITE.equals(activeColor);
 		eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
 				whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
-		kingPositions[playingColor.ordinal()] = to;
+		kingPositions[activeColor.ordinal()] = to;
 		return castling;
 	}
 	

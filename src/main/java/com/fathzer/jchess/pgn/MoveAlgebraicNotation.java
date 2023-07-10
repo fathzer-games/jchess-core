@@ -46,7 +46,7 @@ public class MoveAlgebraicNotation {
 			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
 		}
 		final Piece moved = board.getPiece(move.getFrom());
-		final Castling castling = moved.getKind()==KING ? board.getCastling(move.getFrom(), to, board.getActiveColor()) : null;
+		final Castling castling = moved.getKind()==KING ? board.getCastling(move.getFrom(), to) : null;
 		if (castling!=null) {
 			builder.append(castlingSymbolBuilder.apply(castling.getSide()));
 		} else {
