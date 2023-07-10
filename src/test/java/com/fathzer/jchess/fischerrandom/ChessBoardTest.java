@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.chess960.Chess960Board;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicMove;
 

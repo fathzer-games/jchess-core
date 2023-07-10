@@ -23,7 +23,7 @@ import com.fathzer.jchess.generic.BasicMove;
 
 class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
-		return new AbstractAI<Move>(null,null) {
+		return new AbstractAI<Move>(()->null,null) {
 			@Override
 			public List<Evaluation<Move>> getBestMoves(int depth, List<Move> possibleMoves, int size, int accuracy) {
 				throw new UnsupportedOperationException();

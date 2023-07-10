@@ -1,4 +1,4 @@
-package com.fathzer.jchess.fischerrandom;
+package com.fathzer.jchess.chess960;
 
 import java.util.ArrayList;
 import java.util.List;

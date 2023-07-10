@@ -117,7 +117,7 @@ public class FENParser {
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
 			final int[] rooks = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
 			if (rooks!=null) {
-				return new com.fathzer.jchess.fischerrandom.Chess960Board(pieces, color, castlings, rooks, enPassant, halfMoveCount, moveNumber);
+				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rooks, enPassant, halfMoveCount, moveNumber);
 			} else {
 				return new com.fathzer.jchess.standard.StandardBoard(pieces, color, castlings, enPassant, halfMoveCount, moveNumber);
 			}

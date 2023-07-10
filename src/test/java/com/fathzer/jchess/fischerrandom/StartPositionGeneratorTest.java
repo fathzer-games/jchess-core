@@ -8,6 +8,8 @@ import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.jchess.chess960.Chess960Board;
+import com.fathzer.jchess.chess960.StartPositionGenerator;
 import com.fathzer.jchess.fen.FENParser;
 
 class StartPositionGeneratorTest {

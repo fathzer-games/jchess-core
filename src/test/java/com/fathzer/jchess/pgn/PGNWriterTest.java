@@ -4,16 +4,16 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
+import com.fathzer.jchess.GameBuilders;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.SimpleMove;
-import com.fathzer.jchess.generic.StandardChessRules;
 
 class PGNWriterTest {
 
 	@Test
 	void test() {
-		final Board<Move> board = StandardChessRules.INSTANCE.newGame();
+		final Board<Move> board = GameBuilders.STANDARD.newGame();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final GameHistory history = new GameHistory(board);
 		history.add(new SimpleMove(cs, "e2", "e4"));

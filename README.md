@@ -36,12 +36,10 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - In check situations, the only valid moves are the one that intersects the attacks (or catch the piece).
 
 ## TODO
-- Not sure CompactMoveList.sort is really useful, even if it is effectively called (It does not seems to use any capture information
 - Finish FENParser for Chess960
 - Use zobrist key in AI!!!
 - Implement Capablanca chess
 - General things ... if it does not alter performance too much:
-    - Could it be a good idea to have the ChessBoard able to rewind moves?
     - Move generation improvements:
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.
         - Think about using multithreading in move generation. It is quite simple except to check if move make king in check as it moves pieces on the board.
@@ -53,4 +51,3 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
 ## Known bugs
 - JChessUCIEngine play move at the end of go, which I think is a mistake
 - Draw by repetition is not implemented
-- com.fathzer.jchess.generic.BasicMove is not thread safe
