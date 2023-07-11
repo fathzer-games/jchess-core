@@ -231,10 +231,21 @@ public class MovesBuilder {
 	}
 
 	protected boolean isDrawByRepetition() {
-		if (board.getHalfMoveCount()<6) {
+        final List<Long> history = board.getKeyHistory();
+		final int size = Math.min(history.size(), board.getHalfMoveCount());
+		if (size<6) {
 			return false;
 		}
-		// TODO Auto-generated method stub
+		final Long key = board.getZobristKey();
+		int repetition = 0;
+		for (int i = history.size()-2; i>=history.size()-size; i -= 2) {
+			if (history.get(i).equals(key)) {
+				repetition++;
+				if (repetition==2) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 }

@@ -14,6 +14,7 @@ import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.CoordinatesSystem;
+import com.fathzer.jchess.GameBuilders;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.SimpleMove;
 import com.fathzer.jchess.Piece;
@@ -350,5 +351,44 @@ class ChessBoardTest {
 		assertEquals(Status.DRAW, FENParser.from("8/8/8/8/8/6k1/8/4K3 w - - 0 1").getStatus());
 		// If one pawn remains, no draw
 		assertEquals(Status.PLAYING, FENParser.from("8/8/8/8/8/6k1/7p/1N2K3 w - - 0 1").getStatus());
+	}
+	
+	@Test
+	void drawByRepetitionTest() {
+		Board<Move> board = GameBuilders.STANDARD.newGame();
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		final Move kwf = new BasicMove(cs.getIndex("b1"),cs.getIndex("c3"));
+		final Move kwb = new BasicMove(cs.getIndex("c3"),cs.getIndex("b1"));
+		final Move kbf = new BasicMove(cs.getIndex("b8"),cs.getIndex("c6"));
+		final Move kbb = new BasicMove(cs.getIndex("c6"),cs.getIndex("b8"));
+		board.makeMove(kwf);
+		board.makeMove(kbf);
+		board.makeMove(kwb);
+		board.makeMove(kbb); // first repetition
+		assertEquals(Status.PLAYING, board.getStatus());
+		board.makeMove(kwf);
+		board.makeMove(kbf);
+		board.makeMove(kwb);
+		assertEquals(Status.PLAYING, board.getStatus());
+		board.makeMove(kbb); // second repetition (so, third time with start position)
+		assertEquals(Status.DRAW, board.getStatus());
+		
+		board.unmakeMove(); // Replace last move another reversible move
+		assertEquals(Status.PLAYING, board.getStatus());
+		final Move k2bf = new BasicMove(cs.getIndex("g8"),cs.getIndex("f6"));
+		final Move k2bb = new BasicMove(cs.getIndex("f6"),cs.getIndex("g8"));
+		board.makeMove(k2bf);
+		board.makeMove(kwf);
+		assertEquals(Status.PLAYING, board.getStatus());
+		board.makeMove(k2bb); // third repetition
+		assertEquals(Status.DRAW, board.getStatus());
+		
+		// Test it also working with copy
+		Board<Move> copy = board.create();
+		copy.copy(board);
+		assertEquals(Status.DRAW, copy.getStatus());
+		board.unmakeMove();
+		assertEquals(Status.PLAYING, board.getStatus());
+		assertEquals(Status.DRAW, copy.getStatus());
 	}
 }

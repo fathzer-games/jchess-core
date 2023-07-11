@@ -37,17 +37,16 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
 
 ## TODO
 - Finish FENParser for Chess960
-- Use zobrist key in AI!!!
 - Implement Capablanca chess
 - General things ... if it does not alter performance too much:
     - Move generation improvements:
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.
         - Think about using multithreading in move generation. It is quite simple except to check if move make king in check as it moves pieces on the board.
 - Engine improvements:
+    - Use zobrist key in AI!!!
     - Perform some Quiescence Search before evaluate move
     - Improve evaluation function
     - Use killer moves in Alpha beta pruning moves sort?
 
 ## Known bugs
 - JChessUCIEngine play move at the end of go, which I think is a mistake
-- Draw by repetition is not implemented

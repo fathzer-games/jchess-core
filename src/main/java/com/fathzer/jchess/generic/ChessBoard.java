@@ -4,6 +4,7 @@ import static com.fathzer.games.Color.*;
 import static com.fathzer.jchess.Piece.*;
 import static com.fathzer.jchess.Direction.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 	private int halfMoveCount;
 	private int moveNumber;
 	private long key;
+	private List<Long> keyHistory;
 	private UndoMoveManager<ChessBoardState> undoManager;
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
@@ -118,6 +120,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 		}
 		this.moveNumber = moveNumber;
 		this.key = board.getZobrist().get(this);
+		this.keyHistory = new ArrayList<>();
 		this.movesBuilder = buildMovesBuilder();
 	}
 	
@@ -166,6 +169,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 		if (movedPiece==null) {
 			throw new IllegalArgumentException("No piece at "+from);
 		}
+		keyHistory.add(key);
 		this.undoManager.beforeMove();
 		Castling castling = null;
 		if (PieceKind.PAWN.equals(movedPiece.getKind())) {
@@ -207,6 +211,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 	
 	@Override
 	public void unmakeMove() {
+		this.keyHistory.remove(keyHistory.size()-1);
 		this.undoManager.undo();
 		this.activeColor = this.activeColor.opposite();
 		this.movesBuilder.clear();
@@ -451,6 +456,8 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 			this.castlings = ((ChessBoard)other).castlings;
 			this.board.copy(((ChessBoard)other).board);
 			this.key = other.getZobristKey();
+			this.keyHistory.clear();
+			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
 			this.movesBuilder.clear();
 		} else {
@@ -476,6 +483,10 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 	@Override
 	public long getZobristKey() {
 		return key;
+	}
+	
+	protected List<Long> getKeyHistory() {
+		return this.keyHistory;
 	}
 	
 	@Override
