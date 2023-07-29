@@ -3,6 +3,10 @@ package com.fathzer.jchess;
 import lombok.AllArgsConstructor;
 import static com.fathzer.jchess.PieceKind.*;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.fathzer.games.Color;
 
 import lombok.Getter;
@@ -17,6 +21,8 @@ public enum Piece {
 	BLACK_BISHOP(Color.BLACK,BISHOP,"b"), WHITE_BISHOP(Color.WHITE,BISHOP,"B"),
 	BLACK_QUEEN(Color.BLACK,QUEEN,"q"), WHITE_QUEEN(Color.WHITE,QUEEN,"Q"),
 	BLACK_KING(Color.BLACK,KING,"k"), WHITE_KING(Color.WHITE,KING,"K");
+	
+	public static final List<Piece> ALL = Collections.unmodifiableList(Arrays.asList(Piece.values())); 
 	
 	private Color color;
 	private PieceKind kind;

@@ -176,18 +176,18 @@ class ChessBoardTest {
 	void testZobristKey() {
 		Board<Move> board = FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		long initial = board.getZobristKey();
+		long initial = board.getHashKey();
 		
 		// Test turn
-		assertNotEquals(initial, FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getZobristKey());
+		assertNotEquals(initial, FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getHashKey());
 		
 		// Test useless moves (moves that leads to the same position)
 		board.makeMove(new SimpleMove(cs, "a3","c4"));
-		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/2N5/3PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/2N5/3PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getHashKey(), board.getHashKey());
 		board.makeMove(new SimpleMove(cs, "g8","f6"));
 		board.makeMove(new SimpleMove(cs, "c4","a3"));
 		board.makeMove(new SimpleMove(cs, "f6","g8"));
-		assertEquals(initial, board.getZobristKey());
+		assertEquals(initial, board.getHashKey());
 		
 		// Test castling erase
 		// 1 - Rook move
@@ -195,59 +195,59 @@ class ChessBoardTest {
 		board.makeMove(new SimpleMove(cs, "g8","f6"));
 		board.makeMove(new SimpleMove(cs, "g1","h1"));
 		board.makeMove(new SimpleMove(cs, "f6","g8"));
-		long withoutRCastling = board.getZobristKey();
-		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w Qkq - 0 1").getZobristKey(), withoutRCastling);
+		long withoutRCastling = board.getHashKey();
+		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w Qkq - 0 1").getHashKey(), withoutRCastling);
 		assertNotEquals(initial, withoutRCastling);
 		// 2 - King move
-		initial = board.getZobristKey();
+		initial = board.getHashKey();
 		board.makeMove(new SimpleMove(cs, "e1","d1"));
 		board.makeMove(new SimpleMove(cs, "g8","f6"));
 		board.makeMove(new SimpleMove(cs, "d1","e1"));
 		board.makeMove(new SimpleMove(cs, "f6","g8"));
-		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w kq - 0 1").getZobristKey(), board.getZobristKey());
-		assertNotEquals(withoutRCastling, board.getZobristKey());
+		assertEquals(FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w kq - 0 1").getHashKey(), board.getHashKey());
+		assertNotEquals(withoutRCastling, board.getHashKey());
 		
 		// Test capture
 		board.makeMove(new SimpleMove(cs, "b5", "d7"));
-		assertEquals(FENParser.from("rnbqkbnr/pppBpppp/8/8/8/N2PPN2/PPPQBPPP/R3K2R b kq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("rnbqkbnr/pppBpppp/8/8/8/N2PPN2/PPPQBPPP/R3K2R b kq - 0 1").getHashKey(), board.getHashKey());
 
 		// Test enPassant
 		// 1 - real en passant
-		long enPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getZobristKey();
-		long notEnPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getZobristKey();
+		long enPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
+		long notEnPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getHashKey();
 		assertNotEquals(enPassantKey, notEnPassantKey);
 		// 2 - useless en passant
-		enPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getZobristKey();
-		notEnPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getZobristKey();
+		enPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
+		notEnPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getHashKey();
 		assertEquals(enPassantKey, notEnPassantKey);
 		// 3 - capture en passant
 		board = FENParser.from("rnbqkbnr/pppppp1p/8/8/6pP/8/PPPPPPP1/RNBQKBNR b KQkq h3 0 1");
 		board.makeMove(new SimpleMove(cs, "g4", "h3"));
 		assertNull(board.getPiece(board.getCoordinatesSystem().getIndex("h4")));
-		assertEquals(FENParser.from("rnbqkbnr/pppppp1p/8/8/8/7p/PPPPPPP1/RNBQKBNR w KQkq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("rnbqkbnr/pppppp1p/8/8/8/7p/PPPPPPP1/RNBQKBNR w KQkq - 0 1").getHashKey(), board.getHashKey());
 		
 		// Test promotion
 		board = FENParser.from("rnbqkb2/pppppppP/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R w KQq - 0 1");
 		board.makeMove(new SimpleMove(cs, "h7", "h8", Piece.WHITE_QUEEN));
-		assertEquals(FENParser.from("rnbqkb1Q/ppppppp1/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R b KQq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("rnbqkb1Q/ppppppp1/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R b KQq - 0 1").getHashKey(), board.getHashKey());
 		
 		// Test castling
 		// 1 - Q
 		board = FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQkq - 0 1");
 		board.makeMove(new SimpleMove(cs, "e1","c1"));
-		assertEquals(FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/2KR3R b kq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/2KR3R b kq - 0 1").getHashKey(), board.getHashKey());
 		// 1 - K
 		board = FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQkq - 0 1");
 		board.makeMove(new SimpleMove(cs, "e1","g1"));
-		assertEquals(FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R4RK1 b kq - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R4RK1 b kq - 0 1").getHashKey(), board.getHashKey());
 		// 1 - q
 		board = FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R b KQkq - 0 1");
 		board.makeMove(new SimpleMove(cs, "e8","c8"));
-		assertEquals(FENParser.from("2kr3r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("2kr3r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getHashKey(), board.getHashKey());
 		// 1 - K
 		board = FENParser.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R b KQkq - 0 1");
 		board.makeMove(new SimpleMove(cs, "e8","g8"));
-		assertEquals(FENParser.from("r4rk1/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getZobristKey(), board.getZobristKey());
+		assertEquals(FENParser.from("r4rk1/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getHashKey(), board.getHashKey());
 	}
 	
 	@Test

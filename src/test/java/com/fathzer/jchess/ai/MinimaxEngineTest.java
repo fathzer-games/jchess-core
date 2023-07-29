@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.AbstractAI;
+import com.fathzer.games.Status;
+import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
-import com.fathzer.games.util.ContextualizedExecutor;
+import com.fathzer.games.ai.exec.ExecutionContext;
+import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -21,18 +23,11 @@ import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.generic.BasicMove;
 
+import lombok.AllArgsConstructor;
+
 class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
-		return new AbstractAI<Move>(()->null,null) {
-			@Override
-			public List<Evaluation<Move>> getBestMoves(int depth, List<Move> possibleMoves, int size, int accuracy) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public int evaluate() {
-				throw new UnsupportedOperationException();
-			}}.getWinScore(nbMoves);
+		return new MyGamePosition(null,null).getWinScore(nbMoves);
 	}
 	
 	@Test
@@ -117,13 +112,8 @@ assertEquals(19, moves.size());
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final ChessEvaluator basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
-		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(1)) {
-			AbstractAI<Move> ai = new Negamax<>(() -> getCopy(board), exec) {
-				@Override
-				public int evaluate() {
-					return basicEvaluator.evaluate(board);
-				}
-			};
+		try (ExecutionContext<Move> exec = new SingleThreadContext<>(new MyGamePosition(board, basicEvaluator))) {
+			Negamax<Move> ai = new Negamax<>(exec);
 			List<Move> l = new ArrayList<>();
 			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
@@ -142,4 +132,35 @@ assertEquals(19, moves.size());
 		return copy;
 	}
 
+	@AllArgsConstructor
+	private static class MyGamePosition implements GamePosition<Move> {
+		private Board<Move> board;
+		private ChessEvaluator evaluator; 
+
+		@Override
+		public void makeMove(Move move) {
+			board.makeMove(move);
+		}
+
+		@Override
+		public void unmakeMove() {
+			board.unmakeMove();
+		}
+
+		@Override
+		public List<Move> getMoves() {
+			return board.getMoves();
+		}
+
+		@Override
+		public Status getStatus() {
+			return board.getStatus();
+		}
+
+		@Override
+		public int evaluate() {
+			return evaluator.evaluate(board);
+		}
+		
+	}
 }

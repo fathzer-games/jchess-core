@@ -2,12 +2,12 @@ package com.fathzer.jchess;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ZobristProvider;
+import com.fathzer.games.HashProvider;
 
 /** A chess board.
  * @param <M> The class that represents a move.
  */
-public interface Board<M> extends MoveGenerator<M>, ZobristProvider {
+public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	Dimension getDimension();
 	/** Many methods in this interface use an int index to identify a position on the board.
 	 * Don't make any assumptions on how these values are related to row and columns.

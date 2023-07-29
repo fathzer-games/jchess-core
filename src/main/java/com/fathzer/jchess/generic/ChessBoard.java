@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.UndoMoveManager;
-import com.fathzer.games.ZobristProvider;
+import com.fathzer.games.HashProvider;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
@@ -26,7 +26,7 @@ import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 
-public abstract class ChessBoard implements Board<Move>, ZobristProvider {
+public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private final DirectionExplorer exp;
 	private final BoardRepresentation board;
 	private final MovesBuilder movesBuilder;
@@ -455,7 +455,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 			this.moveNumber = other.getMoveNumber();
 			this.castlings = ((ChessBoard)other).castlings;
 			this.board.copy(((ChessBoard)other).board);
-			this.key = other.getZobristKey();
+			this.key = other.getHashKey();
 			this.keyHistory.clear();
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
@@ -481,7 +481,7 @@ public abstract class ChessBoard implements Board<Move>, ZobristProvider {
 	}
 	
 	@Override
-	public long getZobristKey() {
+	public long getHashKey() {
 		return key;
 	}
 	

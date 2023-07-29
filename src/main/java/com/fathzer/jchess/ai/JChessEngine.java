@@ -1,18 +1,20 @@
 package com.fathzer.jchess.ai;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
-import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.Status;
-import com.fathzer.games.ai.AbstractAI;
+import com.fathzer.games.ai.AI;
+import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.exec.ExecutionContext;
+import com.fathzer.games.ai.exec.MultiThreadsContext;
+import com.fathzer.games.ai.exec.SingleThreadContext;
+import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
@@ -26,20 +28,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JChessEngine implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
-	private final ChessEvaluator evaluator;
+	protected final ChessEvaluator evaluator;
 	@Setter
-	private int depth;
-	@Setter
-	private int parallelism;
-	private Collection<AbstractAI<Move>> sessions;
+	protected int depth;
+	protected Collection<AI<Move>> sessions;
 	private Function<Board<Move>, Move> openingLibrary;
+	@Getter
+	private TranspositionTable<Move> transpositionTable;
+	@Setter
+	@Getter
+	private int parallelism;
 	
 	public JChessEngine(ChessEvaluator evaluator, int depth) {
+		this.parallelism = 1;
 		this.depth = depth;
 		this.evaluator = evaluator;
 		this.sessions = new LinkedList<>();
-		this.parallelism = 1;
 		this.openingLibrary = null;
+		this.transpositionTable = new TT(512);
+		//TODO this.transpositionTable = new com.fathzer.games.ai.transposition.FakeTranspositionTable();
 	}
 	
 	/** Sets the opening library of this engine.
@@ -52,7 +59,7 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	}
 	
 	public synchronized void interrupt() {
-		this.sessions.forEach(AbstractAI::interrupt);
+		this.sessions.forEach(AI::interrupt);
 	}
 
 	@Override
@@ -69,80 +76,50 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	public List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy) {
 		final Stat stat = new Stat();
 		evaluator.setViewPoint(board.getActiveColor());
-		try (ContextualizedExecutor<MoveGenerator<Move>> exec = new ContextualizedExecutor<>(parallelism)) {
-			final Supplier<MoveGenerator<Move>> supplier = () -> {
+// TODO Test if it is really a new position
+		transpositionTable.newPosition();
+		log.info("--- Start evaluation for {} ---",FENParser.to(board));
+		final long start = System.currentTimeMillis();
+		final List<Evaluation<Move>> bestMoves = getBestMoves(board, size, accuracy, stat);
+		final long duration = System.currentTimeMillis()-start;
+		List<Move> pv = transpositionTable.collectPV(board, depth);
+		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
+				stat.moveGenerations.get(), stat.generatedMoves.get(), stat.movesPlayed.get(), stat.evalCount.get(), bestMoves.size(),
+				depth, getParallelism(), duration, bestMoves.get(0).getValue());
+		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+		log.info(Evaluation.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));
+		return bestMoves;
+	}
+
+	private List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy, Stat stat) {
+		try (ExecutionContext<Move> context = buildExecutionContext(board, stat)) {
+			final Negamax<Move> internal = new Negamax<>(context);
+			internal.setTranspositonTable(transpositionTable);
+			return doSession(internal, depth, size, accuracy);
+		}
+	}
+	
+	private ExecutionContext<Move> buildExecutionContext(Board<Move> board, Stat stat) {
+		if (parallelism==1) {
+			return new SingleThreadContext<>(new InstrumentedMoveGenerator(board, evaluator, stat));
+		} else {
+			final Supplier<GamePosition<Move>> supplier = () -> {
 				Board<Move> b = board.create();
 				b.copy(board);
-				return new InstrumentedMoveGenerator(b, stat);
+				return new InstrumentedMoveGenerator(b, evaluator, stat);
 			};
-			final AbstractAI<Move> internal = new Negamax<>(supplier, exec) {
-				@Override
-				public int evaluate() {
-					return evaluator.evaluate(((InstrumentedMoveGenerator)getMoveGenerator()).getBoard());
-				}
-			};
-
-			synchronized (this) {
-				this.sessions.add(internal);
-			}
-			log.debug("--- Start evaluation for {} ---",FENParser.to(board));
-			final long start = System.currentTimeMillis();
-			List<Evaluation<Move>> bestMoves = internal.getBestMoves(depth, size, accuracy);
-			sessions.remove(internal);
-			final long duration = System.currentTimeMillis()-start;
-			log.trace("{} move generations, {} moves generated, {} moves played, {} evaluations ({} duplicated) for {} moves at depth {} by {} threads in {}ms -> {}",
-					stat.moveGenerations.get(), stat.generatedMoves.get(), stat.movesPlayed.get(), stat.evalCount.get(), stat.evalAgainCount, bestMoves.size(),
-					depth, parallelism, duration, bestMoves.get(0).getValue());
-			log.debug(bestMoves.toString());
-			return bestMoves;
+			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(parallelism));
 		}
 	}
 	
-	private static class InstrumentedMoveGenerator implements MoveGenerator<Move> {
-		@Getter
-		private final Board<Move> board;
-		private final Stat stat;
-		private final Comparator<Move> cmp;
-
-		public InstrumentedMoveGenerator(Board<Move> board, Stat stat) {
-			this.board = board;
-			this.stat = stat;
-			this.cmp = new BasicMoveComparator(board);
+	protected List<Evaluation<Move>> doSession(AI<Move> ai, int depth, int size, int accuracy) {
+		synchronized (this) {
+			this.sessions.add(ai);
 		}
-
-		@Override
-		public void makeMove(Move move) {
-			stat.movesPlayed.incrementAndGet();
-			board.makeMove(move);
+		try {
+			return ai.getBestMoves(depth, size, accuracy);
+		} finally {
+			sessions.remove(ai);
 		}
-
-		@Override
-		public List<Move> getMoves() {
-			stat.moveGenerations.incrementAndGet();
-			final List<Move> moves = board.getMoves();
-			moves.sort(cmp);
-			stat.generatedMoves.addAndGet(moves.size());
-			return moves;
-		}
-
-		@Override
-		public void unmakeMove() {
-			board.unmakeMove();
-		}
-
-		@Override
-		public Status getStatus() {
-			return board.getStatus();
-		}
-	}
-	
-	
-	private static class Stat {
-		private final AtomicLong evalCount = new AtomicLong();
-		private final AtomicLong moveGenerations = new AtomicLong();
-		private final AtomicLong generatedMoves = new AtomicLong();
-		private final AtomicLong movesPlayed = new AtomicLong();
-		private long evalAgainCount = 0;
-//		private Set<String> previous = new HashSet<>();
 	}
 }

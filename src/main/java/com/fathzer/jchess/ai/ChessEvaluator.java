@@ -9,6 +9,7 @@ public interface ChessEvaluator {
 	 * @param color The color from which the evaluation is made, null to evaluate the position from the point of view of the current player.
 	 */
 	void setViewPoint(Color color);
+	
 	/** Evaluates a board's position.
 	 * @param board The board to evaluate
 	 * @return An integer

@@ -236,7 +236,7 @@ public class MovesBuilder {
 		if (size<6) {
 			return false;
 		}
-		final Long key = board.getZobristKey();
+		final Long key = board.getHashKey();
 		int repetition = 0;
 		for (int i = history.size()-2; i>=history.size()-size; i -= 2) {
 			if (history.get(i).equals(key)) {
