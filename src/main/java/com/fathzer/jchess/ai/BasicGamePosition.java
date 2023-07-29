@@ -1,41 +1,45 @@
 package com.fathzer.jchess.ai;
 
-import java.util.Comparator;
 import java.util.List;
 
 import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
+import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.GamePosition;
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Move;
+
 
 import lombok.Getter;
 
-class InstrumentedMoveGenerator implements GamePosition<Move>, HashProvider {
+//TODO Maybe this could be promoted to games-core 
+class BasicGamePosition<M,T extends MoveGenerator<M>> implements GamePosition<M>, HashProvider {
+	@FunctionalInterface
+	public interface LongBuilder<V> {
+		long get(V arg);
+	}
+	
 	@Getter
-	private final Board<Move> board;
-	private final ChessEvaluator evaluator;
+	private final T board;
+	private final Evaluator<T> evaluator;
+	private final LongBuilder<T> getHash;
 	private final Stat stat;
-	private final Comparator<Move> cmp;
 
-	public InstrumentedMoveGenerator(Board<Move> board, ChessEvaluator evaluator, Stat stat) {
+	public BasicGamePosition(T board, Evaluator<T> evaluator, LongBuilder<T> getHash, Stat stat) {
 		this.board = board;
 		this.evaluator = evaluator;
+		this.getHash = getHash;
 		this.stat = stat;
-		this.cmp = new BasicMoveComparator(board);
 	}
 
 	@Override
-	public void makeMove(Move move) {
+	public void makeMove(M move) {
 		stat.movesPlayed.incrementAndGet();
 		board.makeMove(move);
 	}
 
 	@Override
-	public List<Move> getMoves() {
+	public List<M> getMoves() {
 		stat.moveGenerations.incrementAndGet();
-		final List<Move> moves = board.getMoves();
-		moves.sort(cmp); //TODO Remove from here
+		final List<M> moves = board.getMoves();
 		stat.generatedMoves.addAndGet(moves.size());
 		return moves;
 	}
@@ -52,7 +56,7 @@ class InstrumentedMoveGenerator implements GamePosition<Move>, HashProvider {
 
 	@Override
 	public long getHashKey() {
-		return board.getHashKey();
+		return getHash.get(board);
 	}
 
 	@Override

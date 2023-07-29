@@ -36,6 +36,7 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - In check situations, the only valid moves are the one that intersects the attacks (or catch the piece).
 
 ## TODO
+- Maybe com.fathzer.jchess.ai BasicGamePosition, Stat and Evaluator classes can be promoted to games-core?
 - Finish FENParser for Chess960
 - Implement Capablanca chess
 - General things ... if it does not alter performance too much:
@@ -43,7 +44,6 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.
         - Think about using multithreading in move generation. It is quite simple except to check if move make king in check as it moves pieces on the board.
 - Engine improvements:
-    - Use zobrist key in AI!!!
     - Perform some Quiescence Search before evaluate move
     - Improve evaluation function
     - Use killer moves in Alpha beta pruning moves sort?

@@ -1,6 +1,7 @@
 package com.fathzer.jchess.ai;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -19,6 +20,7 @@ import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ai.BasicGamePosition.LongBuilder;
 import com.fathzer.jchess.fen.FENParser;
 
 import lombok.Getter;
@@ -28,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JChessEngine implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
-	protected final ChessEvaluator evaluator;
+	protected final Evaluator<Board<Move>> evaluator;
 	@Setter
 	protected int depth;
 	protected Collection<AI<Move>> sessions;
@@ -39,7 +41,7 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	@Getter
 	private int parallelism;
 	
-	public JChessEngine(ChessEvaluator evaluator, int depth) {
+	public JChessEngine(Evaluator<Board<Move>> evaluator, int depth) {
 		this.parallelism = 1;
 		this.depth = depth;
 		this.evaluator = evaluator;
@@ -93,20 +95,29 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 
 	private List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy, Stat stat) {
 		try (ExecutionContext<Move> context = buildExecutionContext(board, stat)) {
-			final Negamax<Move> internal = new Negamax<>(context);
+			final Negamax<Move> internal = new Negamax<>(context) {
+				@Override
+				public List<Move> sort(List<Move> moves) {
+					final Board<Move> b = ((BasicGamePosition<Move, Board<Move>>)getGamePosition()).getBoard();
+					final Comparator<Move> cmp = new BasicMoveComparator(b);
+					moves.sort(cmp);
+					return moves;
+				}
+			};
 			internal.setTranspositonTable(transpositionTable);
 			return doSession(internal, depth, size, accuracy);
 		}
 	}
 	
 	private ExecutionContext<Move> buildExecutionContext(Board<Move> board, Stat stat) {
+		final LongBuilder<Board<Move>> hash = b->b.getHashKey();
 		if (parallelism==1) {
-			return new SingleThreadContext<>(new InstrumentedMoveGenerator(board, evaluator, stat));
+			return new SingleThreadContext<>(new BasicGamePosition<>(board, evaluator, hash, stat));
 		} else {
 			final Supplier<GamePosition<Move>> supplier = () -> {
 				Board<Move> b = board.create();
 				b.copy(board);
-				return new InstrumentedMoveGenerator(b, evaluator, stat);
+				return new BasicGamePosition<>(b, evaluator, hash, stat);
 			};
 			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(parallelism));
 		}

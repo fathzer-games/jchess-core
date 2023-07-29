@@ -1,10 +1,8 @@
 package com.fathzer.jchess.ai;
 
 import com.fathzer.games.Color;
-import com.fathzer.jchess.Board;
-import com.fathzer.jchess.Move;
 
-public interface ChessEvaluator {
+public interface Evaluator<T> {
 	/** Sets the point of view from which the evaluation should be made. 
 	 * @param color The color from which the evaluation is made, null to evaluate the position from the point of view of the current player.
 	 */
@@ -14,5 +12,5 @@ public interface ChessEvaluator {
 	 * @param board The board to evaluate
 	 * @return An integer
 	 */
-	int evaluate(Board<Move> board);
+	int evaluate(T board);
 }

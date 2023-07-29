@@ -7,11 +7,11 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.ai.ChessEvaluator;
+import com.fathzer.jchess.ai.Evaluator;
 
 import lombok.Setter;
 
-public class BasicEvaluator implements ChessEvaluator {
+public class BasicEvaluator implements Evaluator<Board<Move>> {
 	@Setter
 	private Color viewPoint;
 	

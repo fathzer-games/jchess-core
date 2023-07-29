@@ -110,7 +110,7 @@ assertEquals(19, moves.size());
 	void moreTests() {
 		final Board<Move> board = FENParser.from("8/8/8/3kr3/8/8/5PPP/7K w - - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final ChessEvaluator basicEvaluator = new BasicEvaluator();
+		final Evaluator<Board<Move>> basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
 		try (ExecutionContext<Move> exec = new SingleThreadContext<>(new MyGamePosition(board, basicEvaluator))) {
 			Negamax<Move> ai = new Negamax<>(exec);
@@ -135,7 +135,7 @@ assertEquals(19, moves.size());
 	@AllArgsConstructor
 	private static class MyGamePosition implements GamePosition<Move> {
 		private Board<Move> board;
-		private ChessEvaluator evaluator; 
+		private Evaluator<Board<Move>> evaluator; 
 
 		@Override
 		public void makeMove(Move move) {
@@ -161,6 +161,5 @@ assertEquals(19, moves.size());
 		public int evaluate() {
 			return evaluator.evaluate(board);
 		}
-		
 	}
 }
