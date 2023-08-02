@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.SearchResult;
+import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
@@ -32,7 +36,9 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	private static final Random RND = new Random(); 
 	protected final Evaluator<Board<Move>> evaluator;
 	@Setter
-	protected int depth;
+	protected int maxDepth;
+	@Setter
+	protected long maxTime = Long.MAX_VALUE;
 	protected Collection<AI<Move>> sessions;
 	private Function<Board<Move>, Move> openingLibrary;
 	@Getter
@@ -41,14 +47,13 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	@Getter
 	private int parallelism;
 	
-	public JChessEngine(Evaluator<Board<Move>> evaluator, int depth) {
+	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
 		this.parallelism = 1;
-		this.depth = depth;
+		this.maxDepth = maxDepth;
 		this.evaluator = evaluator;
 		this.sessions = new LinkedList<>();
 		this.openingLibrary = null;
 		this.transpositionTable = new TT(512);
-		//TODO this.transpositionTable = new com.fathzer.games.ai.transposition.FakeTranspositionTable();
 	}
 	
 	/** Sets the opening library of this engine.
@@ -76,25 +81,12 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	}
 
 	public List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy) {
-		final Stat stat = new Stat();
 		evaluator.setViewPoint(board.getActiveColor());
 // TODO Test if it is really a new position
 		transpositionTable.newPosition();
-		log.info("--- Start evaluation for {} ---",FENParser.to(board));
-		final long start = System.currentTimeMillis();
-		final List<Evaluation<Move>> bestMoves = getBestMoves(board, size, accuracy, stat);
-		final long duration = System.currentTimeMillis()-start;
-		List<Move> pv = transpositionTable.collectPV(board, depth);
-		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
-				stat.moveGenerations.get(), stat.generatedMoves.get(), stat.movesPlayed.get(), stat.evalCount.get(), bestMoves.size(),
-				depth, getParallelism(), duration, bestMoves.get(0).getValue());
-		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
-		log.info(Evaluation.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));
-		return bestMoves;
-	}
-
-	private List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy, Stat stat) {
-		try (ExecutionContext<Move> context = buildExecutionContext(board, stat)) {
+		SearchResult<Move> bestMoves;
+		log.info("--- Start evaluation at {} for {} with size={} and accuracy={}---",System.currentTimeMillis(), FENParser.to(board), size, accuracy);
+		try (ExecutionContext<Move> context = buildExecutionContext(board)) {
 			final Negamax<Move> internal = new Negamax<>(context) {
 				@Override
 				public List<Move> sort(List<Move> moves) {
@@ -105,30 +97,73 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 				}
 			};
 			internal.setTranspositonTable(transpositionTable);
-			return doSession(internal, depth, size, accuracy);
+			bestMoves = doDepth(board, null, size, accuracy, internal, 4);
+			final Timer timer = new Timer(true);
+			if (maxTime!=Long.MAX_VALUE) {
+				timer.schedule(new TimerTask(){
+					@Override
+					public void run() {
+						internal.interrupt();
+						log.info("Search interrupted by timeout");
+					}
+				}, maxTime);
+			}
+			for (int depth=6; depth<=maxDepth;depth=depth+2) {
+				if (evaluator.getNbMovesToWin(bestMoves.getList().get(0).getValue()) <= depth) {
+					// Stop if best move is mat in depth plies
+					log.info("Search interrupted by imminent win/lose detection");
+					break;
+				}
+				// Res use best moves order to speedup next search
+				List<Move> moves = bestMoves.getList().stream().map(Evaluation::getContent).collect(Collectors.toList());
+				final SearchResult<Move> deeper = doDepth(board, moves, size, accuracy, internal, depth);
+				if (!internal.isInterrupted()) {
+					bestMoves = deeper;
+				} else {
+					//TODO Merge bestMoves and deeper
+					break;
+				}
+			}
+			timer.cancel();
 		}
+		List<Move> pv = transpositionTable.collectPV(board, maxDepth);
+		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+		return bestMoves.getCut();
+	}
+
+	private SearchResult<Move> doDepth(Board<Move> board, List<Move> moves, int size, int accuracy, final Negamax<Move> internal, int depth) {
+		final SearchStatistics stat = internal.getStatistics();
+		stat.clear();
+		final SearchResult<Move> bestMoves = doSession(internal, moves, depth, size, accuracy);
+		final long duration = stat.getDurationMs();
+		final List<Evaluation<Move>> cut = bestMoves.getCut();
+		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
+				stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
+				depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getValue());
+		log.info(Evaluation.toString(bestMoves.getCut(), m -> m.toString(board.getCoordinatesSystem())));
+		return bestMoves;
 	}
 	
-	private ExecutionContext<Move> buildExecutionContext(Board<Move> board, Stat stat) {
+	private ExecutionContext<Move> buildExecutionContext(Board<Move> board) {
 		final LongBuilder<Board<Move>> hash = b->b.getHashKey();
 		if (parallelism==1) {
-			return new SingleThreadContext<>(new BasicGamePosition<>(board, evaluator, hash, stat));
+			return new SingleThreadContext<>(new BasicGamePosition<>(board, evaluator, hash));
 		} else {
 			final Supplier<GamePosition<Move>> supplier = () -> {
 				Board<Move> b = board.create();
 				b.copy(board);
-				return new BasicGamePosition<>(b, evaluator, hash, stat);
+				return new BasicGamePosition<>(b, evaluator, hash);
 			};
 			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(parallelism));
 		}
 	}
 	
-	protected List<Evaluation<Move>> doSession(AI<Move> ai, int depth, int size, int accuracy) {
+	private SearchResult<Move> doSession(AI<Move> ai, List<Move> moves, int depth, int size, int accuracy) {
 		synchronized (this) {
 			this.sessions.add(ai);
 		}
 		try {
-			return ai.getBestMoves(depth, size, accuracy);
+			return moves==null ? ai.getBestMoves(depth, size, accuracy) : ai.getBestMoves(moves, depth, size, accuracy);
 		} finally {
 			sessions.remove(ai);
 		}

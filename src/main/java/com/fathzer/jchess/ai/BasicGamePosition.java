@@ -21,27 +21,21 @@ class BasicGamePosition<M,T extends MoveGenerator<M>> implements GamePosition<M>
 	private final T board;
 	private final Evaluator<T> evaluator;
 	private final LongBuilder<T> getHash;
-	private final Stat stat;
 
-	public BasicGamePosition(T board, Evaluator<T> evaluator, LongBuilder<T> getHash, Stat stat) {
+	public BasicGamePosition(T board, Evaluator<T> evaluator, LongBuilder<T> getHash) {
 		this.board = board;
 		this.evaluator = evaluator;
 		this.getHash = getHash;
-		this.stat = stat;
 	}
 
 	@Override
 	public void makeMove(M move) {
-		stat.movesPlayed.incrementAndGet();
 		board.makeMove(move);
 	}
 
 	@Override
 	public List<M> getMoves() {
-		stat.moveGenerations.incrementAndGet();
-		final List<M> moves = board.getMoves();
-		stat.generatedMoves.addAndGet(moves.size());
-		return moves;
+		return board.getMoves();
 	}
 
 	@Override
@@ -62,5 +56,15 @@ class BasicGamePosition<M,T extends MoveGenerator<M>> implements GamePosition<M>
 	@Override
 	public int evaluate() {
 		return evaluator.evaluate(board);
+	}
+	
+	@Override
+	public int getNbMovesToWin(int winScore) {
+		return evaluator.getNbMovesToWin(winScore);
+	}
+
+	@Override
+	public int getWinScore(int nbMoves) {
+		return evaluator.getWinScore(nbMoves);
 	}
 }

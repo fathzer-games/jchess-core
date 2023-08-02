@@ -118,7 +118,7 @@ assertEquals(19, moves.size());
 			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f4")));
-			final List<Evaluation<Move>> eval = ai.getBestMoves(4, l, Integer.MAX_VALUE, 0);
+			final List<Evaluation<Move>> eval = ai.getBestMoves(l, 4, Integer.MAX_VALUE, 0).getCut();
 			assertEquals(3, eval.size());
 			for (Evaluation<Move> e : eval) {
 				assertEquals(-getMateScore(1), e.getValue());
