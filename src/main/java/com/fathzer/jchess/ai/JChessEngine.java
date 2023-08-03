@@ -1,6 +1,8 @@
 package com.fathzer.jchess.ai;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,11 +83,12 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 	}
 
 	public List<Evaluation<Move>> getBestMoves(Board<Move> board, int size, int accuracy) {
+		final long start = System.currentTimeMillis();
 		evaluator.setViewPoint(board.getActiveColor());
 // TODO Test if it is really a new position
 		transpositionTable.newPosition();
 		SearchResult<Move> bestMoves;
-		log.info("--- Start evaluation at {} for {} with size={} and accuracy={}---",System.currentTimeMillis(), FENParser.to(board), size, accuracy);
+		log.info("--- Start evaluation at for {} with size={} and accuracy={}---", FENParser.to(board), size, accuracy);
 		try (ExecutionContext<Move> context = buildExecutionContext(board)) {
 			final Negamax<Move> internal = new Negamax<>(context) {
 				@Override
@@ -97,7 +100,8 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 				}
 			};
 			internal.setTranspositonTable(transpositionTable);
-			bestMoves = doDepth(board, null, size, accuracy, internal, 4);
+			final int initalDepth = 2;
+			bestMoves = doDepth(board, null, size, accuracy, internal, initalDepth);
 			final Timer timer = new Timer(true);
 			if (maxTime!=Long.MAX_VALUE) {
 				timer.schedule(new TimerTask(){
@@ -106,29 +110,58 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 						internal.interrupt();
 						log.info("Search interrupted by timeout");
 					}
-				}, maxTime);
+				}, maxTime-(System.currentTimeMillis()-start));
 			}
-			for (int depth=6; depth<=maxDepth;depth=depth+2) {
-				if (evaluator.getNbMovesToWin(bestMoves.getList().get(0).getValue()) <= depth) {
-					// Stop if best move is mat in depth plies
-					log.info("Search interrupted by imminent win/lose detection");
-					break;
+			final List<Evaluation<Move>> ended = new ArrayList<>(bestMoves.getList().size());
+			for (int depth=initalDepth+2; depth<=maxDepth;depth=depth+2) {
+				// Re-use best moves order to speedup next search
+				final List<Move> moves = getMovesToDeepen(bestMoves.getList(), ended);
+				if (!moves.isEmpty()) {
+					final SearchResult<Move> deeper = doDepth(board, moves, size, accuracy, internal, depth);
+					if (!internal.isInterrupted()) {
+						bestMoves = deeper;
+					} else {
+						for (Evaluation<Move> ev:deeper.getList()) {
+							bestMoves.update(ev.getContent(), ev.getValue());
+						}
+					}
 				}
-				// Res use best moves order to speedup next search
-				List<Move> moves = bestMoves.getList().stream().map(Evaluation::getContent).collect(Collectors.toList());
-				final SearchResult<Move> deeper = doDepth(board, moves, size, accuracy, internal, depth);
-				if (!internal.isInterrupted()) {
-					bestMoves = deeper;
-				} else {
-					//TODO Merge bestMoves and deeper
+				if (internal.isInterrupted() || moves.isEmpty()) {
 					break;
 				}
 			}
 			timer.cancel();
+			final List<Move> pv = transpositionTable.collectPV(board, bestMoves.getList().get(0).getContent(), maxDepth);
+			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+			final List<Evaluation<Move>> result = bestMoves.getCut();
+			result.addAll(ended);
+			return result;
 		}
-		List<Move> pv = transpositionTable.collectPV(board, maxDepth);
-		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
-		return bestMoves.getCut();
+	}
+	
+	private <M> List<M> getMovesToDeepen(List<Evaluation<M>> evaluations, List<Evaluation<M>> ended) {
+		if (isEndOfGame(evaluations.get(0))) {
+			// if best move is a win/loose, continuing analysis is useless
+			log.info("Search ended by imminent win/lose detection");
+			return Collections.emptyList();
+		}
+		// Separate move that leads to loose (put in finished). These moves do not need to be deepened. Store others in toDeepen
+		// We don't put 'finished' moves in ended directly to preserve the evaluation order 
+		final List<M> toDeepen = new ArrayList<>(evaluations.size());
+		final List<Evaluation<M>> finished = new ArrayList<>();
+		evaluations.stream().forEach(e -> {
+			if (isEndOfGame(e)) {
+				finished.add(e);
+			} else {
+				toDeepen.add(e.getContent());
+			}
+		});
+		ended.addAll(0, finished);
+		return toDeepen;
+	}
+	
+	private <M> boolean isEndOfGame(Evaluation<M> mv) {
+		return evaluator.getNbMovesToWin(mv.getValue()) <= maxDepth;
 	}
 
 	private SearchResult<Move> doDepth(Board<Move> board, List<Move> moves, int size, int accuracy, final Negamax<Move> internal, int depth) {
@@ -137,9 +170,9 @@ public class JChessEngine implements Function<Board<Move>, Move> {
 		final SearchResult<Move> bestMoves = doSession(internal, moves, depth, size, accuracy);
 		final long duration = stat.getDurationMs();
 		final List<Evaluation<Move>> cut = bestMoves.getCut();
-		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
+		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms{} -> {}",
 				stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
-				depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getValue());
+				depth, getParallelism(), duration, internal.isInterrupted()?"(search interrupted)":"", cut.isEmpty()?null:cut.get(0).getValue());
 		log.info(Evaluation.toString(bestMoves.getCut(), m -> m.toString(board.getCoordinatesSystem())));
 		return bestMoves;
 	}
