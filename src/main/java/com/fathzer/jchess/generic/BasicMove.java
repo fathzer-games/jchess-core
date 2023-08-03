@@ -3,9 +3,11 @@ package com.fathzer.jchess.generic;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode
 public class BasicMove implements Move {
 	private final int from;
 	private final int to;
