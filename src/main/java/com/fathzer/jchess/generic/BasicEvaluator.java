@@ -3,11 +3,11 @@ package com.fathzer.jchess.generic;
 import static com.fathzer.games.Color.*;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.ai.Evaluator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.ai.Evaluator;
 
 import lombok.Setter;
 

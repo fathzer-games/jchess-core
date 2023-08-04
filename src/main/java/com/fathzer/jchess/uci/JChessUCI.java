@@ -62,15 +62,15 @@ public class JChessUCI extends UCI {
 		private String fen;
 		private List<Evaluation<Move>> moves;
 		
-		MovesAndMore(JChessEngine engine, String fen, int size, int accuracy) {
+		MovesAndMore(JChessEngine engine, String fen) {
 			this.engine = engine;
-			fill(fen, size, accuracy);
+			fill(fen);
 		}
 		
-		void fill(String fen, int size, int accuracy) {
+		void fill(String fen) {
 			Board<Move> board = FENParser.from(fen);
 			this.cs = board.getCoordinatesSystem();
-			moves = engine.getBestMoves(board, size, accuracy);
+			moves = engine.getBestMoves(board);
 		}
 
 		private void assertEquals(Object expected, Object actual) {
@@ -96,46 +96,49 @@ public class JChessUCI extends UCI {
 	private void speedTest(String[] args) {
 		final long start = System.currentTimeMillis();
 		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
+		engine.getSearchParams().setSize(Integer.MAX_VALUE);
 		if (args.length!=0) {
 			engine.setParallelism(Integer.parseInt(args[0]));
 		}
 		
 		// 3 possible Mats in 1 with whites
-		final MovesAndMore mv = new MovesAndMore(engine, "7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5", Integer.MAX_VALUE, 0);
+		final MovesAndMore mv = new MovesAndMore(engine, "7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
 		mv.assertEquals(6, mv.moves.size());
 		int max = mv.moves.get(0).getValue();
 		mv.assertEquals(32757, max);
 		mv.assertTrue(mv.moves.get(3).getValue()<max);
-		mv.moves.stream().limit(3).forEach(m -> mv.assertEquals(max, (int)m.getValue()));
+		mv.moves.stream().limit(3).forEach(m -> mv.assertEquals(max, m.getValue()));
 
 		// Mat in 1 with blacks
-		mv.fill("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5", Integer.MAX_VALUE, 0);
+		mv.fill("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5");
 		mv.assertEquals(7, mv.moves.size());
-		mv.assertEquals(32757, (int)mv.moves.get(0).getValue());
+		mv.assertEquals(32757, mv.moves.get(0).getValue());
 		Move m = mv.moves.get(0).getContent();
 		mv.assertEquals("c3", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("c2", mv.cs.getAlgebraicNotation(m.getTo()));
-		mv.assertEquals(32737,(int)mv.moves.get(1).getValue());
+		mv.assertEquals(32737,mv.moves.get(1).getValue());
 		mv.assertTrue(mv.moves.get(2).getValue()<10000.0);
 		
 		// Check in 2
-		mv.fill("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1", Integer.MAX_VALUE, 0);
-		mv.assertEquals(32747, (int)mv.moves.get(0).getValue());
+		mv.fill("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1");
+		mv.assertEquals(32747, mv.moves.get(0).getValue());
 		mv.assertTrue(mv.moves.get(1).getValue()<mv.moves.get(0).getValue());
 		m = mv.moves.get(0).getContent();
 		mv.assertEquals("b3", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("a1", mv.cs.getAlgebraicNotation(m.getTo()));
 		
 		// Check in 2 with blacks
-		mv.fill("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1", Integer.MAX_VALUE, 0);
-		mv.assertEquals(32747, (int)mv.moves.get(0).getValue());
+		mv.fill("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1");
+		mv.assertEquals(32747, mv.moves.get(0).getValue());
 		mv.assertTrue(mv.moves.get(1).getValue()<mv.moves.get(0).getValue());
 		mv.assertEquals("g6", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getFrom()));
 		mv.assertEquals("h8", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getTo()));
 		
 		
 		// Check in 3
-		mv.fill("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1", 3, 100);
+		engine.getSearchParams().setSize(3);
+		engine.getSearchParams().setAccuracy(100);
+		mv.fill("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
 		mv.assertEquals(19, mv.moves.size());
 		m = mv.moves.get(0).getContent();
 		mv.assertEquals("d1", mv.cs.getAlgebraicNotation(m.getFrom()));

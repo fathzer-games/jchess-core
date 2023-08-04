@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
+import com.fathzer.games.ai.Evaluator;
 import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
+import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.games.util.Evaluation;
@@ -33,8 +35,9 @@ class MinimaxEngineTest {
 	@Test
 	void blackPlayingTest() {
 		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 3);
+		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
 		final Board<Move> board = FENParser.from("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5");
-		final List<Evaluation<Move>> moves = mme4.getBestMoves(board, Integer.MAX_VALUE, 0);
+		final List<Evaluation<Move>> moves = mme4.getBestMoves(board);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 show(moves, cs);
 		assertEquals(1, moves.size());
@@ -51,11 +54,12 @@ show(moves, cs);
 	void test() {
 		List<Evaluation<Move>> moves;
 		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 4);
+		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
 		
 		// 3 possible Mats in 1 with whites
 		Board<Move> board = FENParser.from("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		moves = mme4.getBestMoves(board, Integer.MAX_VALUE, 0);
+		moves = mme4.getBestMoves(board);
 show(moves, cs);
 		assertEquals(6, moves.size());
 		double max = moves.get(0).getValue();
@@ -66,7 +70,7 @@ show(moves, cs);
 
 		// Mat in 1 with blacks
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5"), Integer.MAX_VALUE, 0);
+		moves = mme4.getBestMoves(FENParser.from("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5"));
 show(moves, cs);
 		assertEquals(7, moves.size());
 		assertEquals(getMateScore(1), moves.get(0).getValue());
@@ -77,7 +81,7 @@ show(moves, cs);
 		
 		// Check in 2
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1"), Integer.MAX_VALUE, 0);
+		moves = mme4.getBestMoves(FENParser.from("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1"));
 show(moves, cs);
 		assertEquals(getMateScore(2), moves.get(0).getValue());
 		assertTrue(moves.get(1).getValue()<moves.get(0).getValue());
@@ -87,7 +91,7 @@ show(moves, cs);
 		
 		// Check in 2 with blacks
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1"), Integer.MAX_VALUE, 0);
+		moves = mme4.getBestMoves(FENParser.from("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1"));
 show(moves, cs);
 		assertEquals(getMateScore(2), moves.get(0).getValue());
 		assertTrue(moves.get(1).getValue()<moves.get(0).getValue());
@@ -97,8 +101,11 @@ show(moves, cs);
 		
 		// Check in 3
 		System.out.println("------------------");
+		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
+		engine.getSearchParams().setSize(3);
+		engine.getSearchParams().setAccuracy(100);
 		board = FENParser.from("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
-		moves = new JChessEngine(new BasicEvaluator(), 6).getBestMoves(board, 3, 100);
+		moves = engine.getBestMoves(board);
 show(moves,cs);
 assertEquals(19, moves.size());
 		mv = moves.get(0).getContent();
@@ -118,7 +125,8 @@ assertEquals(19, moves.size());
 			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f4")));
-			final List<Evaluation<Move>> eval = ai.getBestMoves(l, 4, Integer.MAX_VALUE, 0).getCut();
+			final SearchParameters params = new SearchParameters(4, Integer.MAX_VALUE, 0);
+			final List<Evaluation<Move>> eval = ai.getBestMoves(l, params).getCut();
 			assertEquals(3, eval.size());
 			for (Evaluation<Move> e : eval) {
 				assertEquals(-getMateScore(1), e.getValue());

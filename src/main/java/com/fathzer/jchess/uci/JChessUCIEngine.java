@@ -62,7 +62,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 		} else {
 			throw new IllegalArgumentException();
 		}
-		engine.setMaxDepth(depth);
+		engine.getSearchParams().setDepth(depth);
 	}
 	
 	private void setParallelism(int parallelism) {
