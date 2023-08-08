@@ -1,34 +1,31 @@
 package com.fathzer.jchess.ai;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.ai.AI;
 import com.fathzer.games.ai.Evaluator;
-import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
+import com.fathzer.games.ai.experimental.Negamax3;
 import com.fathzer.games.ai.recursive.AbstractRecursiveEngine;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.games.util.Evaluation;
 import com.fathzer.jchess.Board;
+import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.ai.BasicGamePosition.LongBuilder;
 import com.fathzer.jchess.fen.FENParser;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
-	protected Collection<AI<Move>> sessions;
 	private Function<Board<Move>, Move> openingLibrary;
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
@@ -45,36 +42,32 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 	}
 	
 	@Override
-	public synchronized void interrupt() {
-		this.sessions.forEach(AI::interrupt);
-	}
-	
-	@Override
-	protected ExecutionContext<Move> buildExecutionContext(Board<Move> board) {
-		final LongBuilder<Board<Move>> hash = b->b.getHashKey();
+	protected ExecutionContext<Move, Board<Move>> buildExecutionContext(Board<Move> board) {
 		if (getParallelism()==1) {
-			return new SingleThreadContext<>(new BasicGamePosition<>(board, getEvaluator(), hash));
+			return new SingleThreadContext<>(board);
 		} else {
-			final Supplier<GamePosition<Move>> supplier = () -> {
+			final Supplier<Board<Move>> supplier = () -> {
 				Board<Move> b = board.create();
 				b.copy(board);
-				return new BasicGamePosition<>(b, getEvaluator(), hash);
+				return b;
 			};
 			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(getParallelism()));
 		}
 	}
 
 	@Override
-	protected Negamax<Move> buildNegaMax(ExecutionContext<Move> context) {
-		return new Negamax<>(context) {
+	protected Negamax<Move, Board<Move>> buildNegaMax(ExecutionContext<Move, Board<Move>> context, Evaluator<Board<Move>> evaluator) {
+		Negamax3<Move, Board<Move>> n= new Negamax3<>(context, evaluator) {
 			@Override
 			public List<Move> sort(List<Move> moves) {
-				final Board<Move> b = ((BasicGamePosition<Move, Board<Move>>)getGamePosition()).getBoard();
+				final Board<Move> b = getGamePosition();
 				final Comparator<Move> cmp = new BasicMoveComparator(b);
 				moves.sort(cmp);
 				return moves;
 			}
 		};
+		n.spy = new NegaMaxSpy(3420615620120923866L);
+		return n;
 	}
 
 	@Override
@@ -94,44 +87,66 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 
 	@Override
 	public List<Evaluation<Move>> getBestMoves(Board<Move> board) {
-		setLogger(new EventLogger<>() {
-			@Override
-			public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
-				final long duration = stat.getDurationMs();
-				final List<Evaluation<Move>> cut = bestMoves.getCut();
-				log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
-						stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
-						depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getValue());
-				log.info(Evaluation.toString(bestMoves.getCut(), m -> m.toString(board.getCoordinatesSystem())));
-			}
-
-			@Override
-			public void logTimeOut(int depth) {
-				log.info("Search interrupted by timeout at depth {}",depth);
-			}
-
-			@Override
-			public void logEndDetected(int depth) {
-				log.info("Search ended by imminent win/lose detection at depth {}", depth);
-			}
-		});
-		log.info("--- Start evaluation at for {} with size={} and accuracy={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy());
+		setLogger(getLogger(board));
+		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth());
 		List<Evaluation<Move>> bestMoves = super.getBestMoves(board);
-		final List<Move> pv = getTranspositionTable().collectPV(board, bestMoves.get(0).getContent(), getSearchParams().getDepth());
+		final List<Move> pv = bestMoves.get(0).getPrincipalVariation();
 		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+		showKeys(board, pv);//TODO
 		return bestMoves;
 	}
-
-
 	
-//	private SearchResult<Move> doSession(AI<Move> ai, List<Move> moves, int depth, int size, int accuracy) {
-//		synchronized (this) {
-//			this.sessions.add(ai);
-//		}
-//		try {
-//			return moves==null ? ai.getBestMoves(depth, size, accuracy) : ai.getBestMoves(moves, depth, size, accuracy);
-//		} finally {
-//			sessions.remove(ai);
-//		}
-//	}
+	private void showKeys(Board<Move> board, List<Move> moves) { //TODO
+		for (Move mv : moves) {
+			System.out.println (board.getHashKey()+" -> mv: "+mv.toString(board.getCoordinatesSystem()));
+			board.makeMove(mv);
+		}
+		for (Move mv : moves) {
+			board.unmakeMove();
+		}
+	}
+
+	private class DefaultEventLogger implements EventLogger<Move> {
+		private CoordinatesSystem cs;
+
+		public DefaultEventLogger(CoordinatesSystem cs) {
+			super();
+			this.cs = cs;
+		}
+		@Override
+		public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
+			final long duration = stat.getDurationMs();
+			final List<Evaluation<Move>> cut = bestMoves.getCut();
+			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
+					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
+					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getValue());
+			log.info(Evaluation.toString(bestMoves.getCut(), m -> m.toString(cs)));
+			log.info(toString(bestMoves.getCut().get(0), cs));
+		}
+
+		@Override
+		public void logTimeOut(int depth) {
+			log.info("Search interrupted by timeout at depth {}",depth);
+		}
+
+		@Override
+		public void logEndDetected(int depth) {
+			log.info("Search ended by imminent win/lose detection at depth {}", depth);
+		}
+		
+		private String toString(Evaluation<Move> ev, CoordinatesSystem cs) {
+			int matCount = getEvaluator().getNbHalfMovesToWin(ev.getValue());
+			String value;
+			if (matCount<=getSearchParams().getDepth()) {
+				value="M"+(ev.getValue()<0?"-":"+")+(matCount+1)/2;
+			} else {
+				value = Integer.toString(ev.getValue());
+			}
+			return ev.getContent().toString(cs)+"("+value+")";
+		}
+	}
+
+	protected EventLogger<Move> getLogger(Board<Move> board) {
+		return new DefaultEventLogger(board.getCoordinatesSystem());
+	}
 }

@@ -10,9 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.Status;
 import com.fathzer.games.ai.Evaluator;
-import com.fathzer.games.ai.GamePosition;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.exec.ExecutionContext;
@@ -25,11 +23,9 @@ import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.generic.BasicMove;
 
-import lombok.AllArgsConstructor;
-
 class MinimaxEngineTest {
 	private int getMateScore(int nbMoves) {
-		return new MyGamePosition(null,null).getWinScore(nbMoves);
+		return new BasicEvaluator().getWinScore(nbMoves);
 	}
 	
 	@Test
@@ -119,8 +115,8 @@ assertEquals(19, moves.size());
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final Evaluator<Board<Move>> basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
-		try (ExecutionContext<Move> exec = new SingleThreadContext<>(new MyGamePosition(board, basicEvaluator))) {
-			Negamax<Move> ai = new Negamax<>(exec);
+		try (ExecutionContext<Move, Board<Move>> exec = new SingleThreadContext<>(board)) {
+			Negamax<Move, Board<Move>> ai = new Negamax<>(exec, basicEvaluator);
 			List<Move> l = new ArrayList<>();
 			l.add(new BasicMove(cs.getIndex("h1"), cs.getIndex("g1")));
 			l.add(new BasicMove(cs.getIndex("f2"), cs.getIndex("f3")));
@@ -138,36 +134,5 @@ assertEquals(19, moves.size());
 		Board<Move> copy = board.create();
 		copy.copy(board);
 		return copy;
-	}
-
-	@AllArgsConstructor
-	private static class MyGamePosition implements GamePosition<Move> {
-		private Board<Move> board;
-		private Evaluator<Board<Move>> evaluator; 
-
-		@Override
-		public void makeMove(Move move) {
-			board.makeMove(move);
-		}
-
-		@Override
-		public void unmakeMove() {
-			board.unmakeMove();
-		}
-
-		@Override
-		public List<Move> getMoves() {
-			return board.getMoves();
-		}
-
-		@Override
-		public Status getStatus() {
-			return board.getStatus();
-		}
-
-		@Override
-		public int evaluate() {
-			return evaluator.evaluate(board);
-		}
 	}
 }

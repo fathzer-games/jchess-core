@@ -37,7 +37,6 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
 
 ## TODO
 - UCI stuff needs to be tested (especially if stop works with JChessEngine).
-- Maybe com.fathzer.jchess.ai BasicGamePosition, Stat and Evaluator classes can be promoted to games-core?
 - Finish FENParser for Chess960
 - Implement Capablanca chess
 - General things ... if it does not alter performance too much:
