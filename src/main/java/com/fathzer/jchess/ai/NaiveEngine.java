@@ -7,8 +7,8 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.fathzer.games.ai.Evaluation;
-import com.fathzer.games.util.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluation;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 

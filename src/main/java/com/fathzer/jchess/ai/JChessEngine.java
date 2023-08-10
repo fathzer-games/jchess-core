@@ -6,17 +6,17 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.ai.Evaluation.Type;
-import com.fathzer.games.ai.Evaluator;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
-import com.fathzer.games.ai.recursive.AbstractRecursiveEngine;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.util.ContextualizedExecutor;
-import com.fathzer.games.util.EvaluatedMove;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -25,7 +25,7 @@ import com.fathzer.jchess.fen.FENParser;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
+public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private Function<Board<Move>, Move> openingLibrary;
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
@@ -107,8 +107,7 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
 					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
 					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getEvaluation());
-			log.info(EvaluatedMove.toString(bestMoves.getCut(), m -> m.toString(cs)));
-			log.info(toString(bestMoves.getCut().get(0), cs));
+			log.info(bestMoves.getCut().stream().map(em -> toString(em,cs)).collect(Collectors.joining(", ", "[", "]")));
 		}
 
 		@Override

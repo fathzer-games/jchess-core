@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
-import com.fathzer.games.ai.Evaluation;
-import com.fathzer.games.ai.Evaluation.Type;
-import com.fathzer.games.ai.Evaluator;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.evaluation.Evaluation;
+import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
-import com.fathzer.games.util.EvaluatedMove;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
