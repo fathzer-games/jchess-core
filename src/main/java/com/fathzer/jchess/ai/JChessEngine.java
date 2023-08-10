@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.fathzer.games.ai.Evaluation.Type;
 import com.fathzer.games.ai.Evaluator;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchResult;
@@ -13,10 +14,9 @@ import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
-import com.fathzer.games.ai.experimental.Negamax3;
 import com.fathzer.games.ai.recursive.AbstractRecursiveEngine;
 import com.fathzer.games.util.ContextualizedExecutor;
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -57,7 +57,7 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 
 	@Override
 	protected Negamax<Move, Board<Move>> buildNegaMax(ExecutionContext<Move, Board<Move>> context, Evaluator<Board<Move>> evaluator) {
-		Negamax3<Move, Board<Move>> n= new Negamax3<>(context, evaluator) {
+		return new Negamax<>(context, evaluator) {
 			@Override
 			public List<Move> sort(List<Move> moves) {
 				final Board<Move> b = getGamePosition();
@@ -66,8 +66,6 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 				return moves;
 			}
 		};
-		n.spy = new NegaMaxSpy(3420615620120923866L);
-		return n;
 	}
 
 	@Override
@@ -86,24 +84,13 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 	}
 
 	@Override
-	public List<Evaluation<Move>> getBestMoves(Board<Move> board) {
+	public List<EvaluatedMove<Move>> getBestMoves(Board<Move> board) {
 		setLogger(getLogger(board));
 		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth());
-		List<Evaluation<Move>> bestMoves = super.getBestMoves(board);
+		List<EvaluatedMove<Move>> bestMoves = super.getBestMoves(board);
 		final List<Move> pv = bestMoves.get(0).getPrincipalVariation();
 		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
-		showKeys(board, pv);//TODO
 		return bestMoves;
-	}
-	
-	private void showKeys(Board<Move> board, List<Move> moves) { //TODO
-		for (Move mv : moves) {
-			System.out.println (board.getHashKey()+" -> mv: "+mv.toString(board.getCoordinatesSystem()));
-			board.makeMove(mv);
-		}
-		for (Move mv : moves) {
-			board.unmakeMove();
-		}
 	}
 
 	private class DefaultEventLogger implements EventLogger<Move> {
@@ -116,11 +103,11 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 		@Override
 		public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
 			final long duration = stat.getDurationMs();
-			final List<Evaluation<Move>> cut = bestMoves.getCut();
+			final List<EvaluatedMove<Move>> cut = bestMoves.getCut();
 			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
 					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
-					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getValue());
-			log.info(Evaluation.toString(bestMoves.getCut(), m -> m.toString(cs)));
+					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getEvaluation());
+			log.info(EvaluatedMove.toString(bestMoves.getCut(), m -> m.toString(cs)));
 			log.info(toString(bestMoves.getCut().get(0), cs));
 		}
 
@@ -134,13 +121,13 @@ public class JChessEngine extends AbstractRecursiveEngine<Move, Board<Move>> {
 			log.info("Search ended by imminent win/lose detection at depth {}", depth);
 		}
 		
-		private String toString(Evaluation<Move> ev, CoordinatesSystem cs) {
-			int matCount = getEvaluator().getNbHalfMovesToWin(ev.getValue());
+		private String toString(EvaluatedMove<Move> ev, CoordinatesSystem cs) {
+			final Type type = ev.getEvaluation().getType();
 			String value;
-			if (matCount<=getSearchParams().getDepth()) {
-				value="M"+(ev.getValue()<0?"-":"+")+(matCount+1)/2;
+			if (type==Type.EVAL) {
+				value = Integer.toString(ev.getScore());
 			} else {
-				value = Integer.toString(ev.getValue());
+				value="M"+(ev.getEvaluation().getType()==Type.LOOSE?"-":"+")+ev.getEvaluation().getCountToEnd();
 			}
 			return ev.getContent().toString(cs)+"("+value+")";
 		}

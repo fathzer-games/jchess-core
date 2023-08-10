@@ -10,9 +10,11 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
+import com.fathzer.games.ai.Evaluation;
+import com.fathzer.games.ai.Evaluation.Type;
 import com.fathzer.games.perft.PerfTParser;
 import com.fathzer.games.perft.PerfTTestData;
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -44,7 +46,7 @@ public class JChessUCI extends UCI {
 	
 	public JChessUCI() {
 		super(new JChessUCIEngine());
-		addCommand(this::speedTest, "st");
+		addCommand(this::speedTest, "st"); //TODO Strange seems always use JChess engine!
 	}
 	
 	@Override
@@ -60,7 +62,7 @@ public class JChessUCI extends UCI {
 		private final JChessEngine engine;
 		private CoordinatesSystem cs;
 		private String fen;
-		private List<Evaluation<Move>> moves;
+		private List<EvaluatedMove<Move>> moves;
 		
 		MovesAndMore(JChessEngine engine, String fen) {
 			this.engine = engine;
@@ -89,7 +91,7 @@ public class JChessUCI extends UCI {
 		
 		private void show() {
 			System.out.println(fen);
-			System.out.println(Evaluation.toString(moves, m -> m.toString(cs)));
+			System.out.println(EvaluatedMove.toString(moves, m -> m.toString(cs)));
 		}
 	}
 	
@@ -97,6 +99,7 @@ public class JChessUCI extends UCI {
 		final long start = System.currentTimeMillis();
 		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
 		engine.getSearchParams().setSize(Integer.MAX_VALUE);
+		engine.getSearchParams().setAccuracy(10);
 		if (args.length!=0) {
 			engine.setParallelism(Integer.parseInt(args[0]));
 		}
@@ -104,33 +107,45 @@ public class JChessUCI extends UCI {
 		// 3 possible Mats in 1 with whites
 		final MovesAndMore mv = new MovesAndMore(engine, "7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
 		mv.assertEquals(6, mv.moves.size());
-		int max = mv.moves.get(0).getValue();
-		mv.assertEquals(32757, max);
-		mv.assertTrue(mv.moves.get(3).getValue()<max);
-		mv.moves.stream().limit(3).forEach(m -> mv.assertEquals(max, m.getValue()));
+		{
+			final Evaluation max = mv.moves.get(0).getEvaluation();
+			mv.assertEquals(Type.WIN, max.getType());
+			mv.assertEquals(1, max.getCountToEnd());
+			mv.assertTrue(mv.moves.get(3).getEvaluation().compareTo(max)<0);
+			mv.moves.stream().limit(3).forEach(m -> mv.assertEquals(max, m.getEvaluation()));
+		}
 
 		// Mat in 1 with blacks
 		mv.fill("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5");
 		mv.assertEquals(7, mv.moves.size());
-		mv.assertEquals(32757, mv.moves.get(0).getValue());
+		Evaluation max = mv.moves.get(0).getEvaluation();
+		mv.assertEquals(Type.WIN, max.getType());
+		mv.assertEquals(1, max.getCountToEnd());
 		Move m = mv.moves.get(0).getContent();
 		mv.assertEquals("c3", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("c2", mv.cs.getAlgebraicNotation(m.getTo()));
-		mv.assertEquals(32737,mv.moves.get(1).getValue());
-		mv.assertTrue(mv.moves.get(2).getValue()<10000.0);
+		max = mv.moves.get(1).getEvaluation();
+		//FIXME engine fails to find the second best move in tree, probably because of deepening interruption by first mat
+		mv.assertEquals(Type.WIN, max.getType());
+		mv.assertEquals(3, max.getCountToEnd());
+		mv.assertEquals(Type.EVAL, mv.moves.get(2).getEvaluation().getType());
 		
 		// Check in 2
 		mv.fill("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1");
-		mv.assertEquals(32747, mv.moves.get(0).getValue());
-		mv.assertTrue(mv.moves.get(1).getValue()<mv.moves.get(0).getValue());
+		max = mv.moves.get(0).getEvaluation();
+		mv.assertEquals(Type.WIN, max.getType());
+		mv.assertEquals(2, max.getCountToEnd());
+		mv.assertTrue(mv.moves.get(1).getScore()<max.getScore());
 		m = mv.moves.get(0).getContent();
 		mv.assertEquals("b3", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("a1", mv.cs.getAlgebraicNotation(m.getTo()));
 		
 		// Check in 2 with blacks
 		mv.fill("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1");
-		mv.assertEquals(32747, mv.moves.get(0).getValue());
-		mv.assertTrue(mv.moves.get(1).getValue()<mv.moves.get(0).getValue());
+		max = mv.moves.get(0).getEvaluation();
+		mv.assertEquals(Type.WIN, max.getType());
+		mv.assertEquals(2, max.getCountToEnd());
+		mv.assertTrue(mv.moves.get(1).getScore()<max.getScore());
 		mv.assertEquals("g6", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getFrom()));
 		mv.assertEquals("h8", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getTo()));
 		

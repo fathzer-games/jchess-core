@@ -7,11 +7,13 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.fathzer.games.util.Evaluation;
+import com.fathzer.games.ai.Evaluation;
+import com.fathzer.games.util.EvaluatedMove;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 
 public class NaiveEngine implements Function<Board<Move>, Move> {
+	//FIXME Does not work in mat and draw situations
 	private static final Random RND = new Random();
 	private final ToIntFunction<Board<Move>> evaluator;
 	
@@ -25,13 +27,12 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 	@Override
 	public Move apply(Board<Move> board) {
 		List<Move> possibleMoves = board.getMoves(); 
-		List<Evaluation<Move>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
+		List<EvaluatedMove<Move>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
 			final Move mv = possibleMoves.get(i);
-			return new Evaluation<>(mv, evaluate(mv));
+			return new EvaluatedMove<>(mv, Evaluation.score(evaluate(mv)));
 		}).sorted().collect(Collectors.toList());
-		System.out.println(Evaluation.toString(moves, m -> m.toString(board.getCoordinatesSystem()))); //TODO
-		final double best = moves.get(0).getValue();
-		List<Move> bestMoves = moves.stream().filter(m -> m.getValue()==best).map(Evaluation::getContent).collect(Collectors.toList());
+		final double best = moves.get(0).getScore();
+		List<Move> bestMoves = moves.stream().filter(m -> m.getScore()==best).map(EvaluatedMove::getContent).collect(Collectors.toList());
 		return bestMoves.get(RND.nextInt(bestMoves.size()));
 	}
 	
