@@ -35,7 +35,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		setDeepeningPolicyBuilder(() -> new DeepeningPolicy() {
 			@Override
 			public int getNextDepth(int currentDepth) {
-				return currentDepth+2;
+				return currentDepth < 5 ? currentDepth+2 : currentDepth+1;
 			}
 		});
 	}
@@ -143,8 +143,8 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 
 		@Override
-		public void logEndDetected(int depth) {
-			log.info("Search ended by imminent win/lose detection at depth {}", depth);
+		public void logEndedByPolicy(int depth) {
+			log.info("Search ended by deepening policy at depth {}", depth);
 		}
 	}
 
