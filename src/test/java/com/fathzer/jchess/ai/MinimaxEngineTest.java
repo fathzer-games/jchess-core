@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
@@ -136,6 +137,41 @@ assertEquals(19, moves.size());
 				assertEquals(Type.LOOSE, e.getEvaluation().getType());
 				assertEquals(1, e.getEvaluation().getCountToEnd());
 			}
+		}
+	}
+	
+	@Test
+	@Disabled
+	void iterativeTest() {
+		//TODO This test is disabled, it tests mat in 1 should not be returned when best moves are mat in 3
+		// when ai is called with a reasonable non null accuracy
+		// Currently, the only way to achieve this is to have a custom win/loose evaluation with a gap higher than the accuracy
+		// I should think more about it...
+		Board<Move> board = FENParser.from("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46");
+		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
+		engine.setParallelism(4);
+		engine.getSearchParams().setSize(1);
+		engine.getSearchParams().setAccuracy(300);
+		engine.setMaxTime(15000);
+		// Tests that loose in 1 are not in the best moves (was a bug in fist iterative engine version)
+		final List<EvaluatedMove<Move>> moves = engine.getBestMoves(board);
+		assertEquals(2, moves.size());
+		assertEquals(3, moves.get(0).getEvaluation().getCountToEnd());
+		assertEquals(3, moves.get(1).getEvaluation().getCountToEnd());
+	}
+	
+	@Test
+	void iterativeTest2() {
+		Board<Move> board = FENParser.from("3bkrnr/p2ppppp/7q/2p5/8/2P5/PP1PPPPP/RNBQKBNR b KQk - 0 1");
+		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
+		engine.setParallelism(4);
+		engine.getSearchParams().setSize(1);
+		engine.getSearchParams().setAccuracy(100);
+		engine.setMaxTime(15000);
+		// Tests that loosing move is not in the best moves (was a bug in fist iterative engine version)
+		final List<EvaluatedMove<Move>> moves = engine.getBestMoves(board);
+		for (EvaluatedMove<Move> ev : moves) {
+			assertEquals(Type.EVAL, ev.getEvaluation().getType());
 		}
 	}
 	

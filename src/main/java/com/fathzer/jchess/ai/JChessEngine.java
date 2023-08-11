@@ -1,5 +1,6 @@
 package com.fathzer.jchess.ai;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -15,6 +16,7 @@ import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
+import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.jchess.Board;
@@ -30,6 +32,12 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
 		super(evaluator, maxDepth, new TT(512));
+		setDeepeningPolicyBuilder(() -> new DeepeningPolicy() {
+			@Override
+			public int getNextDepth(int currentDepth) {
+				return currentDepth+2;
+			}
+		});
 	}
 	
 	/** Sets the opening library of this engine.
@@ -77,8 +85,11 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	public Move apply(Board<Move> board) {
 		Move move = openingLibrary==null ? null : openingLibrary.apply(board);
 		if (move==null) {
-			move = super.apply(board);
-			log.debug("Move choosed :{}",move);
+			final List<EvaluatedMove<Move>> bestMoves = getBestMoves(board);
+			move = bestMoves.get(RND.nextInt(bestMoves.size())).getContent();
+			log.info("Move choosed :{}", move.toString(board.getCoordinatesSystem()));
+		} else {
+			log.info("Move from libray:{}", move.toString(board.getCoordinatesSystem()));
 		}
 		return move;
 	}
@@ -90,7 +101,23 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		List<EvaluatedMove<Move>> bestMoves = super.getBestMoves(board);
 		final List<Move> pv = bestMoves.get(0).getPrincipalVariation();
 		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+		log.info("--- End of iterative evaluation returns: {}", toString(bestMoves, board.getCoordinatesSystem()));
 		return bestMoves;
+	}
+	
+	public static String toString(Collection<EvaluatedMove<Move>> moves, CoordinatesSystem cs) {
+		return moves.stream().map(em -> toString(em,cs)).collect(Collectors.joining(", ", "[", "]"));
+	}
+
+	public static String toString(EvaluatedMove<Move> ev, CoordinatesSystem cs) {
+		final Type type = ev.getEvaluation().getType();
+		String value;
+		if (type==Type.EVAL) {
+			value = Integer.toString(ev.getScore());
+		} else {
+			value="M"+(ev.getEvaluation().getType()==Type.LOOSE?"-":"+")+ev.getEvaluation().getCountToEnd();
+		}
+		return ev.getContent().toString(cs)+"("+value+")";
 	}
 
 	private class DefaultEventLogger implements EventLogger<Move> {
@@ -107,7 +134,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
 					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
 					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getEvaluation());
-			log.info(bestMoves.getCut().stream().map(em -> toString(em,cs)).collect(Collectors.joining(", ", "[", "]")));
+			log.info("Search at depth {} returns: {}", depth, JChessEngine.toString(bestMoves.getCut(),cs));
 		}
 
 		@Override
@@ -118,17 +145,6 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		@Override
 		public void logEndDetected(int depth) {
 			log.info("Search ended by imminent win/lose detection at depth {}", depth);
-		}
-		
-		private String toString(EvaluatedMove<Move> ev, CoordinatesSystem cs) {
-			final Type type = ev.getEvaluation().getType();
-			String value;
-			if (type==Type.EVAL) {
-				value = Integer.toString(ev.getScore());
-			} else {
-				value="M"+(ev.getEvaluation().getType()==Type.LOOSE?"-":"+")+ev.getEvaluation().getCountToEnd();
-			}
-			return ev.getContent().toString(cs)+"("+value+")";
 		}
 	}
 
