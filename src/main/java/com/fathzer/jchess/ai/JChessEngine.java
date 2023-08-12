@@ -16,7 +16,6 @@ import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
-import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.jchess.Board;
@@ -32,12 +31,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
 		super(evaluator, maxDepth, new TT(512));
-		setDeepeningPolicyBuilder(() -> new DeepeningPolicy() {
-			@Override
-			public int getNextDepth(int currentDepth) {
-				return currentDepth < 5 ? currentDepth+2 : currentDepth+1;
-			}
-		});
+		setDeepeningPolicyBuilder(() -> new JChessDeepeningPolicy(getMaxTime()));
 	}
 	
 	/** Sets the opening library of this engine.
