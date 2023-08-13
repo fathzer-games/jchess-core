@@ -27,7 +27,7 @@ final class JChessDeepeningPolicy implements DeepeningPolicy {
 	@Override
 	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
 		long spent = System.currentTimeMillis()-start;
-		if (depth<5 || spent<maxTime/2) {
+		if (depth<5 || spent<maxTime/3) {
 			return DeepeningPolicy.super.getMovesToDeepen(depth, evaluations, ended);
 		} else {
 			log.info("{}ms seems not enough to deepen the search",spent);

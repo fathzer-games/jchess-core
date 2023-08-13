@@ -23,7 +23,6 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENParser;
-import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.jchess.generic.BasicMove;
 
 class MinimaxEngineTest {

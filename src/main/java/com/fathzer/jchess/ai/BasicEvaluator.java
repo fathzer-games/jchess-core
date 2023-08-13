@@ -1,4 +1,4 @@
-package com.fathzer.jchess.generic;
+package com.fathzer.jchess.ai;
 
 import static com.fathzer.games.Color.*;
 
@@ -23,7 +23,7 @@ public class BasicEvaluator implements Evaluator<Board<Move>> {
 		return points;
 	}
 
-	private int getPoints(Board<Move> board) {
+	public int getPoints(Board<Move> board) {
 		final BoardExplorer exp = board.getExplorer(); 
 		int points = 0;
 		do {

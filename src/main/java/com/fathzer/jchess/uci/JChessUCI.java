@@ -18,9 +18,9 @@ import com.fathzer.games.perft.PerfTTestData;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ai.BasicEvaluator;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.fen.FENParser;
-import com.fathzer.jchess.generic.BasicEvaluator;
 import com.fathzer.plugin.loader.jar.JarPluginLoader;
 import com.fathzer.plugin.loader.utils.FileUtils;
 

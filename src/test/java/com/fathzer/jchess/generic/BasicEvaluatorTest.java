@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.jchess.ai.BasicEvaluator;
 import com.fathzer.jchess.fen.FENParser;
 
 class BasicEvaluatorTest {
