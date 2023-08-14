@@ -360,11 +360,16 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			key ^= board.getZobrist().getKey(from, promotion);
 			key ^= board.getZobrist().getKey(from, pawn);
 		}
-		if (to==enPassant) {
-			// en-passant catch => delete adverse's pawn
-			final int pos = enPassantDeletePawnIndex;
-			key ^= board.getZobrist().getKey(pos, board.getPiece(pos));
-			board.setPiece(pos, null);
+		if (enPassant>=0) {
+			if (to==enPassant) {
+				// en-passant catch => delete adverse's pawn
+				final int pos = enPassantDeletePawnIndex;
+				key ^= board.getZobrist().getKey(pos, board.getPiece(pos));
+				board.setPiece(pos, null);
+			}
+			// Clear the en-passant key
+			key ^= board.getZobrist().getKey(enPassant);
+			enPassant = -1;
 		}
 		
 		final int rowOffset = board.getCoordinatesSystem().getRow(to) - board.getCoordinatesSystem().getRow(from);
@@ -372,8 +377,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			// Make en-passant available for opponent
 			final boolean whiteMove = WHITE == pawn.getColor();
 			setEnPassant(whiteMove ? board.getCoordinatesSystem().nextRow(to) : board.getCoordinatesSystem().previousRow(to), pawn.getColor().opposite(), to);
-		} else {
-			clearEnPassant();
 		}
 	}
 	
@@ -390,16 +393,10 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	private void setEnPassant(int pos, Color catchingColor, int deletedPawn) {
-		if (enPassant>=0) {
-			// clear previous en passant key
-			key ^= board.getZobrist().getKey(enPassant);
-		}
 		if (isCatcheableEnPassant(pos, catchingColor)) {
 			this.enPassant = pos;
 			enPassantDeletePawnIndex = deletedPawn;
 			key ^= board.getZobrist().getKey(pos);
-		} else {
-			clearEnPassant();
 		}
 	}
 	
@@ -420,8 +417,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private void clearEnPassant() {
 		if (enPassant>=0) {
 			key ^= board.getZobrist().getKey(enPassant);
+			this.enPassant = -1;
 		}
-		this.enPassant = -1;
 	}
 
 	@Override

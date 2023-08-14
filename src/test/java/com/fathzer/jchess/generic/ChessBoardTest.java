@@ -173,6 +173,36 @@ class ChessBoardTest {
 	}
 	
 	@Test
+	void testEnPassantZobristKey() {
+		// Test enPassant
+		// 1 - real en passant
+		long enPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
+		final String notEnPassantFen = "rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 2";
+		long notEnPassantKey = FENParser.from(notEnPassantFen).getHashKey();
+		assertNotEquals(enPassantKey, notEnPassantKey);
+		Board<Move> board = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6p1/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		board.makeMove(new SimpleMove(cs, "h2", "h4"));
+		assertEquals(enPassantKey, board.getHashKey());
+		board = FENParser.from("rnbqkbnr/pppppp1p/8/1B4p1/8/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
+		board.makeMove(new SimpleMove(cs, "h2", "h3"));
+		board.makeMove(new SimpleMove(cs, "g5", "g4"));
+		board.makeMove(new SimpleMove(cs, "h3", "h4"));
+		assertEquals(notEnPassantFen, FENParser.to(board));
+		assertEquals(notEnPassantKey, board.getHashKey());
+		
+		// 2 - useless en passant
+		enPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
+		notEnPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getHashKey();
+		assertEquals(enPassantKey, notEnPassantKey);
+		// 3 - capture en passant
+		board = FENParser.from("rnbqkbnr/pppppp1p/8/8/6pP/8/PPPPPPP1/RNBQKBNR b KQkq h3 0 1");
+		board.makeMove(new SimpleMove(cs, "g4", "h3"));
+		assertNull(board.getPiece(board.getCoordinatesSystem().getIndex("h4")));
+		assertEquals(FENParser.from("rnbqkbnr/pppppp1p/8/8/8/7p/PPPPPPP1/RNBQKBNR w KQkq - 0 1").getHashKey(), board.getHashKey());
+	}
+	
+	@Test
 	void testZobristKey() {
 		Board<Move> board = FENParser.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
@@ -211,21 +241,6 @@ class ChessBoardTest {
 		board.makeMove(new SimpleMove(cs, "b5", "d7"));
 		assertEquals(FENParser.from("rnbqkbnr/pppBpppp/8/8/8/N2PPN2/PPPQBPPP/R3K2R b kq - 0 1").getHashKey(), board.getHashKey());
 
-		// Test enPassant
-		// 1 - real en passant
-		long enPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
-		long notEnPassantKey = FENParser.from("rnbqkbnr/pppppp1p/8/1B6/6pP/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getHashKey();
-		assertNotEquals(enPassantKey, notEnPassantKey);
-		// 2 - useless en passant
-		enPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq h3 0 1").getHashKey();
-		notEnPassantKey = FENParser.from("rnbqkbnr/pppppppp/8/1B6/7P/N2PPN2/PPPQBPP1/R3K2R b KQkq - 0 1").getHashKey();
-		assertEquals(enPassantKey, notEnPassantKey);
-		// 3 - capture en passant
-		board = FENParser.from("rnbqkbnr/pppppp1p/8/8/6pP/8/PPPPPPP1/RNBQKBNR b KQkq h3 0 1");
-		board.makeMove(new SimpleMove(cs, "g4", "h3"));
-		assertNull(board.getPiece(board.getCoordinatesSystem().getIndex("h4")));
-		assertEquals(FENParser.from("rnbqkbnr/pppppp1p/8/8/8/7p/PPPPPPP1/RNBQKBNR w KQkq - 0 1").getHashKey(), board.getHashKey());
-		
 		// Test promotion
 		board = FENParser.from("rnbqkb2/pppppppP/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R w KQq - 0 1");
 		board.makeMove(new SimpleMove(cs, "h7", "h8", Piece.WHITE_QUEEN));
