@@ -5,8 +5,9 @@ import java.util.Comparator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.PieceKind;
 
-/** A move comparator that considers a catch is better than other moves and taking a hish valie piece with a small value piece is better than the opposite.
+/** A move comparator that considers a catch is better than other moves and taking a high value piece with a small value piece is better than the opposite.
  */
 public class BasicMoveComparator implements Comparator<Move> {
 	private Board<Move> board;
@@ -21,12 +22,15 @@ public class BasicMoveComparator implements Comparator<Move> {
 		return getValue(m2) - getValue(m1);
 	}
 
-	private int getValue(Move m) {
+	public int getValue(Move m) {
+		final Piece promotion = m.getPromotion();
+		int value = promotion==null ? 0 : promotion.getKind().getValue();
 		final Piece caught = board.getPiece(m.getTo());
 		if (caught==null) {
-			return 0;
+			return value;
 		} else {
-			return 64 + caught.getKind().getValue() - board.getPiece(m.getFrom()).getKind().getValue();
+			final PieceKind catching = board.getPiece(m.getFrom()).getKind();
+			return 64 + caught.getKind().getValue() - (catching==PieceKind.KING ? 10 : catching.getValue());
 		}
 	}
 }

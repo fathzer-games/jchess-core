@@ -15,6 +15,7 @@ public class BasicEvaluator implements Evaluator<Board<Move>> {
 	@Setter
 	private Color viewPoint;
 	
+	@Override
 	public int evaluate(Board<Move> board) {
 		int points = 100*getPoints(board);
 		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
