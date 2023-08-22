@@ -1,4 +1,4 @@
-package com.fathzer.jchess.ai;
+package com.fathzer.jchess.ai.evaluator;
 
 import java.util.Comparator;
 
