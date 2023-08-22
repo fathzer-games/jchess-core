@@ -22,6 +22,7 @@ import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicMove;
 
@@ -172,6 +173,26 @@ assertEquals(19, moves.size());
 		for (EvaluatedMove<Move> ev : moves) {
 			assertEquals(Type.EVAL, ev.getEvaluation().getType());
 		}
+	}
+	
+	@Test
+	@Disabled
+	void bug20230813() {
+		// Not a bug, just a problem with evaluation function
+		Board<Move> board = FENParser.from("8/8/8/4p1k1/3bK3/8/7p/8 b - - 0 1");
+		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
+		engine.getSearchParams().setSize(Integer.MAX_VALUE);
+		System.out.println(EvaluatedMove.toString(engine.getBestMoves(board), m -> m.toString(board.getCoordinatesSystem())));
+		System.out.println(engine.apply(board).toString(board.getCoordinatesSystem()));
+	}
+
+	@Test
+	@Disabled
+	void bug20230821() {
+		// Not a bug, just a problem with evaluation function
+		Board<Move> board = FENParser.from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76");
+		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 7);
+		System.out.println(engine.apply(board).toString(board.getCoordinatesSystem()));
 	}
 	
 	public static MoveGenerator<Move> getCopy(Board<Move> board) {
