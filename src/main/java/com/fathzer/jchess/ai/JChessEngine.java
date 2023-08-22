@@ -2,7 +2,9 @@ package com.fathzer.jchess.ai;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.ai.evaluator.BasicMoveComparator;
 import com.fathzer.jchess.fen.FENParser;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private Function<Board<Move>, Move> openingLibrary;
+	private List<List<Move>> bestMovesHistory;
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
 		super(evaluator, maxDepth, new TT(512));
@@ -79,22 +83,42 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	public Move apply(Board<Move> board) {
 		Move move = openingLibrary==null ? null : openingLibrary.apply(board);
 		if (move==null) {
-			final List<EvaluatedMove<Move>> bestMoves = getBestMoves(board);
-			move = bestMoves.get(RND.nextInt(bestMoves.size())).getContent();
-			log.info("Move choosed :{}", move.toString(board.getCoordinatesSystem()));
+			final List<EvaluatedMove<Move>> bestMoves = filter(board, getBestMoves(board));
+			final EvaluatedMove<Move> evaluatedMove = bestMoves.get(RND.nextInt(bestMoves.size()));
+			move = evaluatedMove.getContent();
+			log.info("Move choosen :{}", move.toString(board.getCoordinatesSystem()));
+			final List<Move> pv = evaluatedMove.getPrincipalVariation();
+			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
 		} else {
 			log.info("Move from libray:{}", move.toString(board.getCoordinatesSystem()));
 		}
 		return move;
 	}
 
+	private List<EvaluatedMove<Move>> filter(Board<Move> board, List<EvaluatedMove<Move>> bestMoves) {
+		log.info("Filtering with the best moves history:");
+		for (int i=bestMovesHistory.size()-1;i>=0;i--) {
+			List<Move> moves = bestMovesHistory.get(i);
+			bestMoves = getCandidates(bestMoves, moves);
+			log.info(moves.stream().map(m->m.toString(board.getCoordinatesSystem())).collect(Collectors.joining(",")));
+			log.info("  -> {}", EvaluatedMove.toString(bestMoves, m-> m.toString(board.getCoordinatesSystem())));
+		}
+		final BasicMoveComparator c = new BasicMoveComparator(board); 
+		final OptionalInt maxImmediateValue = bestMoves.stream().mapToInt(em->c.getValue(em.getContent())).max();
+		return bestMoves.stream().filter(em -> c.getValue(em.getContent())==maxImmediateValue.getAsInt()).collect(Collectors.toList());
+	}
+	
+	private List<EvaluatedMove<Move>> getCandidates(List<EvaluatedMove<Move>> bestMoves, List<Move> moves) {
+		final List<EvaluatedMove<Move>> alreadyBest = bestMoves.stream().filter(em -> moves.contains(em.getContent())).collect(Collectors.toList());
+		return alreadyBest.isEmpty() ? bestMoves : alreadyBest;
+	}
+
 	@Override
 	public List<EvaluatedMove<Move>> getBestMoves(Board<Move> board) {
+		bestMovesHistory = new LinkedList<>();
 		setLogger(getLogger(board));
 		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth());
 		List<EvaluatedMove<Move>> bestMoves = super.getBestMoves(board);
-		final List<Move> pv = bestMoves.get(0).getPrincipalVariation();
-		log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
 		log.info("--- End of iterative evaluation returns: {}", toString(bestMoves, board.getCoordinatesSystem()));
 		return bestMoves;
 	}
@@ -123,6 +147,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 		@Override
 		public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
+			bestMovesHistory.add(bestMoves.getCut().stream().map(EvaluatedMove::getContent).collect(Collectors.toList()));
 			final long duration = stat.getDurationMs();
 			final List<EvaluatedMove<Move>> cut = bestMoves.getCut();
 			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
