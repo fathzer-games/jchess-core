@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.perft.TestableMoveGeneratorSupplier;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
@@ -15,6 +16,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.ai.JChessEngine;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
+import com.fathzer.jchess.ai.evaluator.simple.SimpleEvaluator;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.generic.BasicMove;
 import com.fathzer.jchess.uci.option.ComboOption;
@@ -25,6 +27,8 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	private static final String BEST_LEVEL = "best";
 	private static final String AVERAGE_LEVEL = "average";
 	private static final String SILLY_LEVEL = "silly";
+	private static final String NAIVE_EVALUATOR = "naive";
+	private static final String SIMPLIFIED_EVALUATOR = "simplified";
 	
 	private Board<Move> board;
 	private JChessEngine engine;
@@ -47,7 +51,8 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	public Option<?>[] getOptions() {
 		return new Option[] {
 			new ComboOption("level", this::setLevel, AVERAGE_LEVEL, new LinkedHashSet<>(Arrays.asList(SILLY_LEVEL, AVERAGE_LEVEL, BEST_LEVEL))),
-			new SpinOption("thread", this::setParallelism, PhysicalCores.count(), 1, Runtime.getRuntime().availableProcessors())
+			new SpinOption("thread", this::setParallelism, PhysicalCores.count(), 1, Runtime.getRuntime().availableProcessors()),
+			new ComboOption("eval", this::setEvaluator, NAIVE_EVALUATOR, new LinkedHashSet<>(Arrays.asList(NAIVE_EVALUATOR, SIMPLIFIED_EVALUATOR)))
 		};
 	}
 	
@@ -67,6 +72,18 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 	
 	private void setParallelism(int parallelism) {
 		engine.setParallelism(parallelism);
+	}
+	
+	private void setEvaluator(String eval) {
+		final Evaluator<Board<Move>> evaluator;
+		if (NAIVE_EVALUATOR.equals(eval)) {
+			evaluator = new BasicEvaluator();
+		} else if (SIMPLIFIED_EVALUATOR.equals(eval)) {
+			evaluator = new SimpleEvaluator();
+		} else {
+			throw new IllegalArgumentException();
+		}
+		engine.setEvaluator(evaluator);
 	}
 	
 	@Override
