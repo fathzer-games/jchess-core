@@ -6,9 +6,6 @@
 # jchess-core
 A chess core library
 
-# Thanks to
-The src/main/resources/Perft.txt file was compiled by the author of [this video on perft method](https://www.youtube.com/watch?v=HGpH28hCw7E&t=2s)
-
 ## Developer notes
 
 ### Tests settings
