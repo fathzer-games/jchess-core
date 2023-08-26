@@ -30,6 +30,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
+			<artifactId>jchess-perft-dataset</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fathzer</groupId>
 			<artifactId>plugin-loader</artifactId>
 			<version>0.0.3</version>
 		</dependency>

@@ -18,8 +18,8 @@ import com.fathzer.games.ai.exec.MultiThreadsContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningSearch;
-import com.fathzer.games.ai.iterativedeepening.RandomMoveSelector;
-import com.fathzer.games.ai.iterativedeepening.StaticMoveSelector;
+import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
+import com.fathzer.games.ai.moveSelector.StaticMoveSelector;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -84,7 +84,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		Move move = openingLibrary==null ? null : openingLibrary.apply(board);
 		if (move==null) {
 			final BasicMoveComparator c = new BasicMoveComparator(board); 
-			super.setMoveSelector(new LoggedSelector(board).setNext(new StaticMoveSelector<Move>(c::getValue).setNext(new RandomMoveSelector<>())));
+			super.setMoveSelector(new LoggedSelector(board).setNext(new StaticMoveSelector<Move,IterativeDeepeningSearch<Move>>(c::getValue).setNext(new RandomMoveSelector<>())));
 			final IterativeDeepeningSearch<Move> search = search(board);
 			final List<EvaluatedMove<Move>> bestMoves = this.getMoveSelector().select(search, search.getBestMoves());
 			final EvaluatedMove<Move> evaluatedMove = bestMoves.get(0);
