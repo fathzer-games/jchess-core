@@ -46,4 +46,3 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - Use killer moves in Alpha beta pruning moves sort?
 
 ## Known bugs
-- JChessUCIEngine play move at the end of go, which I think is a mistake

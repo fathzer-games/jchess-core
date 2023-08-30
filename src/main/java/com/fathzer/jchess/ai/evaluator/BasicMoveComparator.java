@@ -24,13 +24,14 @@ public class BasicMoveComparator implements Comparator<Move> {
 
 	public int getValue(Move m) {
 		final Piece promotion = m.getPromotion();
-		int value = promotion==null ? 0 : promotion.getKind().getValue();
+		int value = promotion==null ? 0 : (promotion.getKind().getValue()-1)*16;
 		final Piece caught = board.getPiece(m.getTo());
 		if (caught==null) {
 			return value;
 		} else {
+			value += caught.getKind().getValue()*16;
 			final PieceKind catching = board.getPiece(m.getFrom()).getKind();
-			return 64 + caught.getKind().getValue() - (catching==PieceKind.KING ? 10 : catching.getValue());
+			return value - (catching==PieceKind.KING ? 10 : catching.getValue());
 		}
 	}
 }

@@ -125,9 +125,7 @@ public class JChessUCIEngine implements Engine, TestableMoveGeneratorSupplier<Mo
 		return new LongRunningTask<>() {
 			@Override
 			public UCIMove get() {
-				final Move best = engine.apply(board);
-				board.makeMove(best);
-				return toMove(board.getCoordinatesSystem(), best);
+				return toMove(board.getCoordinatesSystem(), engine.apply(board));
 			}
 
 			@Override

@@ -41,5 +41,4 @@ class TT extends OneLongEntryTranspositionTable<Move> {
 		final int to = (value & TO_MASK) >> TO_OFFSET;
 		return promotionIndex==0 ? new BasicMove(from, to) : new BasicMove(from, to, Piece.ALL.get(promotionIndex-1));
 	}
-	
 }
