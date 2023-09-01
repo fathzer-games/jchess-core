@@ -20,6 +20,7 @@ import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningSearch;
 import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
 import com.fathzer.games.ai.moveSelector.StaticMoveSelector;
+import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.util.ContextualizedExecutor;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -32,10 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private Function<Board<Move>, Move> openingLibrary;
+	private Function<Board<Move>, Comparator<Move>> moveComparatorSupplier;
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
-		super(evaluator, maxDepth, new TT(512));
+		super(evaluator, maxDepth, new TT(512, SizeUnit.MB));
 		setDeepeningPolicyBuilder(() -> new JChessDeepeningPolicy(getMaxTime()));
+		moveComparatorSupplier = BasicMoveComparator::new;
+		setLogger(new DefaultEventLogger());
 	}
 	
 	/** Sets the opening library of this engine.
@@ -61,13 +65,17 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 	}
 
+	public void setMoveComparatorSupplier(Function<Board<Move>, Comparator<Move>> moveComparatorSupplier) {
+		this.moveComparatorSupplier = moveComparatorSupplier;
+	}
+
 	@Override
 	protected Negamax<Move, Board<Move>> buildNegaMax(ExecutionContext<Move, Board<Move>> context, Evaluator<Board<Move>> evaluator) {
 		return new Negamax<>(context, evaluator) {
 			@Override
 			public List<Move> sort(List<Move> moves) {
 				final Board<Move> b = getGamePosition();
-				final Comparator<Move> cmp = new BasicMoveComparator(b);
+				final Comparator<Move> cmp = moveComparatorSupplier.apply(b);
 				moves.sort(cmp);
 				return moves;
 			}
@@ -83,7 +91,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	public Move apply(Board<Move> board) {
 		Move move = openingLibrary==null ? null : openingLibrary.apply(board);
 		if (move==null) {
-			final BasicMoveComparator c = new BasicMoveComparator(board); 
+			final BasicMoveComparator c = new BasicMoveComparator(board);
 			super.setMoveSelector(new LoggedSelector(board).setNext(new StaticMoveSelector<Move,IterativeDeepeningSearch<Move>>(c::getValue).setNext(new RandomMoveSelector<>())));
 			final IterativeDeepeningSearch<Move> search = search(board);
 			final List<EvaluatedMove<Move>> bestMoves = this.getMoveSelector().select(search, search.getBestMoves());
@@ -100,7 +108,10 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	@Override
 	protected IterativeDeepeningSearch<Move> search(Board<Move> board) {
-		setLogger(getLogger(board));
+		final EventLogger<Move> logger = getLogger();
+		if (logger instanceof DefaultEventLogger) {
+			((DefaultEventLogger)logger).cs = board.getCoordinatesSystem();
+		}
 		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth());
 		IterativeDeepeningSearch<Move> search = super.search(board);
 		log.info("--- End of iterative evaluation returns: {}", toString(search.getBestMoves(), board.getCoordinatesSystem()));
@@ -125,10 +136,10 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private class DefaultEventLogger implements EventLogger<Move> {
 		private CoordinatesSystem cs;
 
-		public DefaultEventLogger(CoordinatesSystem cs) {
+		public DefaultEventLogger() {
 			super();
-			this.cs = cs;
 		}
+
 		@Override
 		public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
 			final long duration = stat.getDurationMs();
@@ -148,9 +159,5 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		public void logEndedByPolicy(int depth) {
 			log.info("Search ended by deepening policy at depth {}", depth);
 		}
-	}
-
-	protected EventLogger<Move> getLogger(Board<Move> board) {
-		return new DefaultEventLogger(board.getCoordinatesSystem());
 	}
 }
