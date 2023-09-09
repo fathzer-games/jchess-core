@@ -6,7 +6,9 @@ import static com.fathzer.jchess.Direction.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.UndoMoveManager;
@@ -40,6 +42,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private long key;
 	private List<Long> keyHistory;
 	private UndoMoveManager<ChessBoardState> undoManager;
+	private Function<Board<Move>, Comparator<Move>> moveComparatorBuilder;
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
 		this(Dimension.STANDARD, pieces);
@@ -162,7 +165,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 * @throws IllegalArgumentException if there's no piece at move.getFrom().
 	 */
 	@Override
-	public void makeMove(Move move) {
+	public boolean makeMove(Move move) {
 		final int from = move.getFrom();
 		int to = move.getTo();
 		Piece movedPiece = board.getPiece(from);
@@ -207,6 +210,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		activeColor = movedPiece.getColor().opposite();
 		key ^= board.getZobrist().getTurnKey();
 		movesBuilder.clear();
+		return true;
 	}
 	
 	@Override
@@ -456,7 +460,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			this.keyHistory.clear();
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
-			this.movesBuilder.clear();
+			this.buildMovesBuilder();
+			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
 		} else {
 			throw new UnsupportedOperationException();
 		}
@@ -504,5 +509,20 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 
 	BoardRepresentation getBoard() {
 		return board;
+	}
+
+	@Override
+	public Function<Board<Move>, Comparator<Move>> getMoveComparatorBuilder() {
+		return moveComparatorBuilder;
+	}
+
+	@Override
+	public void setMoveComparatorBuilder(Function<Board<Move>, Comparator<Move>> moveComparatorBuilder) {
+		this.moveComparatorBuilder = moveComparatorBuilder;
+		if (moveComparatorBuilder==null) {
+			movesBuilder.setMoveComparator(null);
+		} else {
+			movesBuilder.setMoveComparator(moveComparatorBuilder.apply(this));
+		}
 	}
 }

@@ -9,12 +9,10 @@ import com.fathzer.jchess.generic.MovesBuilder;
 public class Chess960MovesBuilder extends MovesBuilder {
 	public Chess960MovesBuilder(Chess960Board board) {
 		super(board);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	protected void addCastling(List<Move> moves, int kingPosition, int rookPosition, int kingDestination, int rookDestination) {
 		moves.add(new BasicMove(kingPosition, rookPosition));
 	}
-
 }

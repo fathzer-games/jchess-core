@@ -97,7 +97,7 @@ public class JChessUCI extends UCI {
 	
 	private void speedTest(String[] args) {
 		final long start = System.currentTimeMillis();
-		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
+		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
 		engine.getSearchParams().setSize(Integer.MAX_VALUE);
 		if (args.length!=0) {
 			engine.setParallelism(Integer.parseInt(args[0]));
@@ -149,7 +149,6 @@ public class JChessUCI extends UCI {
 		mv.assertEquals("g6", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getFrom()));
 		mv.assertEquals("h8", mv.cs.getAlgebraicNotation(mv.moves.get(0).getContent().getTo()));
 		
-		
 		// Check in 3
 		engine.getSearchParams().setSize(3);
 		engine.getSearchParams().setAccuracy(100);
@@ -158,6 +157,17 @@ public class JChessUCI extends UCI {
 		m = mv.moves.get(0).getContent();
 		mv.assertEquals("d1", mv.cs.getAlgebraicNotation(m.getFrom()));
 		mv.assertEquals("d7", mv.cs.getAlgebraicNotation(m.getTo()));
+		
+		// Check in 4
+		engine.getSearchParams().setSize(1);
+		engine.getSearchParams().setAccuracy(0);
+		mv.fill("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
+		mv.assertEquals(2, mv.moves.size());
+		mv.assertEquals(Evaluation.Type.WIN, mv.moves.get(0).getEvaluation().getType());
+		mv.assertEquals(4, mv.moves.get(0).getEvaluation().getCountToEnd());
+		mv.assertEquals(Evaluation.Type.WIN, mv.moves.get(1).getEvaluation().getType());
+		mv.assertEquals(4, mv.moves.get(1).getEvaluation().getCountToEnd());
+
 		out("completed in "+(System.currentTimeMillis()-start)+"ms");
 	}
 }

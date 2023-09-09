@@ -1,5 +1,6 @@
 package com.fathzer.jchess.generic;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.IntPredicate;
 
@@ -18,12 +19,17 @@ public class MovesBuilder {
 	// Cache
 	private List<Move> moves;
 	private Status status;
+	private Comparator<Move> moveComparator;
 	
 	public MovesBuilder(ChessBoard board) {
 		super();
 		this.board = board;
 	}
 	
+	public void setMoveComparator(Comparator<Move> moveComparator) {
+		this.moveComparator = moveComparator;
+	}
+
 	protected void clear() {
 		this.moves = null;
 		this.status = null;
@@ -48,6 +54,9 @@ public class MovesBuilder {
 				} while (exp.next());
 			}
 			moves = tools.getMoves();
+			if (moveComparator!=null) {
+				moves.sort(moveComparator);
+			}
 		}
 		return moves;
 	}

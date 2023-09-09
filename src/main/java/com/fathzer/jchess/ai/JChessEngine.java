@@ -7,7 +7,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -36,7 +35,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private Function<Board<Move>, Comparator<Move>> moveComparatorSupplier;
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
-		super(evaluator, maxDepth, new TT(512, SizeUnit.MB));
+		super(evaluator, maxDepth, new TT(16, SizeUnit.MB));
 		setDeepeningPolicyBuilder(() -> new JChessDeepeningPolicy(getMaxTime()));
 		moveComparatorSupplier = BasicMoveComparator::new;
 		setLogger(new DefaultEventLogger());
@@ -53,6 +52,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	@Override
 	protected ExecutionContext<Move, Board<Move>> buildExecutionContext(Board<Move> board) {
+		board.setMoveComparatorBuilder(moveComparatorSupplier);
 		if (getParallelism()==1) {
 			return new SingleThreadContext<>(board);
 		} else {
@@ -67,19 +67,6 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 
 	public void setMoveComparatorSupplier(Function<Board<Move>, Comparator<Move>> moveComparatorSupplier) {
 		this.moveComparatorSupplier = moveComparatorSupplier;
-	}
-
-	@Override
-	protected Negamax<Move, Board<Move>> buildNegaMax(ExecutionContext<Move, Board<Move>> context, Evaluator<Board<Move>> evaluator) {
-		return new Negamax<>(context, evaluator) {
-			@Override
-			public List<Move> sort(List<Move> moves) {
-				final Board<Move> b = getGamePosition();
-				final Comparator<Move> cmp = moveComparatorSupplier.apply(b);
-				moves.sort(cmp);
-				return moves;
-			}
-		};
 	}
 
 	@Override

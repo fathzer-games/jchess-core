@@ -1,5 +1,8 @@
 package com.fathzer.jchess;
 
+import java.util.Comparator;
+import java.util.function.Function;
+
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.HashProvider;
@@ -83,4 +86,8 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	default void copy(Board<M> board) {
 		throw new UnsupportedOperationException();
 	}
+	
+	Function<Board<Move>, Comparator<Move>> getMoveComparatorBuilder();
+
+	void setMoveComparatorBuilder(Function<Board<Move>, Comparator<Move>> moveComparatorBuilder);
 }

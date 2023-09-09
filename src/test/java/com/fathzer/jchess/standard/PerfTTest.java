@@ -56,6 +56,7 @@ class PerfTTest {
 		try (ContextualizedExecutor<MoveGenerator<Move>> exec =new ContextualizedExecutor<>(PhysicalCores.count())) {
 			final Board<Move> board = FENParser.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
 			final PerfT<Move> perfT = new PerfT<>(exec);
+			perfT.setPlayLeaves(false);
 			final PerfTResult<Move> divide = perfT.divide(2, copy(board));
 			System.out.println("Leaves: "+ divide.getNbLeaves());
 			System.out.println("Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
@@ -65,6 +66,7 @@ class PerfTTest {
 	private void doTest(ContextualizedExecutor<MoveGenerator<Move>> exec, PerfTTestData test, int depth) {
 		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
 		final PerfT<Move> perfT = new PerfT<>(exec);
+		perfT.setPlayLeaves(false);
 		if (test.getSize()>=depth) {
 //			try {
 				final PerfTResult<Move> divide = perfT.divide(depth, copy(board));
