@@ -28,6 +28,9 @@ public class MovesBuilder {
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
 		this.moveComparator = moveComparator;
+		if (this.moves!=null && moveComparator!=null) {
+			this.moves.sort(moveComparator);
+		}
 	}
 
 	protected void clear() {

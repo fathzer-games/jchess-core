@@ -460,8 +460,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			this.keyHistory.clear();
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
-			this.buildMovesBuilder();
 			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
+			this.movesBuilder.clear();
 		} else {
 			throw new UnsupportedOperationException();
 		}
@@ -525,4 +525,20 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			movesBuilder.setMoveComparator(moveComparatorBuilder.apply(this));
 		}
 	}
+
+	@Override
+	public Status isRepetition() {
+		return getHalfMoveCount()>=100 || movesBuilder.isInsufficientMaterial() || movesBuilder.isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
+	}
+
+	@Override
+	public Status onNoValidMove() {
+		if (isCheck()) {
+			return activeColor==WHITE ? Status.BLACK_WON : Status.WHITE_WON;
+		} else {
+			return Status.DRAW;
+		}
+	}
+	
+	
 }
