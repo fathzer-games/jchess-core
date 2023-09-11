@@ -195,6 +195,18 @@ assertEquals(19, moves.size());
 		System.out.println(engine.apply(board).toString(board.getCoordinatesSystem()));
 	}
 	
+	@Test
+	void bug20230911() {
+		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
+		engine.setParallelism(1);
+		engine.getSearchParams().setSize(1);
+		engine.getSearchParams().setAccuracy(0);
+		Board<Move> board = FENParser.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
+		List<EvaluatedMove<Move>> bestMoves = engine.getBestMoves(board);
+		System.out.println(EvaluatedMove.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));
+		assertEquals(2, bestMoves.size());
+	}
+	
 	public static MoveGenerator<Move> getCopy(Board<Move> board) {
 		Board<Move> copy = board.create();
 		copy.copy(board);
