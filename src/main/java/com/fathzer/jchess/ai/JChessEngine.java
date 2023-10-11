@@ -92,7 +92,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 		return move;
 	}
-	
+
 	@Override
 	protected IterativeDeepeningSearch<Move> search(Board<Move> board) {
 		final EventLogger<Move> logger = getLogger();

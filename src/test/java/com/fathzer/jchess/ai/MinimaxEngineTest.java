@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchParameters;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
@@ -19,6 +22,10 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.exec.ExecutionContext;
 import com.fathzer.games.ai.exec.SingleThreadContext;
+import com.fathzer.games.ai.experimental.Negamax3;
+import com.fathzer.games.ai.experimental.Spy;
+import com.fathzer.games.ai.experimental.TreeSearchStateStack;
+import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -205,6 +212,100 @@ assertEquals(19, moves.size());
 		List<EvaluatedMove<Move>> bestMoves = engine.getBestMoves(board);
 		System.out.println(EvaluatedMove.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));
 		assertEquals(2, bestMoves.size());
+	}
+	
+	// An example of bug chasing
+	void bug20230911_chase() {
+		final Board<Move> board = FENParser.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		final Evaluator<Board<Move>> basicEvaluator = new BasicEvaluator();
+		basicEvaluator.setViewPoint(Color.WHITE);
+		try (ExecutionContext<Move, Board<Move>> exec = new SingleThreadContext<>(board)) {
+			Negamax3<Move, Board<Move>> ai = new Negamax3<>(exec, basicEvaluator);
+			final TT tt = new TT(16, SizeUnit.MB);
+			ai.setTranspositonTable(tt);
+			final Move a5a6 = new BasicMove(cs.getIndex("a5"), cs.getIndex("a6"));
+			final MySpy spy = new MySpy(cs, tt);
+			ai.setSpy(spy);
+			EvaluatedMove<Move> e = ai.getBestMoves(Collections.singletonList(a5a6), new SearchParameters(8)).getList().get(0);
+			assertEquals(Type.WIN, e.getEvaluation().getType());
+			assertEquals(4, e.getEvaluation().getCountToEnd());
+			final Move h1h6 = new BasicMove(cs.getIndex("h1"), cs.getIndex("h6"));
+			spy.searchedKey = FENParser.from("8/4k3/7R/R7/8/8/8/4K3 b - - 0 1").getHashKey(); //h1h6
+			spy.searchedKey = -8273089417188127202L; //e7d7
+			spy.searchedKey = 6365043373273418417L; //a5a7
+			spy.searchedKey = -3019684505475777408L; //d7d8
+			spy.searchedKey = 1283331931822092560L; //h6h8
+			e = ai.getBestMoves(Collections.singletonList(h1h6),new SearchParameters(8)).getList().get(0);
+			System.out.println("pv="+tt.collectPV(board, h1h6, 8).stream().map(m->m.toString(cs)).collect(Collectors.toList()));
+			assertEquals(Type.WIN, e.getEvaluation().getType());
+			assertEquals(4, e.getEvaluation().getCountToEnd());
+		}
+	}
+	
+	private static class MySpy implements Spy<Move, Board<Move>> {
+		private CoordinatesSystem cs;
+		private int traceDepth = Integer.MAX_VALUE;
+		private long searchedKey = 6365043373273418417L;
+		private TT tt;
+
+		private MySpy(CoordinatesSystem cs, TT tt) {
+			this.cs = cs;
+			this.tt = tt;
+		}
+		
+		private CharSequence tab(int depth) {
+			StringBuilder b = new StringBuilder("  ");
+			depth = traceDepth-depth;
+			for (int i = 0; i < depth; i++) {
+				b.append("  ");
+			}
+			return b;
+		}
+
+		@Override
+		public void enter(TreeSearchStateStack<Move, Board<Move>> state) {
+			if (state.position.getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
+				traceDepth = state.getCurrentDepth();
+				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position)+" at depth "+state.getCurrentDepth());
+			}
+			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
+				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position));
+			}
+			Spy.super.enter(state);
+		}
+		
+		@Override
+		public void alphaBetaFromTT(TreeSearchStateStack<Move, Board<Move>> state, AlphaBetaState<Move> abState) {
+			if (state.position.getHashKey()==1283331931822092560L) {
+//			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
+				System.out.println("Something in TT");
+			}
+		}
+		
+		@Override
+		public void storeTT(TreeSearchStateStack<Move, Board<Move>> state, AlphaBetaState<Move> abState, boolean store) {
+			if (state.position.getHashKey()==1283331931822092560L) {
+				System.out.println ("Store: "+store+", value="+abState.getValue()+" at depth "+abState.getDepth());
+				System.out.println ("Restore: "+tt.get(state.position.getHashKey()).getValue());
+			}
+		}
+
+		@Override
+		public void exit(TreeSearchStateStack<Move, Board<Move>> state, Event evt) {
+			if (traceDepth>=0) {
+				final long key = state.position.getHashKey();
+				if (state.getCurrentDepth()==traceDepth-1) {
+					System.out.println (tab(state.getCurrentDepth())+"Exit with "+state.getCurrent().value+" ("+key+")");
+				}
+				if (state.getCurrentDepth()==traceDepth && key==searchedKey) {
+					traceDepth = Integer.MAX_VALUE;
+					System.out.println ("Stop spy on "+evt+". Value="+state.getCurrent().value);
+				}
+			}
+			Spy.super.exit(state, evt);
+		}
+		
 	}
 	
 	public static MoveGenerator<Move> getCopy(Board<Move> board) {
