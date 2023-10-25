@@ -246,7 +246,7 @@ assertEquals(19, moves.size());
 	private static class MySpy implements Spy<Move, Board<Move>> {
 		private CoordinatesSystem cs;
 		private int traceDepth = Integer.MAX_VALUE;
-		private long searchedKey = 6365043373273418417L;
+		private long searchedKey = 0;
 		private TT tt;
 
 		private MySpy(CoordinatesSystem cs, TT tt) {
@@ -267,7 +267,7 @@ assertEquals(19, moves.size());
 		public void enter(TreeSearchStateStack<Move, Board<Move>> state) {
 			if (state.position.getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
 				traceDepth = state.getCurrentDepth();
-				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position)+" at depth "+state.getCurrentDepth());
+				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
 			}
 			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
 				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position));
@@ -286,8 +286,7 @@ assertEquals(19, moves.size());
 		@Override
 		public void storeTT(TreeSearchStateStack<Move, Board<Move>> state, AlphaBetaState<Move> abState, boolean store) {
 			if (state.position.getHashKey()==1283331931822092560L) {
-				System.out.println ("Store: "+store+", value="+abState.getValue()+" at depth "+abState.getDepth());
-				System.out.println ("Restore: "+tt.get(state.position.getHashKey()).getValue());
+				System.out.println ("Stored: "+store+", value="+abState.getValue()+" at depth "+abState.getDepth()+". Put "+tt.get(state.position.getHashKey()).getValue()+" in table"+" ... "+Short.MAX_VALUE);
 			}
 		}
 

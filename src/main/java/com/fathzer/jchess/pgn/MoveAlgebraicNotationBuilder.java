@@ -17,13 +17,13 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
-/** A class to get move <a href="https://en.wikipedia.org/wiki/Algebraic_notation_(chess)">Algebraic notation</a> of moves.
+/** A class to get <a href="https://en.wikipedia.org/wiki/Algebraic_notation_(chess)">Algebraic notation</a> of moves.
  */
-public class MoveAlgebraicNotation {
+public class MoveAlgebraicNotationBuilder {
 	private String checkSymbol = "+";
 	private String checkmateSymbol = "#";
 	private char captureSymbol = 'x';
-	private String enPassantSymbol = " e.p";
+	private String enPassantSymbol = " e.p.";
 	private Function<Castling.Side,String> castlingSymbolBuilder = s -> s==Castling.Side.KING?"O-O":"O-O-O";
 	private Function<Piece, String> promotionSymbolBuilder = p -> "="+p.getNotation().toUpperCase();
 	private boolean playMove;
@@ -137,7 +137,7 @@ public class MoveAlgebraicNotation {
 		board.makeMove(move);
 		try {
 			final Status status = board.getStatus();
-			if (status!=DRAW && board.getMoves().size()==0) {
+			if (status!=DRAW && board.getMoves().isEmpty()) {
 				return Optional.of(checkmateSymbol);
 			} else if (board.isCheck()) {
 				return Optional.of(checkSymbol);
@@ -151,38 +151,75 @@ public class MoveAlgebraicNotation {
 		}
 	}
 
-	public MoveAlgebraicNotation withCheckSymbol(String checkSymbol) {
+	/** Sets the symbol added to moves that resulted in a check.
+	 * <br>The default value is "+".
+	 * @param checkSymbol The new symbol
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withCheckSymbol(String checkSymbol) {
 		this.checkSymbol = checkSymbol;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withCheckmateSymbol(String checkmateSymbol) {
+	/** Sets the symbol added to moves that resulted in a check mate.
+	 * <br>The default value is "#".
+	 * @param checkmateSymbol The new symbol
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withCheckmateSymbol(String checkmateSymbol) {
 		this.checkmateSymbol = checkmateSymbol;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withCaptureSymbol(char captureSymbol) {
+	/** Sets the symbol inserted in captures.
+	 * <br>The default value is "x".
+	 * @param captureSymbol The new symbol
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withCaptureSymbol(char captureSymbol) {
 		this.captureSymbol = captureSymbol;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withPlayMove(boolean sideEffect) {
-		this.playMove = sideEffect;
+	/** Sets the symbol added to 'En passant' captures.
+	 * <br>The default value is " e.p.". Be aware that this symbol should be empty when generating a PGN file (see section 8.2.3.3 of <a href="https://ia902908.us.archive.org/26/items/pgn-standard-1994-03-12/PGN_standard_1994-03-12.txt">PGN specification</a>).
+	 * @param enPassantSymbol The new symbol
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withEnPassantSymbol(String enPassantSymbol) {
+		this.enPassantSymbol = enPassantSymbol;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withPromotionSymbolBuilder(Function<Piece, String> promotionSymbolBuilder) {
+	/** Sets the functions that builds the notation for promotions.
+	 * <br>The default value is "=" followed by the English notation of the piece the pawn is promoted to.
+	 * @param promotionSymbolBuilder The new builder
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withPromotionSymbolBuilder(Function<Piece, String> promotionSymbolBuilder) {
 		this.promotionSymbolBuilder = promotionSymbolBuilder;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withCastlingSymbolBuilder(Function<Castling.Side, String> castlingSymbolBuilder) {
+	/** Sets the functions that builds the notation for castlings.
+	 * <br>The default value is "O-O" for king side castling and "O-O-O" for queen size castling.
+	 * @param castlingSymbolBuilder The new builder
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withCastlingSymbolBuilder(Function<Castling.Side, String> castlingSymbolBuilder) {
 		this.castlingSymbolBuilder = castlingSymbolBuilder;
 		return this;
 	}
 
-	public MoveAlgebraicNotation withEnPassantSymbol(String enPassantSymbol) {
-		this.enPassantSymbol = enPassantSymbol;
+	/** Sets the play move attribute.
+	 * <br>Each time the {@link #get(Board, Move)} method is called, the move is played on the board in order to test if a check occurs.
+	 * <br>If this attribute is true, the move is not revered, leaving the board changed. Be aware that, even when setting the attribute to false, the board is changed during the {@link #get(Board, Move)} method execution.
+	 * <br>Default value is false.
+	 * @param sideEffect True to leave the move played on the board.
+	 * @return this modified MoveAlgebraicNotation instance.
+	 */
+	public MoveAlgebraicNotationBuilder withPlayMove(boolean sideEffect) {
+		this.playMove = sideEffect;
 		return this;
 	}
 }

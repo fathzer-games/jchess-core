@@ -16,7 +16,7 @@ class MoveAlgebraicNotationTest {
 
 	@Test
 	void test() {
-		final MoveAlgebraicNotation san = new MoveAlgebraicNotation();
+		final MoveAlgebraicNotationBuilder san = new MoveAlgebraicNotationBuilder();
 		
 		Board<Move> board = FENParser.from("rnbqkbnr/pppp1ppp/8/4p3/3P3P/8/PPP1PPP1/RNBQKBNR b KQkq d3 0 2");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
@@ -37,7 +37,7 @@ class MoveAlgebraicNotationTest {
 		assertEquals("O-O-O", san.get(board, new SimpleMove(cs, "e8","c8")));
 		
 		board = FENParser.from("rnbqkbnr/p1pppppp/8/PpP5/8/8/1P1PPPPP/RNBQKBNR w KQkq b6 0 1");
-		assertEquals("axb6 e.p", san.get(board, new SimpleMove(cs, "a5","b6")));
+		assertEquals("axb6 e.p.", san.get(board, new SimpleMove(cs, "a5","b6")));
 		assertNull(board.getPiece(cs.getIndex("b5")));
 		
 		board = FENParser.from("2kr3r/Ppp1pppp/3p4/8/2P5/1P3K2/2PP2PP/R1B1Q3 w - - 0 1");
@@ -67,7 +67,7 @@ class MoveAlgebraicNotationTest {
 	
 	@Test
 	void testCustom() {
-		final MoveAlgebraicNotation san = new MoveAlgebraicNotation();
+		final MoveAlgebraicNotationBuilder san = new MoveAlgebraicNotationBuilder();
 		san.withCaptureSymbol(':').withCastlingSymbolBuilder(s -> s==Castling.Side.KING?"0-0":"0-0-0");
 		san.withCheckSymbol("ch").withCheckmateSymbol("++");
 		san.withEnPassantSymbol("").withPromotionSymbolBuilder(p->p.getNotation().toUpperCase());
