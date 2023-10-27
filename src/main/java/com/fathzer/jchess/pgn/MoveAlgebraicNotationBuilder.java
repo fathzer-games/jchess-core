@@ -36,12 +36,11 @@ public class MoveAlgebraicNotationBuilder {
 	 */
 	public String get(Board<Move> board, Move move) {
 		final StringBuilder builder = new StringBuilder();
-		final List<Move> state = board.getMoves(false);
+		final List<Move> state = board.getLegalMoves();
 		// First, keep only moves with the right destination
 		// This list will allow us to check if the move is valid and if it needs disambiguation
 		final int to = move.getTo();
 		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).collect(Collectors.toList());
-		//FIXME candidates can contain invalid pseudo legal moves, we should test the moves are valid
 		if (!checkValidMove(move, candidates)) {
 			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
 		}

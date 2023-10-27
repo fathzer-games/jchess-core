@@ -152,7 +152,12 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	
 	@Override
 	public List<Move> getMoves(boolean quiesce) {
-		return quiesce ? Collections.emptyList() : movesBuilder.getMoves(); //TODO
+		return quiesce ? Collections.emptyList() : getLegalMoves(); //TODO
+	}
+	
+	@Override
+	public List<Move> getLegalMoves() {
+		return movesBuilder.getMoves();
 	}
 
 	@Override

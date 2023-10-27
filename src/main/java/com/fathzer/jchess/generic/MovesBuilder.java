@@ -231,7 +231,7 @@ public class MovesBuilder {
 		if (isInsufficientMaterial() || board.getHalfMoveCount()>=100 || isDrawByRepetition()) {
 			return Status.DRAW;
 		}
-		if (board.getMoves(false).isEmpty()) { //FIXME Not working with pseudo legal moves
+		if (board.getLegalMoves().isEmpty()) {
 			if (board.isCheck()) {
 				return board.getActiveColor().equals(Color.WHITE) ? Status.BLACK_WON : Status.WHITE_WON;
 			} else {

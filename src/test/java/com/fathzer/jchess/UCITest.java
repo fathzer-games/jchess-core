@@ -16,7 +16,7 @@ class UCITest {
 	void test() throws InterruptedException {
 		//FIXME
 		// This is clearly not a test (no assertion)!
-		// The worse is it does not respect the uci protocol (should wait for go return before sending a new position)
+		// The worse is it does not respect the uci protocol (it should wait for go return before sending a new position)
 		MyUCI uci = new MyUCI();
 		Thread thread = new Thread(uci);
 		thread.setDaemon(true);
