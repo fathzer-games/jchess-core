@@ -6,6 +6,7 @@ import static com.fathzer.jchess.Direction.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -150,8 +151,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	@Override
-	public List<Move> getMoves() {
-		return movesBuilder.getMoves();
+	public List<Move> getMoves(boolean quiesce) {
+		return quiesce ? Collections.emptyList() : movesBuilder.getMoves(); //TODO
 	}
 
 	@Override

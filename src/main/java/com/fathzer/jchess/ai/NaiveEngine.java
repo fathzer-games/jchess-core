@@ -26,7 +26,8 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 	
 	@Override
 	public Move apply(Board<Move> board) {
-		List<Move> possibleMoves = board.getMoves(); 
+		List<Move> possibleMoves = board.getMoves(false);
+		//FIXME Does not work with pseudo legal moves
 		List<EvaluatedMove<Move>> moves = IntStream.range(0, possibleMoves.size()).mapToObj(i -> {
 			final Move mv = possibleMoves.get(i);
 			return new EvaluatedMove<>(mv, Evaluation.score(evaluate(mv)));
@@ -41,7 +42,8 @@ public class NaiveEngine implements Function<Board<Move>, Move> {
 		this.board.makeMove(move);
 		try {
 			// Gets the opponent responses
-			final List<Move> moves = this.board.getMoves();
+			//FIXME Does not work with pseudo legal moves
+			final List<Move> moves = this.board.getMoves(false);
 			int max = 0;
 			for (int i = 0; i < moves.size(); i++) {
 				// For all opponent responses

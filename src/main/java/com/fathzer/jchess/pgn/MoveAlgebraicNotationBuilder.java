@@ -1,7 +1,6 @@
 package com.fathzer.jchess.pgn;
 
 import static com.fathzer.jchess.PieceKind.*;
-import static com.fathzer.games.Status.DRAW;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,11 +36,12 @@ public class MoveAlgebraicNotationBuilder {
 	 */
 	public String get(Board<Move> board, Move move) {
 		final StringBuilder builder = new StringBuilder();
-		final List<Move> state = board.getMoves();
+		final List<Move> state = board.getMoves(false);
 		// First, keep only moves with the right destination
 		// This list will allow us to check if the move is valid and if it needs disambiguation
 		final int to = move.getTo();
 		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).collect(Collectors.toList());
+		//FIXME candidates can contain invalid pseudo legal moves, we should test the moves are valid
 		if (!checkValidMove(move, candidates)) {
 			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
 		}
@@ -137,7 +137,7 @@ public class MoveAlgebraicNotationBuilder {
 		board.makeMove(move);
 		try {
 			final Status status = board.getStatus();
-			if (status!=DRAW && board.getMoves().isEmpty()) {
+			if (status==Status.BLACK_WON || status==Status.WHITE_WON) {
 				return Optional.of(checkmateSymbol);
 			} else if (board.isCheck()) {
 				return Optional.of(checkSymbol);

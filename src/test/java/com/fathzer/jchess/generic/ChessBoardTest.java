@@ -269,7 +269,7 @@ class ChessBoardTest {
 	void pawnsMoveGenerationTest() {
 		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final List<Move> blackMoves = board.getMoves();
+		final List<Move> blackMoves = board.getMoves(false);
 		assertEquals(Set.of("a4"), getTo(cs, getMoves(cs, blackMoves, "a5")));
 		assertEquals(Set.of("g5","g6"), getTo(cs, getMoves(cs, blackMoves, "g7")));
 		assertEquals(Set.of("b6"), getTo(cs, getMoves(cs, blackMoves, "b7")));
@@ -280,7 +280,7 @@ class ChessBoardTest {
 		final String fen = "r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1";
 		board.copy(FENParser.from(fen));
 		assertEquals(fen, FENParser.to(board));
-		final List<Move> whiteMoves = board.getMoves();
+		final List<Move> whiteMoves = board.getMoves(false);
 		assertEquals(Set.of("a6","b6","c6"), getTo(cs, getMoves(cs, whiteMoves, "b5")), whiteMoves.stream().map(m -> m.toString(cs)).collect(Collectors.joining(",")));
 
 		
@@ -295,7 +295,7 @@ class ChessBoardTest {
 	}
 	
 	private List<Move> getMoves(Board<Move> board, String from) {
-		return getMoves(board.getCoordinatesSystem(), board.getMoves(),from);
+		return getMoves(board.getCoordinatesSystem(), board.getMoves(false),from);
 	}
 
 	private List<Move> getMoves(CoordinatesSystem cs, List<Move> moves, String from) {
@@ -324,7 +324,7 @@ class ChessBoardTest {
 		assertEquals(Set.of("d1","f1"), getTo(cs ,getMoves(FENParser.from("4k3/8/8/8/8/3n4/3PP3/4K2R w K - 0 1"), "e1")), "Problem in king move");
 		
 		// Can castle
-		List<Move> moves = FENParser.from("r3kb1r/ppp2ppp/2nqb2n/P2p4/2P1p3/6R1/1PQPPPPP/1NB1KBNR b Kkq - 1 8").getMoves();
+		List<Move> moves = FENParser.from("r3kb1r/ppp2ppp/2nqb2n/P2p4/2P1p3/6R1/1PQPPPPP/1NB1KBNR b Kkq - 1 8").getMoves(false);
 		moves = moves.stream().filter(m->"e8".equals(cs.getAlgebraicNotation(m.getFrom()))).collect(Collectors.toList());
 		assertEquals(Set.of("c8","d8", "d7", "e7"), getTo(cs, moves));
 		assertEquals(4, moves.size(), toString(moves, cs));
@@ -338,7 +338,7 @@ class ChessBoardTest {
 	void enPassantPinned() {
 		final Board<Move> board = FENParser.from("2Q1B3/8/8/KP4p1/1R3pPk/5R2/4P3/8 b - g3 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		List<Move> moves = board.getMoves();
+		List<Move> moves = board.getMoves(false);
 		assertEquals(0, moves.size(), "Should have no possible moves but obtain "+toString(moves, cs));
 	}
 	
@@ -349,7 +349,7 @@ class ChessBoardTest {
 		// Only king can move
 		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		List<Move> moves = board.getMoves();
+		List<Move> moves = board.getMoves(false);
 		assertEquals(Set.of("e8"), getFrom(cs, moves), "Only king can move");
 		assertEquals(Set.of("d8", "f8"), getTo(cs, moves));
 	}

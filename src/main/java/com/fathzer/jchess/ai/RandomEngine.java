@@ -14,7 +14,9 @@ public class RandomEngine implements Function<Board<Move>, Move> {
 	
 	@Override
 	public Move apply(Board<Move> board) {
-		final List<Move> possibleMoves = board.getMoves();
+		//FIXME Does not work with pseudo legal moves
+		final List<Move> possibleMoves = board.getMoves(false);
+		//FIXME throw exception when possibleMoves is empty
 		return possibleMoves.get(RND.nextInt(possibleMoves.size()));
 	}
 }

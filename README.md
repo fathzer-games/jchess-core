@@ -47,3 +47,6 @@ For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to Sy
     - Use killer moves in Alpha beta pruning moves sort?
 
 ## Known bugs
+Not exactly bugs yet ... because all moves returned by Board are legal. But potentially buthese are potential bugs:
+- See FIXME in com.fathzer.jchess.pgn.MoveAlgebraicNotationBuilder.
+- See FIXME in com.fathzer.jchess.ai.NaiveEngine and com.fathzer.jchess.ai.RandomEngine.

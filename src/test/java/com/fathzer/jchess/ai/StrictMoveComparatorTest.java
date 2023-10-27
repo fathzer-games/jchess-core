@@ -36,7 +36,7 @@ class StrictMoveComparatorTest {
 		CoordinatesSystem cs = board.getCoordinatesSystem();
 		final StrictMoveComparator cmp = new StrictMoveComparator(board);
 		
-		List<Move> moves = board.getMoves();
+		List<Move> moves = board.getMoves(false); //FIXME Should use legal moves
 		moves.sort(cmp);
 		
 		final Move queenPromo = new BasicMove(cs.getIndex("a2"), cs.getIndex("a1"), Piece.BLACK_QUEEN);

@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.Status;
 import com.fathzer.games.HashProvider;
 
 /** A chess board.
@@ -71,6 +72,13 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	}
 	
 	Piece getPiece(int position);
+	
+    /**
+     * Gets the current game status.
+     * @return a status
+     */
+	Status getStatus();
+
 
 	/** Creates a copy of this board of the same class as this.
 	 * @return a new Board.
