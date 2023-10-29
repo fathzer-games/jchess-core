@@ -533,7 +533,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 
 	@Override
-	public Status isRepetition() {
+	public Status getContextualStatus() {
 		return getHalfMoveCount()>=100 || movesBuilder.isInsufficientMaterial() || movesBuilder.isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
 	}
 
