@@ -42,7 +42,8 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	}
 	
 	/** Sets the opening library of this engine.
-	 * @param openingLibrary The opening library. It returns null if the library does not known what to play here.
+	 * @param openingLibrary The opening library or null to play without such library.
+	 * <br>An openings library is a function that should return null if the library does not known what to play here.
 	 * @return This updated chess engine
 	 */
 	public JChessEngine setOpenings(Function<Board<Move>, Move> openingLibrary) {
