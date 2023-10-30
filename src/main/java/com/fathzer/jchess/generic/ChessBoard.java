@@ -538,7 +538,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 
 	@Override
-	public Status onNoValidMove() {
+	public Status getEndGameStatus() {
 		if (isCheck()) {
 			return activeColor==WHITE ? Status.BLACK_WON : Status.WHITE_WON;
 		} else {
