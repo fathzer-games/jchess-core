@@ -17,7 +17,6 @@ final class JChessDeepeningPolicy implements DeepeningPolicy {
 	protected JChessDeepeningPolicy(long maxTimeMs) {
 		this.maxTime = maxTimeMs;
 		this.start = System.currentTimeMillis();
-		System.out.println("Create policy at "+this.start+" with max="+maxTimeMs);
 	}
 	
 	@Override
@@ -28,7 +27,7 @@ final class JChessDeepeningPolicy implements DeepeningPolicy {
 	@Override
 	public <M> List<M> getMovesToDeepen(int depth, List<EvaluatedMove<M>> evaluations, List<EvaluatedMove<M>> ended) {
 		final long spent = System.currentTimeMillis()-start;
-		if (depth<5 || spent<maxTime/*/3*/) {
+		if (depth<5 || spent<maxTime/3) {
 			return DeepeningPolicy.super.getMovesToDeepen(depth, evaluations, ended);
 		} else {
 			log.info("{}ms seems not enough to deepen the search",maxTime-spent);
