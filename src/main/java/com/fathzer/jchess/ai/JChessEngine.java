@@ -100,7 +100,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		if (logger instanceof DefaultEventLogger) {
 			((DefaultEventLogger)logger).cs = board.getCoordinatesSystem();
 		}
-		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth());
+		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth(), getMaxTime());
 		IterativeDeepeningSearch<Move> search = super.search(board);
 		log.info("--- End of iterative evaluation returns: {}", toString(search.getBestMoves(), board.getCoordinatesSystem()));
 		return search;
