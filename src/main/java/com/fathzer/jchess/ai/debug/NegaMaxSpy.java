@@ -14,7 +14,7 @@ import com.fathzer.games.ai.experimental.TreeSearchStateStack;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	private final KeyBasedNegaMaxSpyFilter<Move, Board<Move>> filter;
@@ -81,7 +81,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	private void print(TreeSearchStateStack<Move, Board<Move>> state) {
 		final CharSequence tab = getTab(state);
 		final Board<Move> bb = state.position;
-		System.out.print(tab+getMoves(state).toString()+", "+FENParser.to(bb)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth+": ");
+		System.out.print(tab+getMoves(state).toString()+", "+FENUtils.to(bb)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth+": ");
 	}
 	
 	private List<String> getMoves(TreeSearchStateStack<Move, Board<Move>> state) {

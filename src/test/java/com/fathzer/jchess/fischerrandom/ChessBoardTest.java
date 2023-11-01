@@ -17,7 +17,7 @@ class ChessBoardTest {
 
 	@Test
 	void test() {
-		final List<PieceWithPosition> pieces = FENParser.getPieces("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/2RK3R");
+		final List<PieceWithPosition> pieces = new FENParser("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/2RK3R w - - 0 1").getPieces();
 		final Chess960Board board = new Chess960Board(pieces);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		board.makeMove(new BasicMove(cs.getIndex("d1"), cs.getIndex("c1")));

@@ -12,14 +12,14 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.generic.BasicMove;
 
 class BasicMoveComparatorTest {
 
 	@Test
 	void test() {
-		final Board<Move> board = FENParser.from("Q2n4/4P3/8/5P2/8/qK3p1k/1P6/8 w - - 0 1");
+		final Board<Move> board = FENUtils.from("Q2n4/4P3/8/5P2/8/qK3p1k/1P6/8 w - - 0 1");
 		CoordinatesSystem cs = board.getCoordinatesSystem();
 		final BasicMoveComparator cmp = new BasicMoveComparator(board);
 		final Move queenPawnCatch = new BasicMove(cs.getIndex("a8"), cs.getIndex("f3"));

@@ -1,8 +1,20 @@
 package com.fathzer.jchess.fen;
 
-import static com.fathzer.games.Color.*;
-import static com.fathzer.jchess.Castling.Side.*;
-import static com.fathzer.jchess.Piece.*;
+import static com.fathzer.games.Color.BLACK;
+import static com.fathzer.games.Color.WHITE;
+import static com.fathzer.jchess.Castling.Side.KING;
+import static com.fathzer.jchess.Piece.BLACK_BISHOP;
+import static com.fathzer.jchess.Piece.BLACK_KING;
+import static com.fathzer.jchess.Piece.BLACK_KNIGHT;
+import static com.fathzer.jchess.Piece.BLACK_PAWN;
+import static com.fathzer.jchess.Piece.BLACK_QUEEN;
+import static com.fathzer.jchess.Piece.BLACK_ROOK;
+import static com.fathzer.jchess.Piece.WHITE_BISHOP;
+import static com.fathzer.jchess.Piece.WHITE_KING;
+import static com.fathzer.jchess.Piece.WHITE_KNIGHT;
+import static com.fathzer.jchess.Piece.WHITE_PAWN;
+import static com.fathzer.jchess.Piece.WHITE_QUEEN;
+import static com.fathzer.jchess.Piece.WHITE_ROOK;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -24,16 +37,20 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.standard.StandardBoard;
 
-import lombok.experimental.UtilityClass;
-
-@UtilityClass
-public class FENParser {
+public class FENParser implements Supplier<Board<Move>> {
 	private static final Map<Character, Piece> CODE_TO_PIECE;
-	
-	public static final String NEW_STANDARD_GAME = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	private final Dimension dimension;
+	private final List<PieceWithPosition> pieces;
+	private final Color color;
+	private final Collection<Castling> castlings;
+	private final int[] rookPositions;
+	private final int enPassant;
+	private final int halfMoveCount;
+	private final int moveNumber;
 	
 	static {
 		CODE_TO_PIECE = new HashMap<>();
@@ -50,74 +67,27 @@ public class FENParser {
 		CODE_TO_PIECE.put('k', BLACK_KING);
 		CODE_TO_PIECE.put('K', WHITE_KING);
 	}
-
-	public static String to(Board<Move> board) {
-		//TODO output X-FEN castling when chess960 needs it
-		final StringBuilder b = new StringBuilder();
-		for (int i = 0; i <board.getDimension().getHeight() ; i++) {
-			b.append(getRow(board, i));
-			if (i!=board.getDimension().getHeight()-1) {
-				b.append('/');
-			}
-		}
-		b.append(' ');
-		b.append(WHITE.equals(board.getActiveColor())?'w':'b');
-		b.append(' ');
-		addCastlings(b, board);
-		b.append(' ');
-		b.append(board.getEnPassant()<0?"-":board.getCoordinatesSystem().getAlgebraicNotation(board.getEnPassant()));
-		b.append(' ');
-		b.append(board.getHalfMoveCount());
-		b.append(' ');
-		b.append(board.getMoveNumber());
-		return b.toString();
-	}
-
-	protected static void addCastlings(final StringBuilder b, Board<Move> board) {
-		final int initialSize = b.length();
-		Castling.ALL.stream().filter(board::hasCastling).forEach(c -> b.append(c.getCode()));
-		if (b.length()==initialSize) {
-			b.append('-');
-		}
-	}
-
-	private static CharSequence getRow(Board<Move> board, int row) {
-		final StringBuilder b = new StringBuilder();
-		int emptyCount = 0;
-		for (int col = 0; col < board.getDimension().getHeight(); col++) {
-			final Piece piece = board.getPiece(board.getCoordinatesSystem().getIndex(row, col));
-			if (piece==null) {
-				emptyCount++;
-			} else {
-				if (emptyCount>0) {
-					b.append(emptyCount);
-					emptyCount = 0;
-				}
-				b.append(piece.getNotation());
-			}
-		}
-		if (emptyCount>0) {
-			b.append(emptyCount);
-		}
-		return b;
-	}
-
-	public static Board<Move> from(String fen) {
+	
+	public FENParser(String fen) {
 		String[] tokens = fen.split(" ");
 		if (tokens.length!=6) {
 			throw new IllegalArgumentException("This FEN definition is invalid: "+fen);
 		}
-		final Dimension dimension = getDimension(tokens[0]);
-		final List<PieceWithPosition> pieces = getPieces(tokens[0]);
-		final Color color = getColor(tokens[1]);
-		final Collection<Castling> castlings = getCastlings(tokens[2]);
-		final int enPassant = "-".equals(tokens[3]) ? -1 : getColumn(tokens[3]);
-		final int halfMoveCount = Integer.parseInt(tokens[4]);
-		final int moveNumber = Integer.parseInt(tokens[5]);
+		this.dimension = getDimension(tokens[0]);
+		this.pieces = getPieces(tokens[0]);
+		this.color = getColor(tokens[1]);
+		this.castlings = getCastlings(tokens[2]);
+		this.rookPositions = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
+		this.enPassant = "-".equals(tokens[3]) ? -1 : getColumn(tokens[3]);
+		this.halfMoveCount = Integer.parseInt(tokens[4]);
+		this.moveNumber = Integer.parseInt(tokens[5]);
+	}
+	
+	@Override
+	public Board<Move> get() {
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
-			final int[] rooks = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
-			if (rooks!=null) {
-				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rooks, enPassant, halfMoveCount, moveNumber);
+			if (rookPositions!=null) {
+				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rookPositions, enPassant, halfMoveCount, moveNumber);
 			} else {
 				return new com.fathzer.jchess.standard.StandardBoard(pieces, color, castlings, enPassant, halfMoveCount, moveNumber);
 			}
@@ -126,6 +96,87 @@ public class FENParser {
 		}
 	}
 
+	private Dimension getDimension(String str) {
+		final String[] lines = str.split("/");
+		int width = 0;
+		for (int i = 0; i < lines[0].length(); i++) {
+			final char code = str.charAt(i);
+			final Piece p = CODE_TO_PIECE.get(code);
+			width = width + (p==null ? Integer.parseInt(Character.toString(code)) : 1);
+		}
+		return new Dimension(width, lines.length);
+	}
+	
+	protected List<PieceWithPosition> getPieces(String str) {
+		final String[] lines = str.split("/");
+		final List<PieceWithPosition> result = new LinkedList<>();
+		for (int i = 0; i < lines.length; i++) {
+			result.addAll(lineToPieces(i, lines[i], dimension));
+		}
+		return result;
+	}
+
+	public List<PieceWithPosition> getPieces() {
+		return pieces;
+	}
+
+	private static Collection<PieceWithPosition> lineToPieces(int row, String str, Dimension dimension) {
+		final List<PieceWithPosition> result = new LinkedList<>();
+		int x = 0;
+		for (int i = 0; i < str.length(); i++) {
+			final char code = str.charAt(i);
+			final Piece p = CODE_TO_PIECE.get(code);
+			if (p==null) {
+				x+=Integer.parseInt(Character.toString(code));
+			} else {
+				result.add(new PieceWithPosition(p, row, x));
+				x++;
+			}
+		}
+		return result;
+	}
+
+	private Color getColor(String code) {
+		if ("-".equals(code)) {
+			return null;
+		} else if ("w".equals(code)) {
+			return WHITE;
+		} else if ("b".equals(code)) {
+			return BLACK;
+		} else {
+			throw new IllegalArgumentException();
+		}
+	}
+
+	private Collection<Castling> getCastlings(String code) {
+		if ("-".equals(code)) {
+			return Collections.emptyList();
+		} else {
+			return code.chars().mapToObj(c -> toCastling((char)c)).collect(Collectors.toList());
+		}
+	}
+
+	private Castling toCastling(char c) {
+		final Optional<Castling> value = Castling.ALL.stream().filter(x -> x.getCode().charAt(0)==c).findFirst();
+		if (value.isPresent()) {
+			return value.get();
+		}
+		// It should be X-FEN castling. Get castling from their column
+		if (Character.isUpperCase(c)) {
+			// White color
+			int col = c-'A';
+			return col > getKingsColumn(WHITE) ? Castling.WHITE_KING_SIDE : Castling.WHITE_QUEEN_SIDE; 
+		} else {
+			// Black color
+			int col = c-'a';
+			return col > getKingsColumn(BLACK) ? Castling.BLACK_KING_SIDE : Castling.BLACK_QUEEN_SIDE; 
+		}
+	}
+	
+	private int getKingsColumn(Color color) {
+		return pieces.stream().filter(p -> p.getPiece().getKind()==PieceKind.KING && p.getPiece().getColor()==color).findFirst().orElseThrow(()-> new IllegalArgumentException("No king found")).getColumn();
+	}
+	
 	private int getColumn(String algebraicNotation) {
 		if (algebraicNotation.isEmpty()) {
 			throw new IllegalArgumentException();
@@ -177,68 +228,5 @@ public class FENParser {
 		final IntStream sortedColumns = pieces.stream().filter(pieceOnRow.and(sidePredicate)).mapToInt(PieceWithPosition::getColumn).sorted();
 		OptionalInt result = side==KING ? sortedColumns.max() : sortedColumns.min();
 		return result.getAsInt();
-	}
-
-	private static Collection<Castling> getCastlings(String code) {
-		if ("-".equals(code)) {
-			return Collections.emptyList();
-		} else {
-			return code.chars().mapToObj(c -> toCastling((char)c)).collect(Collectors.toList());
-		}
-	}
-
-	private static Castling toCastling(char c) {
-		//TODO Does not support X-FEN castling
-		final Optional<Castling> value = Castling.ALL.stream().filter(x -> x.getCode().charAt(0)==c).findFirst();
-		return value.orElseThrow(IllegalArgumentException::new);
-	}
-
-	private static Color getColor(String code) {
-		if ("-".equals(code)) {
-			return null;
-		} else if ("w".equals(code)) {
-			return WHITE;
-		} else if ("b".equals(code)) {
-			return BLACK;
-		} else {
-			throw new IllegalArgumentException();
-		}
-	}
-
-	public static List<PieceWithPosition> getPieces(String str) {
-		final Dimension dimension = getDimension(str);
-		final String[] lines = str.split("/");
-		final List<PieceWithPosition> result = new LinkedList<>();
-		for (int i = 0; i < lines.length; i++) {
-			result.addAll(lineToPieces(i, lines[i], dimension));
-		}
-		return result;
-	}
-
-	private static Collection<PieceWithPosition> lineToPieces(int row, String str, Dimension dimension) {
-		final List<PieceWithPosition> result = new LinkedList<>();
-		int x = 0;
-		for (int i = 0; i < str.length(); i++) {
-			final char code = str.charAt(i);
-			final Piece p = CODE_TO_PIECE.get(code);
-			if (p==null) {
-				x+=Integer.parseInt(Character.toString(code));
-			} else {
-				result.add(new PieceWithPosition(p, row, x));
-				x++;
-			}
-		}
-		return result;
-	}
-	
-	private static Dimension getDimension(String str) {
-		final String[] lines = str.split("/");
-		int width = 0;
-		for (int i = 0; i < lines[0].length(); i++) {
-			final char code = str.charAt(i);
-			final Piece p = CODE_TO_PIECE.get(code);
-			width = width + (p==null ? Integer.parseInt(Character.toString(code)) : 1);
-		}
-		return new Dimension(width, lines.length);
 	}
 }

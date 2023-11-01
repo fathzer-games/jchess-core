@@ -30,7 +30,7 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.generic.BasicMove;
 
 class MinimaxEngineTest {
@@ -39,7 +39,7 @@ class MinimaxEngineTest {
 	void blackPlayingTest() {
 		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 3);
 		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
-		final Board<Move> board = FENParser.from("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5");
+		final Board<Move> board = FENUtils.from("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5");
 		final List<EvaluatedMove<Move>> moves = mme4.getBestMoves(board);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 show(moves, cs);
@@ -60,7 +60,7 @@ show(moves, cs);
 		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
 		
 		// 3 possible Mats in 1 with whites
-		Board<Move> board = FENParser.from("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
+		Board<Move> board = FENUtils.from("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		moves = mme4.getBestMoves(board);
 show(moves, cs);
@@ -76,7 +76,7 @@ show(moves, cs);
 
 		// Mat in 1 with blacks
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5"));
+		moves = mme4.getBestMoves(FENUtils.from("1R6/8/8/7R/k7/ppp1p3/r2bP3/1K6 b - - 6 5"));
 show(moves, cs);
 		assertEquals(7, moves.size());
 		Evaluation max = moves.get(0).getEvaluation();
@@ -89,7 +89,7 @@ show(moves, cs);
 		
 		// Check in 2
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1"));
+		moves = mme4.getBestMoves(FENUtils.from("8/8/8/8/1B6/NN6/pk1K4/8 w - - 0 1"));
 show(moves, cs);
 		max = moves.get(0).getEvaluation();
 		assertEquals(Type.WIN, max.getType());
@@ -101,7 +101,7 @@ show(moves, cs);
 		
 		// Check in 2 with blacks
 		System.out.println("------------------");
-		moves = mme4.getBestMoves(FENParser.from("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1"));
+		moves = mme4.getBestMoves(FENUtils.from("8/4k1KP/6nn/6b1/8/8/8/8 b - - 0 1"));
 show(moves, cs);
 		max = moves.get(0).getEvaluation();
 		assertEquals(Type.WIN, max.getType());
@@ -116,7 +116,7 @@ show(moves, cs);
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
 		engine.getSearchParams().setSize(3);
 		engine.getSearchParams().setAccuracy(100);
-		board = FENParser.from("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
+		board = FENUtils.from("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
 		moves = engine.getBestMoves(board);
 show(moves,cs);
 assertEquals(19, moves.size());
@@ -127,7 +127,7 @@ assertEquals(19, moves.size());
 	
 	@Test
 	void moreTests() {
-		final Board<Move> board = FENParser.from("8/8/8/3kr3/8/8/5PPP/7K w - - 0 1");
+		final Board<Move> board = FENUtils.from("8/8/8/3kr3/8/8/5PPP/7K w - - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final Evaluator<Board<Move>> basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
@@ -154,7 +154,7 @@ assertEquals(19, moves.size());
 		// when ai is called with a reasonable non null accuracy
 		// Currently, the only way to achieve this is to have a custom win/loose evaluation with a gap higher than the accuracy
 		// I should think more about it...
-		Board<Move> board = FENParser.from("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46");
+		Board<Move> board = FENUtils.from("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
 		engine.setParallelism(4);
 		engine.getSearchParams().setSize(1);
@@ -169,7 +169,7 @@ assertEquals(19, moves.size());
 	
 	@Test
 	void iterativeTest2() {
-		Board<Move> board = FENParser.from("3bkrnr/p2ppppp/7q/2p5/8/2P5/PP1PPPPP/RNBQKBNR b KQk - 0 1");
+		Board<Move> board = FENUtils.from("3bkrnr/p2ppppp/7q/2p5/8/2P5/PP1PPPPP/RNBQKBNR b KQk - 0 1");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
 		engine.setParallelism(4);
 		engine.getSearchParams().setSize(1);
@@ -186,7 +186,7 @@ assertEquals(19, moves.size());
 	@Disabled
 	void bug20230813() {
 		// Not a bug, just a problem with evaluation function
-		Board<Move> board = FENParser.from("8/8/8/4p1k1/3bK3/8/7p/8 b - - 0 1");
+		Board<Move> board = FENUtils.from("8/8/8/4p1k1/3bK3/8/7p/8 b - - 0 1");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
 		engine.getSearchParams().setSize(Integer.MAX_VALUE);
 		System.out.println(EvaluatedMove.toString(engine.getBestMoves(board), m -> m.toString(board.getCoordinatesSystem())));
@@ -197,7 +197,7 @@ assertEquals(19, moves.size());
 	@Disabled
 	void bug20230821() {
 		// Not a bug, just a problem with evaluation function
-		Board<Move> board = FENParser.from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76");
+		Board<Move> board = FENUtils.from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 7);
 		System.out.println(engine.apply(board).toString(board.getCoordinatesSystem()));
 	}
@@ -208,7 +208,7 @@ assertEquals(19, moves.size());
 		engine.setParallelism(1);
 		engine.getSearchParams().setSize(1);
 		engine.getSearchParams().setAccuracy(0);
-		Board<Move> board = FENParser.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
+		Board<Move> board = FENUtils.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		List<EvaluatedMove<Move>> bestMoves = engine.getBestMoves(board);
 		System.out.println(EvaluatedMove.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));
 		assertEquals(2, bestMoves.size());
@@ -216,7 +216,7 @@ assertEquals(19, moves.size());
 	
 	// An example of bug chasing
 	void bug20230911_chase() {
-		final Board<Move> board = FENParser.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
+		final Board<Move> board = FENUtils.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final Evaluator<Board<Move>> basicEvaluator = new BasicEvaluator();
 		basicEvaluator.setViewPoint(Color.WHITE);
@@ -231,7 +231,7 @@ assertEquals(19, moves.size());
 			assertEquals(Type.WIN, e.getEvaluation().getType());
 			assertEquals(4, e.getEvaluation().getCountToEnd());
 			final Move h1h6 = new BasicMove(cs.getIndex("h1"), cs.getIndex("h6"));
-			spy.searchedKey = FENParser.from("8/4k3/7R/R7/8/8/8/4K3 b - - 0 1").getHashKey(); //h1h6
+			spy.searchedKey = FENUtils.from("8/4k3/7R/R7/8/8/8/4K3 b - - 0 1").getHashKey(); //h1h6
 			spy.searchedKey = -8273089417188127202L; //e7d7
 			spy.searchedKey = 6365043373273418417L; //a5a7
 			spy.searchedKey = -3019684505475777408L; //d7d8
@@ -267,10 +267,10 @@ assertEquals(19, moves.size());
 		public void enter(TreeSearchStateStack<Move, Board<Move>> state) {
 			if (state.position.getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
 				traceDepth = state.getCurrentDepth();
-				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
+				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENUtils.to(state.position)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
 			}
 			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
-				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENParser.to(state.position));
+				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENUtils.to(state.position));
 			}
 			Spy.super.enter(state);
 		}

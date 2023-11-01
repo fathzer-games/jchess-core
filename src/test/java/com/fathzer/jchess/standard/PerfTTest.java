@@ -25,7 +25,7 @@ import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ class PerfTTest {
 //	@Test
 	void showDivide() {
 		try (ContextualizedExecutor<MoveGenerator<Move>> exec =new ContextualizedExecutor<>(PhysicalCores.count())) {
-			final Board<Move> board = FENParser.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
+			final Board<Move> board = FENUtils.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
 			final PerfT<Move> perfT = new PerfT<>(exec);
 			perfT.setPlayLeaves(false);
 			final PerfTResult<Move> divide = perfT.divide(2, copy(board));
@@ -64,7 +64,7 @@ class PerfTTest {
 	}
 
 	private void doTest(ContextualizedExecutor<MoveGenerator<Move>> exec, PerfTTestData test, int depth) {
-		final Board<Move> board = FENParser.from(test.getStartPosition()+" 0 1");
+		final Board<Move> board = FENUtils.from(test.getStartPosition()+" 0 1");
 		final PerfT<Move> perfT = new PerfT<>(exec);
 		perfT.setPlayLeaves(false);
 		if (test.getSize()>=depth) {

@@ -8,13 +8,13 @@ import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 class AttackDetectorTest {
 
 	@Test
 	void test() {
-		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
+		final Board<Move> board = FENUtils.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
 		AttackDetector explorer = new AttackDetector(board.getDirectionExplorer(-1));
@@ -29,7 +29,7 @@ class AttackDetectorTest {
 	
 //	@Test
 	void speedTest() {
-		final Board<Move> board = FENParser.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
+		final Board<Move> board = FENUtils.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		AttackDetector explorer = new AttackDetector(board.getDirectionExplorer(-1));
 		for (int i=0;i<100000;i++) {

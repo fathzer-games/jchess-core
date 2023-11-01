@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 class PhaseDetectorTest {
 
@@ -23,7 +23,7 @@ class PhaseDetectorTest {
 	
 	private Phase getPhase(String fen) {
 		final PhaseDetector pd = new PhaseDetector();
-		final BoardExplorer explorer = FENParser.from(fen).getExplorer();
+		final BoardExplorer explorer = FENUtils.from(fen).getExplorer();
 		do {
 			final Piece p = explorer.getPiece();
 			if (p!=null) {

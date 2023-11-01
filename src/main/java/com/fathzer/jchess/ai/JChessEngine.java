@@ -25,7 +25,7 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.ai.evaluator.BasicMoveComparator;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -100,7 +100,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		if (logger instanceof DefaultEventLogger) {
 			((DefaultEventLogger)logger).cs = board.getCoordinatesSystem();
 		}
-		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENParser.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth(), getMaxTime());
+		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENUtils.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth(), getMaxTime());
 		IterativeDeepeningSearch<Move> search = super.search(board);
 		log.info("--- End of iterative evaluation returns: {}", toString(search.getBestMoves(), board.getCoordinatesSystem()));
 		return search;

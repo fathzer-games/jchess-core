@@ -11,14 +11,14 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 import com.fathzer.jchess.generic.BasicMove;
 
 class StrictMoveComparatorTest {
 
 	@Test
 	void test() {
-		Board<Move> b = FENParser.from(FENParser.NEW_STANDARD_GAME);
+		Board<Move> b = FENUtils.from(FENUtils.NEW_STANDARD_GAME);
 		CoordinatesSystem cs = b.getCoordinatesSystem();
 		StrictMoveComparator c = new StrictMoveComparator(b);
 		// Ensure first is A8
@@ -32,7 +32,7 @@ class StrictMoveComparatorTest {
 
 	@Test
 	void test2() {
-		Board<Move> board = FENParser.from("5B2/8/7p/8/8/NN6/pk1K4/8 b - - 0 1");
+		Board<Move> board = FENUtils.from("5B2/8/7p/8/8/NN6/pk1K4/8 b - - 0 1");
 		CoordinatesSystem cs = board.getCoordinatesSystem();
 		final StrictMoveComparator cmp = new StrictMoveComparator(board);
 		

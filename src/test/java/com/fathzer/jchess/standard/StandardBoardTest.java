@@ -33,7 +33,7 @@ class StandardBoardTest {
 	}
 
 	private void testIllegal(String pieces, Castling castling) {
-		final List<PieceWithPosition> withPos = FENParser.getPieces(pieces);
+		final List<PieceWithPosition> withPos = new FENParser(pieces+" w - - 0 1").getPieces();
 		final Set<Castling> castlings = Collections.singleton(castling);
 		assertThrows(IllegalArgumentException.class, () -> new StandardBoard(withPos, WHITE, castlings, -1, 0, 1));
 	}

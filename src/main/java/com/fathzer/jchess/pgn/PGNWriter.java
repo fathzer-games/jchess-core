@@ -11,7 +11,7 @@ import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.fen.FENParser;
+import com.fathzer.jchess.fen.FENUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -62,7 +62,7 @@ public class PGNWriter {
 			final List<String> result = new LinkedList<>();
 			result.add(getField("Variant", variant));
 			result.add(getField("SetUp", "1"));
-			result.add(getField("FEN", FENParser.to(history.getStartBoard())));
+			result.add(getField("FEN", FENUtils.to(history.getStartBoard())));
 			return result;
 		} else {
 			return Collections.emptyList();
