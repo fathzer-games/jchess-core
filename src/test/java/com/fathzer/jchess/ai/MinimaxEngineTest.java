@@ -38,7 +38,7 @@ class MinimaxEngineTest {
 	@Test
 	void blackPlayingTest() {
 		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 3);
-		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
+		mme4.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
 		final Board<Move> board = FENUtils.from("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5");
 		final List<EvaluatedMove<Move>> moves = mme4.getBestMoves(board);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
@@ -57,7 +57,7 @@ show(moves, cs);
 	void test() {
 		List<EvaluatedMove<Move>> moves;
 		final JChessEngine mme4 = new JChessEngine(new BasicEvaluator(), 4);
-		mme4.getSearchParams().setSize(Integer.MAX_VALUE);
+		mme4.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
 		
 		// 3 possible Mats in 1 with whites
 		Board<Move> board = FENUtils.from("7k/5p2/5PQN/5PPK/6PP/8/8/8 w - - 6 5");
@@ -114,8 +114,8 @@ show(moves, cs);
 		// Check in 3
 		System.out.println("------------------");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 6);
-		engine.getSearchParams().setSize(3);
-		engine.getSearchParams().setAccuracy(100);
+		engine.getDeepeningPolicy().setSize(3);
+		engine.getDeepeningPolicy().setAccuracy(100);
 		board = FENUtils.from("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1");
 		moves = engine.getBestMoves(board);
 show(moves,cs);
@@ -157,9 +157,9 @@ assertEquals(19, moves.size());
 		Board<Move> board = FENUtils.from("4n2r/2k1Q2p/5B2/2N5/2B2R2/1P6/3PKPP1/6q1 b - - 2 46");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
 		engine.setParallelism(4);
-		engine.getSearchParams().setSize(1);
-		engine.getSearchParams().setAccuracy(300);
-		engine.setMaxTime(15000);
+		engine.getDeepeningPolicy().setSize(1);
+		engine.getDeepeningPolicy().setAccuracy(300);
+		engine.getDeepeningPolicy().setMaxTime(15000);
 		// Tests that loose in 1 are not in the best moves (was a bug in fist iterative engine version)
 		final List<EvaluatedMove<Move>> moves = engine.getBestMoves(board);
 		assertEquals(2, moves.size());
@@ -172,9 +172,9 @@ assertEquals(19, moves.size());
 		Board<Move> board = FENUtils.from("3bkrnr/p2ppppp/7q/2p5/8/2P5/PP1PPPPP/RNBQKBNR b KQk - 0 1");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
 		engine.setParallelism(4);
-		engine.getSearchParams().setSize(1);
-		engine.getSearchParams().setAccuracy(100);
-		engine.setMaxTime(15000);
+		engine.getDeepeningPolicy().setSize(1);
+		engine.getDeepeningPolicy().setAccuracy(100);
+		engine.getDeepeningPolicy().setMaxTime(15000);
 		// Tests that loosing move is not in the best moves (was a bug in fist iterative engine version)
 		final List<EvaluatedMove<Move>> moves = engine.getBestMoves(board);
 		for (EvaluatedMove<Move> ev : moves) {
@@ -188,7 +188,7 @@ assertEquals(19, moves.size());
 		// Not a bug, just a problem with evaluation function
 		Board<Move> board = FENUtils.from("8/8/8/4p1k1/3bK3/8/7p/8 b - - 0 1");
 		JChessEngine engine = new JChessEngine(new BasicEvaluator(), 4);
-		engine.getSearchParams().setSize(Integer.MAX_VALUE);
+		engine.getDeepeningPolicy().setSize(Integer.MAX_VALUE);
 		System.out.println(EvaluatedMove.toString(engine.getBestMoves(board), m -> m.toString(board.getCoordinatesSystem())));
 		System.out.println(engine.apply(board).toString(board.getCoordinatesSystem()));
 	}
@@ -206,8 +206,8 @@ assertEquals(19, moves.size());
 	void bug20230911() {
 		final JChessEngine engine = new JChessEngine(new BasicEvaluator(), 8);
 		engine.setParallelism(1);
-		engine.getSearchParams().setSize(1);
-		engine.getSearchParams().setAccuracy(0);
+		engine.getDeepeningPolicy().setSize(1);
+		engine.getDeepeningPolicy().setAccuracy(0);
 		Board<Move> board = FENUtils.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		List<EvaluatedMove<Move>> bestMoves = engine.getBestMoves(board);
 		System.out.println(EvaluatedMove.toString(bestMoves, m -> m.toString(board.getCoordinatesSystem())));

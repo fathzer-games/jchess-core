@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class JChessDeepeningPolicy extends DeepeningPolicy {
 	
-	protected JChessDeepeningPolicy(long maxTimeMs) {
-		super(maxTimeMs);
+	protected JChessDeepeningPolicy(int maxDepth) {
+		super(maxDepth);
 	}
 	
 	@Override

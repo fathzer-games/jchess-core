@@ -36,7 +36,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
 		super(evaluator, maxDepth, new TT(16, SizeUnit.MB));
-		setDeepeningPolicyBuilder(() -> new JChessDeepeningPolicy(getMaxTime()));
+		setDeepeningPolicy(new JChessDeepeningPolicy(maxDepth));
 		moveComparatorSupplier = BasicMoveComparator::new;
 		setLogger(new DefaultEventLogger());
 	}
@@ -100,7 +100,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		if (logger instanceof DefaultEventLogger) {
 			((DefaultEventLogger)logger).cs = board.getCoordinatesSystem();
 		}
-		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENUtils.to(board), getSearchParams().getSize(), getSearchParams().getAccuracy(), getSearchParams().getDepth(), getMaxTime());
+		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENUtils.to(board), getDeepeningPolicy().getSize(), getDeepeningPolicy().getAccuracy(), getDeepeningPolicy().getDepth(), getDeepeningPolicy().getMaxTime());
 		IterativeDeepeningSearch<Move> search = super.search(board);
 		log.info("--- End of iterative evaluation returns: {}", toString(search.getBestMoves(), board.getCoordinatesSystem()));
 		return search;
