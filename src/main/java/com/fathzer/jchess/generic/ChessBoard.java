@@ -171,12 +171,15 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 * @throws IllegalArgumentException if there's no piece at move.getFrom().
 	 */
 	@Override
-	public boolean makeMove(Move move) {
+	public boolean makeMove(Move move, MoveConfidence confidence) {
+		if (confidence==MoveConfidence.UNSAFE && !getLegalMoves().contains(move)) {
+			return false;
+		}
 		final int from = move.getFrom();
 		int to = move.getTo();
 		Piece movedPiece = board.getPiece(from);
 		if (movedPiece==null) {
-			throw new IllegalArgumentException("No piece at "+from);
+			return false;
 		}
 		keyHistory.add(key);
 		this.undoManager.beforeMove();

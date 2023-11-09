@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -28,7 +29,7 @@ class ChessBoardTest {
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
 		// Test King move erases castling possibility
-		board.makeMove(new SimpleMove(cs, "e1","d1"));
+		board.makeMove(new SimpleMove(cs, "e1","d1"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
 		assertFalse(board.hasCastling(Castling.WHITE_KING_SIDE));
 		assertEquals(Piece.WHITE_KING,board.getPiece(cs.getIndex("d1")));
@@ -36,7 +37,7 @@ class ChessBoardTest {
 		board.unmakeMove();
 
 		// Test castling moves the pieces has it should
-		board.makeMove(new SimpleMove(cs, "e1","g1"));
+		board.makeMove(new SimpleMove(cs, "e1","g1"), MoveConfidence.LEGAL);
 		assertEquals(Piece.WHITE_KING,board.getPiece(cs.getIndex("g1")));
 		assertEquals(cs.getIndex("g1"), board.getKingPosition(Color.WHITE));
 		assertEquals(Piece.WHITE_ROOK,board.getPiece(cs.getIndex("f1")));
@@ -48,7 +49,7 @@ class ChessBoardTest {
 
 		int moveNumber = board.getMoveNumber();
 		int halfMoveCount = board.getHalfMoveCount();
-		board.makeMove(new SimpleMove(cs, "e1","c1"));
+		board.makeMove(new SimpleMove(cs, "e1","c1"), MoveConfidence.LEGAL);
 		assertEquals(Piece.WHITE_KING,board.getPiece(cs.getIndex("c1")));
 		assertEquals(cs.getIndex("c1"), board.getKingPosition(Color.WHITE));
 		assertEquals(Piece.WHITE_ROOK,board.getPiece(cs.getIndex("d1")));
@@ -66,18 +67,18 @@ class ChessBoardTest {
 		board.unmakeMove();
 
 		// Rook move erases castling possibility
-		board.makeMove(new SimpleMove(cs, "a1","b1"));
+		board.makeMove(new SimpleMove(cs, "a1","b1"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
 		assertTrue(board.hasCastling(Castling.WHITE_KING_SIDE));
 		board.unmakeMove();
-		board.makeMove(new SimpleMove(cs, "h1","h2"));
+		board.makeMove(new SimpleMove(cs, "h1","h2"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_KING_SIDE));
 		assertTrue(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
-		board.makeMove(new SimpleMove(cs, "a8","a7"));
+		board.makeMove(new SimpleMove(cs, "a8","a7"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_QUEEN_SIDE));
 		assertTrue(board.hasCastling(Castling.BLACK_KING_SIDE));
 		assertTrue(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
-		board.makeMove(new SimpleMove(cs, "h8","g8"));
+		board.makeMove(new SimpleMove(cs, "h8","g8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_KING_SIDE));
 	}
 	
@@ -105,7 +106,7 @@ class ChessBoardTest {
 		// Test valid enPassant is set
 		assertEquals(board.getCoordinatesSystem().getIndex("a6"), board.getEnPassant());
 		// Test en-passant catch clears the caught pawn and enPassant position
-		board.makeMove(new SimpleMove(cs, "b5","a6"));
+		board.makeMove(new SimpleMove(cs, "b5","a6"), MoveConfidence.LEGAL);
 		assertEquals(Piece.WHITE_PAWN, board.getPiece(cs.getIndex("a6")));
 		assertNull(board.getPiece(cs.getIndex("b5")));
 		assertNull(board.getPiece(cs.getIndex("a5")));
@@ -114,18 +115,18 @@ class ChessBoardTest {
 		
 		// Test promotion
 		assertEquals(Color.BLACK, board.getActiveColor());
-		board.makeMove(new SimpleMove(cs, "g2","h1",Piece.BLACK_QUEEN));
+		board.makeMove(new SimpleMove(cs, "g2","h1",Piece.BLACK_QUEEN), MoveConfidence.LEGAL);
 		assertEquals(Piece.BLACK_QUEEN, board.getPiece(cs.getIndex("h1")));
 		assertNull(board.getPiece(cs.getIndex("g2")));
 		assertEquals(Color.WHITE, board.getActiveColor());
 		
 		board = FENUtils.from("4k1r1/1P6/5p2/p1Np1P2/5B1p/5Q1P/1q3PPK/8 w - - 4 42");
-		board.makeMove(new SimpleMove(cs, "b7","b8", Piece.WHITE_QUEEN));
+		board.makeMove(new SimpleMove(cs, "b7","b8", Piece.WHITE_QUEEN), MoveConfidence.LEGAL);
 		assertEquals(Color.BLACK, board.getActiveColor());
 		
 		// Test enPassant is set when pawn moves two rows
 		board = FENUtils.from("4k1r1/2p5/5p2/NP1p1P2/5B1p/5Q1P/1q3PPK/8 b - - 4 42");
-		board.makeMove(new SimpleMove(cs, "c7","c5"));
+		board.makeMove(new SimpleMove(cs, "c7","c5"), MoveConfidence.LEGAL);
 		assertEquals(cs.getIndex("c6"), board.getEnPassant());
 		assertEquals(0, board.getHalfMoveCount());
 		assertNull(board.getPiece(cs.getIndex("c7")));
@@ -136,19 +137,19 @@ class ChessBoardTest {
 	void testRookCaptureAndCastlings() {
 		ChessBoard board = (ChessBoard) FENUtils.from("r3k3/1K6/8/8/8/8/8/8 w q - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		board.makeMove(new SimpleMove(cs, "b7", "a8"));
+		board.makeMove(new SimpleMove(cs, "b7", "a8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_QUEEN_SIDE));
 
 		board = (ChessBoard) FENUtils.from("4k2r/6K1/8/8/8/8/8/8 w k - 0 1");
-		board.makeMove(new SimpleMove(cs, "g7", "h8"));
+		board.makeMove(new SimpleMove(cs, "g7", "h8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_KING_SIDE));
 		
 		board = (ChessBoard) FENUtils.from("4k2r/6b1/8/8/8/8/8/R3K2R b k - 0 1");
-		board.makeMove(new SimpleMove(cs, "h8", "h1"));
+		board.makeMove(new SimpleMove(cs, "h8", "h1"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_KING_SIDE));
 		
 		board = (ChessBoard) FENUtils.from("4k2r/6b1/8/8/8/8/8/R3K2R b k - 0 1");
-		board.makeMove(new SimpleMove(cs, "g7", "a1"));
+		board.makeMove(new SimpleMove(cs, "g7", "a1"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
 	}
 	
@@ -156,19 +157,19 @@ class ChessBoardTest {
 	void testRookMoveAndCastlings() {
 		ChessBoard board = (ChessBoard) FENUtils.from("r3k3/1K6/8/8/8/8/8/8 b q - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		board.makeMove(new SimpleMove(cs, "a8","d8"));
+		board.makeMove(new SimpleMove(cs, "a8","d8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_QUEEN_SIDE));
 
 		board = (ChessBoard) FENUtils.from("4k2r/6K1/8/8/8/8/8/8 b k - 0 1");
-		board.makeMove(new SimpleMove(cs, "h8","f8"));
+		board.makeMove(new SimpleMove(cs, "h8","f8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.BLACK_KING_SIDE));
 		
 		board = (ChessBoard) FENUtils.from("4k2r/6b1/8/8/8/8/8/R3K2R w KQk - 0 1");
-		board.makeMove(new SimpleMove(cs, "h1", "g2"));
+		board.makeMove(new SimpleMove(cs, "h1", "g2"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_KING_SIDE));
 		
 		board = (ChessBoard) FENUtils.from("4k2r/6b1/8/8/8/8/8/R3K2R w KQk - 0 1");
-		board.makeMove(new SimpleMove(cs, "a1","a8"));
+		board.makeMove(new SimpleMove(cs, "a1","a8"), MoveConfidence.LEGAL);
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));
 	}
 	
@@ -182,12 +183,12 @@ class ChessBoardTest {
 		assertNotEquals(enPassantKey, notEnPassantKey);
 		Board<Move> board = FENUtils.from("rnbqkbnr/pppppp1p/8/1B6/6p1/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		board.makeMove(new SimpleMove(cs, "h2", "h4"));
+		board.makeMove(new SimpleMove(cs, "h2", "h4"), MoveConfidence.LEGAL);
 		assertEquals(enPassantKey, board.getHashKey());
 		board = FENUtils.from("rnbqkbnr/pppppp1p/8/1B4p1/8/N2PPN2/PPPQBPPP/R3K2R w KQkq - 0 1");
-		board.makeMove(new SimpleMove(cs, "h2", "h3"));
-		board.makeMove(new SimpleMove(cs, "g5", "g4"));
-		board.makeMove(new SimpleMove(cs, "h3", "h4"));
+		board.makeMove(new SimpleMove(cs, "h2", "h3"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "g5", "g4"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "h3", "h4"), MoveConfidence.LEGAL);
 		assertEquals(notEnPassantFen, FENUtils.to(board));
 		assertEquals(notEnPassantKey, board.getHashKey());
 		
@@ -197,7 +198,7 @@ class ChessBoardTest {
 		assertEquals(enPassantKey, notEnPassantKey);
 		// 3 - capture en passant
 		board = FENUtils.from("rnbqkbnr/pppppp1p/8/8/6pP/8/PPPPPPP1/RNBQKBNR b KQkq h3 0 1");
-		board.makeMove(new SimpleMove(cs, "g4", "h3"));
+		board.makeMove(new SimpleMove(cs, "g4", "h3"), MoveConfidence.LEGAL);
 		assertNull(board.getPiece(board.getCoordinatesSystem().getIndex("h4")));
 		assertEquals(FENUtils.from("rnbqkbnr/pppppp1p/8/8/8/7p/PPPPPPP1/RNBQKBNR w KQkq - 0 1").getHashKey(), board.getHashKey());
 	}
@@ -212,56 +213,56 @@ class ChessBoardTest {
 		assertNotEquals(initial, FENUtils.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getHashKey());
 		
 		// Test useless moves (moves that leads to the same position)
-		board.makeMove(new SimpleMove(cs, "a3","c4"));
+		board.makeMove(new SimpleMove(cs, "a3","c4"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("rnbqkbnr/pppppppp/8/1B6/2N5/3PPN2/PPPQBPPP/R3K2R b KQkq - 0 1").getHashKey(), board.getHashKey());
-		board.makeMove(new SimpleMove(cs, "g8","f6"));
-		board.makeMove(new SimpleMove(cs, "c4","a3"));
-		board.makeMove(new SimpleMove(cs, "f6","g8"));
+		board.makeMove(new SimpleMove(cs, "g8","f6"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "c4","a3"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "f6","g8"), MoveConfidence.LEGAL);
 		assertEquals(initial, board.getHashKey());
 		
 		// Test castling erase
 		// 1 - Rook move
-		board.makeMove(new SimpleMove(cs, "h1","g1"));
-		board.makeMove(new SimpleMove(cs, "g8","f6"));
-		board.makeMove(new SimpleMove(cs, "g1","h1"));
-		board.makeMove(new SimpleMove(cs, "f6","g8"));
+		board.makeMove(new SimpleMove(cs, "h1","g1"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "g8","f6"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "g1","h1"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "f6","g8"), MoveConfidence.LEGAL);
 		long withoutRCastling = board.getHashKey();
 		assertEquals(FENUtils.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w Qkq - 0 1").getHashKey(), withoutRCastling);
 		assertNotEquals(initial, withoutRCastling);
 		// 2 - King move
 		initial = board.getHashKey();
-		board.makeMove(new SimpleMove(cs, "e1","d1"));
-		board.makeMove(new SimpleMove(cs, "g8","f6"));
-		board.makeMove(new SimpleMove(cs, "d1","e1"));
-		board.makeMove(new SimpleMove(cs, "f6","g8"));
+		board.makeMove(new SimpleMove(cs, "e1","d1"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "g8","f6"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "d1","e1"), MoveConfidence.LEGAL);
+		board.makeMove(new SimpleMove(cs, "f6","g8"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("rnbqkbnr/pppppppp/8/1B6/8/N2PPN2/PPPQBPPP/R3K2R w kq - 0 1").getHashKey(), board.getHashKey());
 		assertNotEquals(withoutRCastling, board.getHashKey());
 		
 		// Test capture
-		board.makeMove(new SimpleMove(cs, "b5", "d7"));
+		board.makeMove(new SimpleMove(cs, "b5", "d7"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("rnbqkbnr/pppBpppp/8/8/8/N2PPN2/PPPQBPPP/R3K2R b kq - 0 1").getHashKey(), board.getHashKey());
 
 		// Test promotion
 		board = FENUtils.from("rnbqkb2/pppppppP/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R w KQq - 0 1");
-		board.makeMove(new SimpleMove(cs, "h7", "h8", Piece.WHITE_QUEEN));
+		board.makeMove(new SimpleMove(cs, "h7", "h8", Piece.WHITE_QUEEN), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("rnbqkb1Q/ppppppp1/5r1n/1B6/8/N2PPN2/PPPQBPP1/R3K2R b KQq - 0 1").getHashKey(), board.getHashKey());
 		
 		// Test castling
 		// 1 - Q
 		board = FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQkq - 0 1");
-		board.makeMove(new SimpleMove(cs, "e1","c1"));
+		board.makeMove(new SimpleMove(cs, "e1","c1"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/2KR3R b kq - 0 1").getHashKey(), board.getHashKey());
 		// 1 - K
 		board = FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQkq - 0 1");
-		board.makeMove(new SimpleMove(cs, "e1","g1"));
+		board.makeMove(new SimpleMove(cs, "e1","g1"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R4RK1 b kq - 0 1").getHashKey(), board.getHashKey());
 		// 1 - q
 		board = FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R b KQkq - 0 1");
-		board.makeMove(new SimpleMove(cs, "e8","c8"));
+		board.makeMove(new SimpleMove(cs, "e8","c8"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("2kr3r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getHashKey(), board.getHashKey());
 		// 1 - K
 		board = FENUtils.from("r3k2r/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R b KQkq - 0 1");
-		board.makeMove(new SimpleMove(cs, "e8","g8"));
+		board.makeMove(new SimpleMove(cs, "e8","g8"), MoveConfidence.LEGAL);
 		assertEquals(FENUtils.from("r4rk1/ppp1qp1p/2n1pnp1/3p1b2/1b1P1B2/2NBPN2/PPP1QPPP/R3K2R w KQ - 0 1").getHashKey(), board.getHashKey());
 	}
 	
@@ -376,26 +377,26 @@ class ChessBoardTest {
 		final Move kwb = new BasicMove(cs.getIndex("c3"),cs.getIndex("b1"));
 		final Move kbf = new BasicMove(cs.getIndex("b8"),cs.getIndex("c6"));
 		final Move kbb = new BasicMove(cs.getIndex("c6"),cs.getIndex("b8"));
-		board.makeMove(kwf);
-		board.makeMove(kbf);
-		board.makeMove(kwb);
-		board.makeMove(kbb); // first repetition
+		board.makeMove(kwf, MoveConfidence.LEGAL);
+		board.makeMove(kbf, MoveConfidence.LEGAL);
+		board.makeMove(kwb, MoveConfidence.LEGAL);
+		board.makeMove(kbb, MoveConfidence.LEGAL); // first repetition
 		assertEquals(Status.PLAYING, board.getStatus());
-		board.makeMove(kwf);
-		board.makeMove(kbf);
-		board.makeMove(kwb);
+		board.makeMove(kwf, MoveConfidence.LEGAL);
+		board.makeMove(kbf, MoveConfidence.LEGAL);
+		board.makeMove(kwb, MoveConfidence.LEGAL);
 		assertEquals(Status.PLAYING, board.getStatus());
-		board.makeMove(kbb); // second repetition (so, third time with start position)
+		board.makeMove(kbb, MoveConfidence.LEGAL); // second repetition (so, third time with start position)
 		assertEquals(Status.DRAW, board.getStatus());
 		
 		board.unmakeMove(); // Replace last move another reversible move
 		assertEquals(Status.PLAYING, board.getStatus());
 		final Move k2bf = new BasicMove(cs.getIndex("g8"),cs.getIndex("f6"));
 		final Move k2bb = new BasicMove(cs.getIndex("f6"),cs.getIndex("g8"));
-		board.makeMove(k2bf);
-		board.makeMove(kwf);
+		board.makeMove(k2bf, MoveConfidence.LEGAL);
+		board.makeMove(kwf, MoveConfidence.LEGAL);
 		assertEquals(Status.PLAYING, board.getStatus());
-		board.makeMove(k2bb); // third repetition
+		board.makeMove(k2bb, MoveConfidence.LEGAL); // third repetition
 		assertEquals(Status.DRAW, board.getStatus());
 		
 		// Test it also working with copy

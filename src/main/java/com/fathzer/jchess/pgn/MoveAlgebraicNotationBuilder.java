@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
@@ -133,7 +134,7 @@ public class MoveAlgebraicNotationBuilder {
 	}
 	
 	private Optional<String> afterMove(Board<Move> board, Move move) {
-		board.makeMove(move);
+		board.makeMove(move, MoveConfidence.LEGAL);
 		try {
 			final Status status = board.getStatus();
 			if (status==Status.BLACK_WON || status==Status.WHITE_WON) {
