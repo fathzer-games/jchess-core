@@ -32,7 +32,7 @@ import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private final DirectionExplorer exp;
 	private final BoardRepresentation board;
-	private final MovesBuilder movesBuilder;
+	private MovesBuilder movesBuilder;
 	private int[] kingPositions;
 	private int enPassant;
 	private int enPassantDeletePawnIndex;
@@ -40,6 +40,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private int castlings;
 	private int halfMoveCount;
 	private int moveNumber;
+	private InsufficientMaterialDetector insufficientMaterialDetector;
 	private long key;
 	private List<Long> keyHistory;
 	private UndoMoveManager<ChessBoardState> undoManager;
@@ -54,25 +55,29 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	private void save(ChessBoardState state) {
+		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
+		System.arraycopy(board.getPieces(), 0, state.cells, 0, state.cells.length);
 		state.enPassant = this.enPassant;
 		state.enPassantDeletePawnIndex = this.enPassantDeletePawnIndex;
 		state.castlings = this.castlings;
 		state.moveNumber = this.moveNumber;
 		state.halfMoveCount = this.halfMoveCount;
+		state.insufficientMaterialDetector.copy(this.insufficientMaterialDetector);
 		state.key = this.key;
-		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
-		System.arraycopy(board.getPieces(), 0, state.cells, 0, state.cells.length);
+		state.movesBuilder = this.movesBuilder;
 	}
 	
 	private void restore(ChessBoardState state) {
+		System.arraycopy(state.cells, 0, board.getPieces(), 0, state.cells.length);
+		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
 		this.enPassant = state.enPassant;
 		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
 		this.castlings = state.castlings;
 		this.moveNumber = state.moveNumber;
 		this.halfMoveCount = state.halfMoveCount;
+		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
 		this.key = state.key;
-		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
-		System.arraycopy(state.cells, 0, board.getPieces(), 0, state.cells.length);
+		this.movesBuilder = state.movesBuilder;
 	}
 
 	/** Constructor.
@@ -109,10 +114,13 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			setEnPassant(enPassantIndex, activeColor, pawnCell);
 		}
 		this.kingPositions = new int[2];
+		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
 		for (PieceWithPosition p : pieces) {
 			if (PieceKind.KING.equals(p.getPiece().getKind())) {
 				final int dest = board.getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
 				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
+			} else {
+				insufficientMaterialDetector.add(p.getPiece());
 			}
 		}
 		if (halfMoveCount<0) {
@@ -152,7 +160,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	
 	@Override
 	public List<Move> getMoves(boolean quiesce) {
-		return quiesce ? Collections.emptyList() : getLegalMoves(); //TODO
+		return quiesce ? Collections.emptyList() : movesBuilder.getPseudoLegalMoves();
 	}
 	
 	@Override
@@ -203,7 +211,12 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 				onRookEvent(to);
 			}
 			move(from, to, false);
-			incHalfCount = erasedPiece==null && !PieceKind.PAWN.equals(movedPiece.getKind());
+			if (erasedPiece!=null) {
+				incHalfCount = true;
+				insufficientMaterialDetector.remove(erasedPiece);
+			} else {
+				incHalfCount = !PieceKind.PAWN.equals(movedPiece.getKind());
+			}
 		} else {
 			incHalfCount = true;
 		}
@@ -218,7 +231,10 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 		activeColor = movedPiece.getColor().opposite();
 		key ^= board.getZobrist().getTurnKey();
-		movesBuilder.clear();
+		movesBuilder = buildMovesBuilder();
+		if (moveComparatorBuilder!=null) {
+			movesBuilder.setMoveComparator(moveComparatorBuilder.apply(this));
+		}
 		return true;
 	}
 	
@@ -227,7 +243,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this.keyHistory.remove(keyHistory.size()-1);
 		this.undoManager.undo();
 		this.activeColor = this.activeColor.opposite();
-		this.movesBuilder.clear();
 	}
 	
 	void saveCells() {
@@ -377,7 +392,9 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			if (to==enPassant) {
 				// en-passant catch => delete adverse's pawn
 				final int pos = enPassantDeletePawnIndex;
-				key ^= board.getZobrist().getKey(pos, board.getPiece(pos));
+				final Piece caught = board.getPiece(pos);
+				insufficientMaterialDetector.remove(caught);
+				key ^= board.getZobrist().getKey(pos, caught);
 				board.setPiece(pos, null);
 			}
 			// Clear the en-passant key
@@ -469,6 +486,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			this.keyHistory.clear();
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
+			this.insufficientMaterialDetector.copy(((ChessBoard)other).insufficientMaterialDetector);
 			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
 			this.movesBuilder.clear();
 		} else {
@@ -511,6 +529,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	@Override
+	public boolean isInsufficientMaterial() {
+		return insufficientMaterialDetector.isInsufficient();
+	}
+
+	@Override
 	public boolean isCheck() {
 		Color color = getActiveColor();
 		return new AttackDetector(board.getDirectionExplorer(-1)).isAttacked(getKingPosition(color), color.opposite());
@@ -537,7 +560,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 
 	@Override
 	public Status getContextualStatus() {
-		return getHalfMoveCount()>=100 || movesBuilder.isInsufficientMaterial() || movesBuilder.isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
+		return getHalfMoveCount()>=100 || isInsufficientMaterial() || movesBuilder.isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
 	}
 
 	@Override

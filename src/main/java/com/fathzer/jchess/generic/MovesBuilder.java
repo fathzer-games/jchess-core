@@ -20,6 +20,7 @@ public class MovesBuilder {
 	private List<Move> moves;
 	private Status status;
 	private Comparator<Move> moveComparator;
+	private boolean sorted;
 	
 	public MovesBuilder(ChessBoard board) {
 		super();
@@ -28,7 +29,7 @@ public class MovesBuilder {
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
 		this.moveComparator = moveComparator;
-		if (this.moves!=null && moveComparator!=null) {
+		if (this.moves!=null && moveComparator!=null && sorted) {
 			this.moves.sort(moveComparator);
 		}
 	}
@@ -40,6 +41,7 @@ public class MovesBuilder {
 
 	protected List<Move> getMoves() {
 		if (moves==null) {
+//System.out.println("Computing move list for "+FENUtils.to(board));
 			final Color color = board.getActiveColor();
 			final InternalMoveBuilder tools = new InternalMoveBuilder(board);
 			final BoardExplorer exp = tools.getFrom();
@@ -57,9 +59,17 @@ public class MovesBuilder {
 				} while (exp.next());
 			}
 			moves = tools.getMoves();
-			if (moveComparator!=null) {
-				moves.sort(moveComparator);
-			}
+			sorted = false;
+		}
+		return moves;
+	}
+	
+	protected List<Move> getPseudoLegalMoves() {
+		// Ensure moves is computed
+		getMoves();
+		if (!sorted && moveComparator!=null) {
+			sorted = true;
+			moves.sort(moveComparator);
 		}
 		return moves;
 	}
@@ -200,26 +210,6 @@ public class MovesBuilder {
 		}
 	}
 	
-	protected boolean isInsufficientMaterial() {
-		int whiteKnightOrBishopCount = 0;
-		int blackKnightOrBishopCount = 0;
-		final BoardExplorer exp = board.getExplorer();
-		do {
-			final Piece p = exp.getPiece();
-			if (p!=null && !PieceKind.KING.equals(p.getKind())) {
-				if (Piece.BLACK_BISHOP.equals(p) || Piece.BLACK_KNIGHT.equals(p)) {
-					blackKnightOrBishopCount++;
-				} else if (Piece.WHITE_BISHOP.equals(p) || Piece.WHITE_KNIGHT.equals(p)) {
-					whiteKnightOrBishopCount++;
-				} else {
-					return false;
-				}
-			}
-			
-		} while (exp.next());
-		return whiteKnightOrBishopCount <= 1 && blackKnightOrBishopCount <= 1;
-	}
-	
 	protected Status getStatus() {
 		if (status==null) {
 			status=buildStatus();
@@ -228,7 +218,7 @@ public class MovesBuilder {
 	}
 
 	private Status buildStatus() {
-		if (isInsufficientMaterial() || board.getHalfMoveCount()>=100 || isDrawByRepetition()) {
+		if (board.isInsufficientMaterial() || board.getHalfMoveCount()>=100 || isDrawByRepetition()) {
 			return Status.DRAW;
 		}
 		if (board.getLegalMoves().isEmpty()) {

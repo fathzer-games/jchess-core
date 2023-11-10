@@ -31,6 +31,7 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	 */
 	int getEnPassant();
 	int getHalfMoveCount();
+	boolean isInsufficientMaterial();
 	int getMoveNumber();
 	int getKingPosition(Color color);
 	boolean hasCastling(Castling c);
