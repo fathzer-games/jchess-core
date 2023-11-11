@@ -33,6 +33,7 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - In check situations, the only valid moves are the one that intersects the attacks (or catch the piece).
 
 ## TODO
+- I think the generic part should be re-engeniered: MoveComparator management is ugly, BoardRepresentation owns what seems to be just a cache for MovesBuilder. MovesBuilder computes the chessboard status... Probably we can have the changing chessboard data in an object, only copy it to a backup stack when we make a move, and get this object back from the stack without any copy when unmaking the move.
 - UCI stuff needs to be tested (especially if stop works with JChessEngine and perfT test that probably use the last move comparator, which is perfectly useless - Engine should have a perfT mode or, at least a way to set in perftT test if moves are sorted or not).  
 For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to System.out when moveComparator is null, could be helpful.
 - Finish FENParser for Chess960

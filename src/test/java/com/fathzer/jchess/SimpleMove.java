@@ -13,8 +13,8 @@ public class SimpleMove implements Move {
 	}
 
 	public SimpleMove(CoordinatesSystem cs, String from, String to, Piece promoted) {
-		this.from = cs.getIndex(from);
-		this.to = cs.getIndex(to);
+		this.from = cs.getIndex(from.toLowerCase());
+		this.to = cs.getIndex(to.toLowerCase());
 		this.promoted = promoted;
 	}
 

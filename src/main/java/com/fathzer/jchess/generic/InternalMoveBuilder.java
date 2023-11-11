@@ -37,7 +37,7 @@ public class InternalMoveBuilder {
 		this.moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
-		this.checkManager = new PinnedDetector(board);
+		this.checkManager = new PinnedDetector(board.getBoard(), board.getActiveColor(), board.getKingPosition(board.getActiveColor()));
 		this.mv = new MoveValidator(board, checkManager);
 	}
 

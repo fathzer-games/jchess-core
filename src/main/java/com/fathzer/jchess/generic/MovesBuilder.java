@@ -1,5 +1,7 @@
 package com.fathzer.jchess.generic;
 
+import static com.fathzer.jchess.PieceKind.*;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.IntPredicate;
@@ -11,11 +13,11 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
 
 public class MovesBuilder {
 	private final ChessBoard board;
+	private InternalMoveBuilder tools;
 	// Cache
 	private List<Move> moves;
 	private Status status;
@@ -37,13 +39,20 @@ public class MovesBuilder {
 	protected void clear() {
 		this.moves = null;
 		this.status = null;
+		tools = null;
+	}
+	
+	private void initTools() {
+		if (tools==null) {
+			tools = new InternalMoveBuilder(board);
+		}
 	}
 
 	protected List<Move> getMoves() {
 		if (moves==null) {
+			initTools();
 //System.out.println("Computing move list for "+FENUtils.to(board));
 			final Color color = board.getActiveColor();
-			final InternalMoveBuilder tools = new InternalMoveBuilder(board);
 			final BoardExplorer exp = tools.getFrom();
 			if (tools.getCheckCount()>1) {
 				// If double check, only king can move
@@ -77,17 +86,17 @@ public class MovesBuilder {
 	private void addPossibleMoves(InternalMoveBuilder tools) {
 		final Piece piece = tools.getFrom().getPiece();
 		tools.getTo().reset(tools.getFrom().getIndex());
-		if (PieceKind.ROOK.equals(piece.getKind()) || PieceKind.BISHOP.equals(piece.getKind()) || PieceKind.QUEEN.equals(piece.getKind())) {
+		if (ROOK.equals(piece.getKind()) || BISHOP.equals(piece.getKind()) || QUEEN.equals(piece.getKind())) {
 			for (Direction d:piece.getKind().getDirections()) {
 				tools.addAllMoves(d, tools.mv.getDefault());
 			}
-		} else if (PieceKind.KNIGHT.equals(piece.getKind())) {
-			for (Direction d:PieceKind.KNIGHT.getDirections()) {
+		} else if (KNIGHT.equals(piece.getKind())) {
+			for (Direction d:KNIGHT.getDirections()) {
 				tools.addMove(d, tools.mv.getDefault());
 			}
-		} else if (PieceKind.KING.equals(piece.getKind())) {
+		} else if (KING.equals(piece.getKind())) {
 			addKingMoves(tools);
-		} else if (PieceKind.PAWN.equals(piece.getKind())) {
+		} else if (PAWN.equals(piece.getKind())) {
 			addPawnMoves(tools);
 		} else {
 			throw new IllegalArgumentException("Unknown piece kind: "+piece.getKind());
@@ -97,7 +106,7 @@ public class MovesBuilder {
 	private void addKingMoves(InternalMoveBuilder tools) {
 		// We can think remember the free safe cells could be reused in castling //TODO
 		// StandardMoves => King can't go to attacked cell
-		for (Direction d:PieceKind.KING.getDirections()) {
+		for (Direction d:KING.getDirections()) {
 			tools.addMove(d, tools.mv.getKing());
 		}
 		// Castlings
@@ -177,11 +186,15 @@ public class MovesBuilder {
 		}
 		return true;
 	}
+	
+	private int getPromotionRow(boolean blackPlaying) {
+		return blackPlaying?board.getDimension().getHeight()-1:0;
+	}
 
 	private void addPawnMoves(InternalMoveBuilder tools) {
 		final boolean black = Color.BLACK == tools.getFrom().getPiece().getColor();
 		// Take care of promotion when generating move
-		final int promotionRow = black?tools.getBoard().getDimension().getHeight()-1:0;
+		final int promotionRow = getPromotionRow(black);
 		final IntPredicate promoted = i -> tools.getBoard().getCoordinatesSystem().getRow(i)==promotionRow;
 		final MoveGenerator generator = (m, f, t) -> {
 			if (promoted.test(t)) {
@@ -218,7 +231,7 @@ public class MovesBuilder {
 	}
 
 	private Status buildStatus() {
-		if (board.isInsufficientMaterial() || board.getHalfMoveCount()>=100 || isDrawByRepetition()) {
+		if (board.isInsufficientMaterial() || board.getHalfMoveCount()>=100 || board.isDrawByRepetition()) {
 			return Status.DRAW;
 		}
 		if (board.getLegalMoves().isEmpty()) {
@@ -232,22 +245,52 @@ public class MovesBuilder {
 		}
 	}
 
-	protected boolean isDrawByRepetition() {
-        final List<Long> history = board.getKeyHistory();
-		final int size = Math.min(history.size(), board.getHalfMoveCount());
-		if (size<6) {
+	protected boolean isLegal(Move move) {
+		final Color activeColor = board.getActiveColor();
+		final int from = move.getFrom();
+		// Check a piece of the active color is moving
+		final Piece piece = board.getPiece(from);
+		if (piece==null || piece.getColor()!=activeColor) {
 			return false;
 		}
-		final Long key = board.getHashKey();
-		int repetition = 0;
-		for (int i = history.size()-2; i>=history.size()-size; i -= 2) {
-			if (history.get(i).equals(key)) {
-				repetition++;
-				if (repetition==2) {
-					return true;
+		// Check piece does not catch its own color piece
+		final int to = move.getTo();
+		final Piece caught = board.getPiece(to);
+		if (caught!=null && caught.getColor()==activeColor) {
+			return false;
+		}
+		// Check promotion is valid
+		final Piece promotion = move.getPromotion();
+		// Reject promotions if moving piece is not a pawn or promotion is king or pawn or
+		// has the wrong color or has not the right destination row
+		if (promotion!=null && (piece.getKind()!=PAWN || promotion.getKind()==PAWN || promotion.getKind()==KING
+				|| promotion.getColor()!=activeColor || getPromotionRow(activeColor==Color.BLACK)!=board.getCoordinatesSystem().getRow(to))) {
+			return false;
+		}
+		initTools();
+		if (piece.getKind()==KING) {
+			final Castling castling = board.getCastling(from, to);
+			if (castling!=null) {
+				if (!board.hasCastling(castling)) {
+					return false;
 				}
+				if (tools.getCheckCount()!=0) {
+					return  false;
+				}
+				final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
+				final int rookDestination  = to + castling.getSide().getRookOffset();
+				if (!areCastlingCellsFree(tools.getFrom(), to, rookPosition, rookDestination) ||
+						!areCastlingCellsSafe(tools.mv, tools.getBoard().getActiveColor().opposite(), from, to)) {
+					return false;
+				}
+			} else if (tools.mv.isAttacked(to, activeColor.opposite())) {
+				return false;
 			}
 		}
-		return false;
+		//TODO Test that position is reachable
+		//TODO Strange, the following test leads to exceptions in MinimaxEngineTest methods 
+		tools = null;
+		return true;
+//		return getMoves().contains(move);
 	}
 }

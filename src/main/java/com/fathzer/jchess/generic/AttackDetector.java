@@ -10,16 +10,26 @@ import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
-class AttackDetector {
+/** A class that can tests if a cell is attacked by the pieces of a color.
+ */
+public class AttackDetector {
 	static final Collection<Direction> BLACK_PAWN_THREAT_DIRECTIONS = EnumSet.of(Direction.NORTH_EAST, Direction.NORTH_WEST);
 	static final Collection<Direction> WHITE_PAWN_THREAT_DIRECTIONS = EnumSet.of(Direction.SOUTH_EAST, Direction.SOUTH_WEST);
 
 	private final DirectionExplorer explorer;
 	
+	/** Constructor.
+	 * @param explorer A direction explorer
+	 */
 	public AttackDetector(DirectionExplorer explorer) {
 		this.explorer = explorer;
 	}
 	
+	/** Checks if a cell is attacked by the pieces of a color.
+	 * @param position the cell's position
+	 * @param color The attacking color
+	 * @return true if the cell is attacked
+	 */
 	public boolean isAttacked(int position, Color color) {
 		explorer.reset(position);
 		

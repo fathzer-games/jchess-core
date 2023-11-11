@@ -180,7 +180,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 */
 	@Override
 	public boolean makeMove(Move move, MoveConfidence confidence) {
-		if (confidence==MoveConfidence.UNSAFE && !getLegalMoves().contains(move)) {
+		if (confidence==MoveConfidence.UNSAFE && !movesBuilder.isLegal(move)) {
 			return false;
 		}
 		final int from = move.getFrom();
@@ -532,6 +532,24 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	public boolean isInsufficientMaterial() {
 		return insufficientMaterialDetector.isInsufficient();
 	}
+	
+	@Override
+	public boolean isDrawByRepetition() {
+		final int size = Math.min(keyHistory.size(), getHalfMoveCount());
+		if (size<6) {
+			return false;
+		}
+		int repetition = 0;
+		for (int i = keyHistory.size()-2; i>=keyHistory.size()-size; i -= 2) {
+			if (keyHistory.get(i).equals(key)) {
+				repetition++;
+				if (repetition==2) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	@Override
 	public boolean isCheck() {
@@ -560,7 +578,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 
 	@Override
 	public Status getContextualStatus() {
-		return getHalfMoveCount()>=100 || isInsufficientMaterial() || movesBuilder.isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
+		return getHalfMoveCount()>=100 || isInsufficientMaterial() || isDrawByRepetition() ? Status.DRAW : Status.PLAYING;
 	}
 
 	@Override

@@ -1,10 +1,8 @@
 package com.fathzer.jchess.generic;
 
 import com.fathzer.games.Color;
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
-import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
@@ -21,11 +19,10 @@ public class PinnedDetector implements IntFunction<Direction> {
 	private int checkCount = 0;
 	private boolean hasPinned;
 	 
-	public PinnedDetector(Board<Move> board) {
+	public PinnedDetector(BoardRepresentation board, Color kingsColor, int kingsPosition) {
 		//TODO Maybe stopping search after 2 checks could be enough as all pieces are pinned (test if it has a real impact on performance - My guess is it has not)
-		final Color color = board.getActiveColor();
-		final DirectionExplorer exp = board.getDirectionExplorer(board.getKingPosition(color));
-		pinedMap = ((ChessBoard)board).getBoard().getPinnedMap();
+		final DirectionExplorer exp = board.getDirectionExplorer(kingsPosition);
+		pinedMap = board.getPinnedMap();
 		Arrays.fill(pinedMap, null);
 		for (Direction d : PieceKind.QUEEN.getDirections()) {
 			exp.start(d);
@@ -36,8 +33,8 @@ public class PinnedDetector implements IntFunction<Direction> {
 					// We found a piece
 					final int pos = exp.getIndex();
 					// If it is in the defender's team, it will be pined if there's an attacker in the same direction before any other piece.
-					if (color.equals(p.getColor())) {
-						if (hasAttacker(exp, color.opposite(), d)) {
+					if (kingsColor.equals(p.getColor())) {
+						if (hasAttacker(exp, kingsColor.opposite(), d)) {
 							pinedMap[pos] = d;
 							hasPinned = true;
 						}
@@ -51,7 +48,7 @@ public class PinnedDetector implements IntFunction<Direction> {
 			}
 		}
 		// Search for knights that attacks king
-		final Piece knight = color.equals(Color.WHITE)? Piece.BLACK_KNIGHT : Piece.WHITE_KNIGHT;
+		final Piece knight = kingsColor.equals(Color.WHITE)? Piece.BLACK_KNIGHT : Piece.WHITE_KNIGHT;
 		for (Direction d: PieceKind.KNIGHT.getDirections()) {
 			exp.start(d);
 			if (exp.next() && knight.equals(exp.getPiece())) {
