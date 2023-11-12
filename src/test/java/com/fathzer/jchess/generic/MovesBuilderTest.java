@@ -45,24 +45,35 @@ class MovesBuilderTest {
 		assertFalse(mvg.makeMove(move, UNSAFE));
 		
 		// Move a piece through another piece 
-		move = new SimpleMove(cs, "D6", "B6");
+		move = new SimpleMove(cs, "D8", "B6");
+		assertFalse(mvg.makeMove(move, UNSAFE));
+		move = new SimpleMove(cs, "F7", "F5");
 		assertFalse(mvg.makeMove(move, UNSAFE));
 		
+		
+		// Pawn goes to unreachable cell
+		move = new SimpleMove(cs, "H7", "H4");
+		assertFalse(mvg.makeMove(move, UNSAFE));
+
 		// Piece takes own piece
 		move = new SimpleMove(cs, "F6", "D5");
 		assertFalse(mvg.makeMove(move, UNSAFE));
 		
-		// Piece goes to unreachable cell
+		// Queen goes to unreachable cell
 		move = new SimpleMove(cs, "D5", "A5");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
+
+		// King goes to unreachable cell
+		move = new SimpleMove(cs, "E8", "B6");
+		assertFalse(mvg.makeMove(move, UNSAFE));
 
 		// Pawn takes no piece
 		move = new SimpleMove(cs, "H7", "G6");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
 		
 		// Pawn goes on opponent piece
 		move = new SimpleMove(cs, "D5", "D4");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
 
 		// Pawn goes on own piece
 		move = new SimpleMove(cs, "F7", "F6");
@@ -93,7 +104,7 @@ class MovesBuilderTest {
 		
 		// imaginary en-passant
 		move = new SimpleMove(cs, "H5", "G6");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
 
 		// Pinned piece
 		move = new SimpleMove(cs, "F2", "F3");

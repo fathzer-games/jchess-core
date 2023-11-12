@@ -1,7 +1,12 @@
 package com.fathzer.jchess.generic;
 
+import static com.fathzer.jchess.Piece.*;
 import static com.fathzer.jchess.PieceKind.*;
+import static com.fathzer.jchess.Direction.*;
+import static com.fathzer.games.Color.*;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.IntPredicate;
@@ -13,9 +18,13 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
 
 public class MovesBuilder {
+	private final static Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
+	private final static Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
+	
 	private final ChessBoard board;
 	private InternalMoveBuilder tools;
 	// Cache
@@ -112,7 +121,7 @@ public class MovesBuilder {
 		// Castlings
 		if (tools.getCheckCount()==0) {
 			// No castlings allowed when you're in check
-			if (Color.WHITE==tools.getFrom().getPiece().getColor()) {
+			if (WHITE==tools.getFrom().getPiece().getColor()) {
 				tryCastling(tools, Castling.WHITE_KING_SIDE);
 				tryCastling(tools, Castling.WHITE_QUEEN_SIDE);
 			} else {
@@ -190,24 +199,28 @@ public class MovesBuilder {
 	private int getPromotionRow(boolean blackPlaying) {
 		return blackPlaying?board.getDimension().getHeight()-1:0;
 	}
+	
+	private int getPawnMaxMoveLength(boolean isBlack, int from) {
+		final int startRow = isBlack ? 1 : board.getDimension().getHeight()-2;
+		return board.getCoordinatesSystem().getRow(from) == startRow ? 2 : 1;
+	}
 
 	private void addPawnMoves(InternalMoveBuilder tools) {
-		final boolean black = Color.BLACK == tools.getFrom().getPiece().getColor();
+		final boolean black = BLACK == tools.getFrom().getPiece().getColor();
 		// Take care of promotion when generating move
 		final int promotionRow = getPromotionRow(black);
 		final IntPredicate promoted = i -> tools.getBoard().getCoordinatesSystem().getRow(i)==promotionRow;
 		final MoveGenerator generator = (m, f, t) -> {
 			if (promoted.test(t)) {
-				m.add(new BasicMove(f, t, black ? Piece.BLACK_KNIGHT : Piece.WHITE_KNIGHT));
-				m.add(new BasicMove(f, t, black ? Piece.BLACK_QUEEN : Piece.WHITE_QUEEN));
-				m.add(new BasicMove(f, t, black ? Piece.BLACK_ROOK : Piece.WHITE_ROOK));
-				m.add(new BasicMove(f, t, black ? Piece.BLACK_BISHOP : Piece.WHITE_BISHOP));
+				m.add(new BasicMove(f, t, black ? BLACK_KNIGHT : WHITE_KNIGHT));
+				m.add(new BasicMove(f, t, black ? BLACK_QUEEN : WHITE_QUEEN));
+				m.add(new BasicMove(f, t, black ? BLACK_ROOK : WHITE_ROOK));
+				m.add(new BasicMove(f, t, black ? BLACK_BISHOP : WHITE_BISHOP));
 			} else {
 				m.add(new BasicMove(f, t));
 			}
 		};
-		final int startRow = black ? 1 : tools.getBoard().getDimension().getHeight()-2;
-		final int countAllowed = tools.getBoard().getCoordinatesSystem().getRow(tools.getFrom().getIndex()) == startRow ? 2 : 1;
+		final int countAllowed = getPawnMaxMoveLength(black, tools.getFrom().getIndex());
 		if (black) {
 			// Standard moves (no catch)
 			tools.addMoves(Direction.SOUTH, countAllowed, tools.mv.getPawnNoCatch(), generator);
@@ -236,7 +249,7 @@ public class MovesBuilder {
 		}
 		if (board.getLegalMoves().isEmpty()) {
 			if (board.isCheck()) {
-				return board.getActiveColor().equals(Color.WHITE) ? Status.BLACK_WON : Status.WHITE_WON;
+				return board.getActiveColor().equals(WHITE) ? Status.BLACK_WON : Status.WHITE_WON;
 			} else {
 				return Status.DRAW;
 			}
@@ -264,10 +277,12 @@ public class MovesBuilder {
 		// Reject promotions if moving piece is not a pawn or promotion is king or pawn or
 		// has the wrong color or has not the right destination row
 		if (promotion!=null && (piece.getKind()!=PAWN || promotion.getKind()==PAWN || promotion.getKind()==KING
-				|| promotion.getColor()!=activeColor || getPromotionRow(activeColor==Color.BLACK)!=board.getCoordinatesSystem().getRow(to))) {
+				|| promotion.getColor()!=activeColor || getPromotionRow(activeColor==BLACK)!=board.getCoordinatesSystem().getRow(to))) {
 			return false;
 		}
 		initTools();
+try {
+		tools.getTo().reset(from);
 		if (piece.getKind()==KING) {
 			final Castling castling = board.getCastling(from, to);
 			if (castling!=null) {
@@ -286,11 +301,48 @@ public class MovesBuilder {
 			} else if (tools.mv.isAttacked(to, activeColor.opposite())) {
 				return false;
 			}
+			return isReachable(KING.getDirections(), to, 1)!=null;
+		} else {
+			// Test that position is reachable
+			return isReachable(piece, from, to, caught)!=null;
 		}
-		//TODO Test that position is reachable
-		//TODO Strange, the following test leads to exceptions in MinimaxEngineTest methods 
-		tools = null;
-		return true;
+} finally {
+	//TODO Strange, the following test leads to exceptions in MinimaxEngineTest methods 
+	tools = null;
+}
 //		return getMoves().contains(move);
+	}
+	
+
+	private Direction isReachable(Piece piece, int from, int to, Piece caught) {
+		final PieceKind kind = piece.getKind();
+		if (kind==PAWN) {
+			final boolean isBlack = piece.getColor()==BLACK;
+			if (to==board.getEnPassant()) {
+				caught = isBlack ? WHITE_PAWN : BLACK_PAWN;
+			}
+			if (caught==null) {
+				return canNonCatchingPawnReach(isBlack, from, to);
+			} else {
+				return isReachable(isBlack ? BLACK_PAWN_CATCH_DIRECTIONS : WHITE_PAWN_CATCH_DIRECTIONS, to, 1);
+			}
+		} else {
+			return isReachable(kind.getDirections(), to, kind.isSliding()?Integer.MAX_VALUE:1);
+		}
+	}
+
+	private Direction isReachable(Collection<Direction> dirs, int to, int maxIteration) {
+		for (Direction d:dirs) {
+			if (tools.canReach(d, maxIteration, to)) {
+				return d;
+			}
+		}
+		return null;
+	}
+
+	private Direction canNonCatchingPawnReach(boolean isBlack, int from, int to) {
+		final int maxMoveLength = getPawnMaxMoveLength(isBlack, from);
+		final Direction d = isBlack ? SOUTH : NORTH;
+		return tools.canReach(d, maxMoveLength, to) ? d : null;
 	}
 }

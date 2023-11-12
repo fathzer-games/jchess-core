@@ -24,10 +24,12 @@ public class FastDirectionExplorer implements DirectionExplorer {
 		this.startPosition = startPosition;
 	}
 
+	@Override
 	public void reset(int startPosition) {
 		this.startPosition = startPosition;
 	}
 
+	@Override
 	public void start(Direction direction) {
 		this.index = startPosition;
 		this.cellIncrement = direction.getRowIncrement()*rowIncrement+direction.getColumnIncrement();

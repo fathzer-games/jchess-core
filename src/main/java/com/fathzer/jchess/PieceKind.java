@@ -18,6 +18,7 @@ public enum PieceKind {
 	private int value;
 	@Getter
 	private Collection<Direction> directions;
+	@Getter
 	private boolean sliding;
 	
 	PieceKind(int value, Collection<Direction> directions, boolean slides) {
