@@ -27,12 +27,14 @@ class FastBoardExplorer implements BoardExplorer {
 			return false;
 		}
 		piece = pieces[index];
-		return piece == Piece.BORDER ? next() : true;
+		return piece != Piece.BORDER || next();
 	}
 
 	@Override
 	public void reset(int index) {
 		this.index = index;
-		this.piece = pieces[index];
+		if (index<pieces.length) {
+			this.piece = pieces[index];
+		}
 	}
 }

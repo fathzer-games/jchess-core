@@ -16,14 +16,15 @@ import com.fathzer.games.Status;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Direction;
+import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
 
 public class MovesBuilder {
-	private final static Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
-	private final static Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
+	private static final Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
+	private static final Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
 	
 	private final ChessBoard board;
 	private InternalMoveBuilder tools;
@@ -304,11 +305,17 @@ try {
 			return isReachable(KING.getDirections(), to, 1)!=null;
 		} else {
 			// Test that position is reachable
-			return isReachable(piece, from, to, caught)!=null;
+			final Direction direction = isReachable(piece, from, to, caught);
+			if (direction==null) {
+				return false;
+			}
+			// Test piece is not pinned
+			final Direction pinnedDirection = tools.getPinnedDirection(from);
+			return pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction; 
 		}
 } finally {
 	//TODO Strange, the following test leads to exceptions in MinimaxEngineTest methods 
-	tools = null;
+//	tools = null;
 }
 //		return getMoves().contains(move);
 	}
@@ -332,8 +339,10 @@ try {
 	}
 
 	private Direction isReachable(Collection<Direction> dirs, int to, int maxIteration) {
+		final DirectionExplorer explorer = tools.getTo();
 		for (Direction d:dirs) {
-			if (tools.canReach(d, maxIteration, to)) {
+			explorer.start(d);
+			if (explorer.canReach(to, maxIteration)) {
 				return d;
 			}
 		}
@@ -343,6 +352,8 @@ try {
 	private Direction canNonCatchingPawnReach(boolean isBlack, int from, int to) {
 		final int maxMoveLength = getPawnMaxMoveLength(isBlack, from);
 		final Direction d = isBlack ? SOUTH : NORTH;
-		return tools.canReach(d, maxMoveLength, to) ? d : null;
+		final DirectionExplorer explorer = tools.getTo();
+		explorer.start(d);
+		return explorer.canReach(to, maxMoveLength) ? d : null;
 	}
 }

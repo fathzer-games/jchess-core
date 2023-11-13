@@ -97,19 +97,4 @@ public class InternalMoveBuilder {
 	public Direction getPinnedDirection(int index) {
 		return checkManager.apply(index);
 	}
-	
-	public boolean canReach(Direction direction, int maxIteration, int toIndex) {
-		to.start(direction);
-		int iteration = 0;
-		while (this.to.next()) {
-			iteration++;
-			if (to.getIndex()==toIndex) {
-				return true;
-			}
-			if (iteration>=maxIteration || to.getPiece()!=null) {
-				break;
-			}
-		}
-		return false;
-	}
 }

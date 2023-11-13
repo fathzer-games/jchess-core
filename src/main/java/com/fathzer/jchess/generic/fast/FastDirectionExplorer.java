@@ -9,6 +9,7 @@ import lombok.Getter;
 
 public class FastDirectionExplorer implements DirectionExplorer {
 	private final Piece[] pieces;
+	private final int rowIncrement;
 	@Getter
 	private int startPosition;
 	@Getter
@@ -16,7 +17,6 @@ public class FastDirectionExplorer implements DirectionExplorer {
 	@Getter
 	private int index;
 	private int cellIncrement;
-	private int rowIncrement;
 
 	public FastDirectionExplorer(Piece[] pieces, Dimension cs, int startPosition) {
 		this.rowIncrement = cs.getWidth()+2;
@@ -43,5 +43,17 @@ public class FastDirectionExplorer implements DirectionExplorer {
 		}
 		piece = pieces[index];
 		return piece != Piece.BORDER;
+	}
+
+	@Override
+	public boolean canReach(int toIndex, int maxIteration) {
+		final int distance = toIndex-getIndex();
+		if (maxIteration==1) {
+			return distance==cellIncrement;
+		} else if ((distance>0 && cellIncrement<0) || (distance<0 && cellIncrement>0)) {
+			return false;
+		} else {
+			return DirectionExplorer.super.canReach(toIndex, maxIteration);
+		}
 	}
 }
