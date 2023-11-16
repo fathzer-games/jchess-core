@@ -25,14 +25,12 @@ public abstract class BoardRepresentation {
 	protected final Piece[] pieces;
 	@Getter
 	private final Direction[] pinnedMap;
-	private final Piece[] backup;
 	
 	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension, List<PieceWithPosition> pieces) {
 		this.dimension = coordinatesSystem.getDimension();
 		this.coordinatesSystem = coordinatesSystem;
 		zobrist = ZobristKeyBuilder.get(arrayDimension);
 		this.pieces = new Piece[arrayDimension];
-		this.backup = new Piece[this.pieces.length];
 		this.pinnedMap = new Direction[this.pieces.length];
 		for (PieceWithPosition p : pieces) {
 			final int dest = coordinatesSystem.getIndex(p.getRow(), p.getColumn());
@@ -51,14 +49,6 @@ public abstract class BoardRepresentation {
 		System.arraycopy(other.pieces, 0, pieces, 0, pieces.length);
 	}
 	
-	public void save() {
-		System.arraycopy(this.pieces, 0, backup, 0, pieces.length);
-	}
-	
-	public void restore() {
-		System.arraycopy(backup, 0, this.pieces, 0, pieces.length);
-	}
-
 	void setPiece(int index, Piece piece) {
 		this.pieces[index] = piece;
 	}

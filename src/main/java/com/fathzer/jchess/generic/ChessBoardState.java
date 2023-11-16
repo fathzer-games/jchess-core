@@ -1,9 +1,6 @@
 package com.fathzer.jchess.generic;
 
-import com.fathzer.jchess.Piece;
-
 class ChessBoardState {
-	final Piece[] cells;
 	int[] kingPositions;
 	int enPassant;
 	int enPassantDeletePawnIndex;
@@ -11,11 +8,11 @@ class ChessBoardState {
 	int moveNumber;
 	int halfMoveCount;
 	InsufficientMaterialDetector insufficientMaterialDetector;
+	BoardMoveUnmaker boardMoveUnmaker;
 	long key;
-	MovesBuilder movesBuilder;
 	
-	ChessBoardState(int cellsCount) {
-		this.cells = new Piece[cellsCount];
+	ChessBoardState() {
+		this.boardMoveUnmaker = new BoardMoveUnmaker();
 		this.kingPositions = new int[2];
 		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
 	}

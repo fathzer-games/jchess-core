@@ -11,9 +11,8 @@ public class KingSafeAfterMoveValidator implements BiIntPredicate {
 	public KingSafeAfterMoveValidator(ChessBoard board, AttackDetector detector) {
 		this.board = board;
 		this.detector = detector;
-		this.board.saveCells();
 	}
-
+	
 	@Override
 	public boolean test(int source, int dest) {
 		final int kingPos = board.moveOnlyCells(source, dest);
