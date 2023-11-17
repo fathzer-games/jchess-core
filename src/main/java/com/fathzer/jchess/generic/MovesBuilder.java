@@ -21,6 +21,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
+import com.fathzer.util.MemoryStats;
 
 public class MovesBuilder {
 	private static final Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
@@ -49,16 +50,18 @@ public class MovesBuilder {
 	protected void clear() {
 		this.moves = null;
 		this.status = null;
-		tools = null;
 	}
 	
 	private void initTools() {
 		if (tools==null) {
 			tools = new InternalMoveBuilder(board);
 		}
+		tools.clear();
 	}
 
 	protected List<Move> getMoves() {
+MemoryStats.on = true;
+try {
 		if (moves==null) {
 			initTools();
 //System.out.println("Computing move list for "+FENUtils.to(board));
@@ -81,6 +84,9 @@ public class MovesBuilder {
 			sorted = false;
 		}
 		return moves;
+} finally {
+	MemoryStats.on = false;
+}
 	}
 	
 	protected List<Move> getPseudoLegalMoves() {
@@ -260,6 +266,8 @@ public class MovesBuilder {
 	}
 
 	protected boolean isLegal(Move move) {
+MemoryStats.on = true;
+try {
 		final Color activeColor = board.getActiveColor();
 		final int from = move.getFrom();
 		// Check a piece of the active color is moving
@@ -282,7 +290,6 @@ public class MovesBuilder {
 			return false;
 		}
 		initTools();
-try {
 		tools.getTo().reset(from);
 		if (piece.getKind()==KING) {
 			final Castling castling = board.getCastling(from, to);
@@ -314,8 +321,7 @@ try {
 			return pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction; 
 		}
 } finally {
-	//TODO Strange, the following test leads to exceptions in MinimaxEngineTest methods 
-//	tools = null;
+MemoryStats.on = false;
 }
 //		return getMoves().contains(move);
 	}

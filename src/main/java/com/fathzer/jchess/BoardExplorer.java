@@ -15,8 +15,8 @@ public interface BoardExplorer {
 	 * @return A piece or null if is empty
 	 */
 	Piece getPiece();
-	/** Reset the explorer to a cell index.
-	 * @param index The cell index
+	/** Resets the explorer to a cell that becomes its starting cell.
+	 * @param index The cell's index
 	 */
 	void reset(int index);
 }

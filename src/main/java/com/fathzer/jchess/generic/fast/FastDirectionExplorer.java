@@ -30,7 +30,7 @@ public class FastDirectionExplorer implements DirectionExplorer {
 	public void reset(int startPosition) {
 		this.startPosition = startPosition;
 	}
-
+	
 	@Override
 	public void start(Direction direction) {
 		this.index = startPosition;

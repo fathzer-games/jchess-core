@@ -19,9 +19,9 @@ import com.fathzer.jchess.util.U;
 class InternalMoveBuilderTest {
 	private static void reset(InternalMoveBuilder explorer, String coord) {
 		final int index = explorer.getBoard().getCoordinatesSystem().getIndex(coord);
+		explorer.clear();
 		explorer.getFrom().reset(index);
 		explorer.getTo().reset(index);
-		explorer.clear();
 	}
 	
 	@Test

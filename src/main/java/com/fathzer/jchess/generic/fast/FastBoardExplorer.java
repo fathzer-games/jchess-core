@@ -35,8 +35,6 @@ class FastBoardExplorer implements BoardExplorer {
 	@Override
 	public void reset(int index) {
 		this.index = index;
-		if (index<pieces.length) {
-			this.piece = pieces[index];
-		}
+		this.piece = pieces[index];
 	}
 }

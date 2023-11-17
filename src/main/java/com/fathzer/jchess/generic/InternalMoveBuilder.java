@@ -44,6 +44,9 @@ public class InternalMoveBuilder {
 
 	void clear() {
 		this.moves = new ArrayList<>();
+		MemoryStats.add(moves);
+		this.mv = new MoveValidator(board);
+		this.from.reset(0);
 	}
 	
 	public int getCheckCount() {

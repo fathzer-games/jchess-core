@@ -28,10 +28,12 @@ public class BasicDirectionExplorer implements DirectionExplorer {
 		this.startPosition = startPosition;
 	}
 	
+	@Override
 	public void reset(int startPosition) {
 		this.startPosition = startPosition;
 	}
 	
+	@Override
 	public void start(Direction direction) {
 		start(direction.getRowIncrement(), direction.getColumnIncrement());
 	}

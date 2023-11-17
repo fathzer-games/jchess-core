@@ -5,14 +5,19 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MemoryStats {
+	public static boolean on = false;
 	private static final MemoryStats ME = new MemoryStats();
 	private Map<String, AtomicLong> map = new HashMap<>();
 	
 	public static void add(Object obj) {
-		ME.map.computeIfAbsent(obj.getClass().toString(), k->new AtomicLong()).incrementAndGet();
+		if (on) {
+			ME.map.computeIfAbsent(obj.getClass().toString(), k->new AtomicLong()).incrementAndGet();
+		}
 	}
 	public static void increment(String str) {
-		ME.map.computeIfAbsent(str, k->new AtomicLong()).incrementAndGet();
+		if (on) {
+			ME.map.computeIfAbsent(str, k->new AtomicLong()).incrementAndGet();
+		}
 	}
 	
 	public static void clear() {
