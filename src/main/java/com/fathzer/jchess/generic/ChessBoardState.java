@@ -8,12 +8,14 @@ class ChessBoardState {
 	int moveNumber;
 	int halfMoveCount;
 	InsufficientMaterialDetector insufficientMaterialDetector;
+	PinnedDetector pinnedDetector;
 	BoardMoveUnmaker boardMoveUnmaker;
 	long key;
 	
-	ChessBoardState() {
+	ChessBoardState(ChessBoard board) {
 		this.boardMoveUnmaker = new BoardMoveUnmaker();
 		this.kingPositions = new int[2];
 		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
+		this.pinnedDetector = new PinnedDetector(board);
 	}
 }

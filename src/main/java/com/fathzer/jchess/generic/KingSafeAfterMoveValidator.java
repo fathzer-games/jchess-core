@@ -1,6 +1,7 @@
 package com.fathzer.jchess.generic;
 
 import com.fathzer.jchess.util.BiIntPredicate;
+import com.fathzer.util.MemoryStats;
 
 /** A move validator that verifies the king is safe after the move is played.
  */
@@ -11,6 +12,7 @@ public class KingSafeAfterMoveValidator implements BiIntPredicate {
 	public KingSafeAfterMoveValidator(ChessBoard board, AttackDetector detector) {
 		this.board = board;
 		this.detector = detector;
+		MemoryStats.add(this);
 	}
 	
 	@Override

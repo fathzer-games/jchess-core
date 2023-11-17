@@ -2,6 +2,7 @@ package com.fathzer.jchess.generic.fast;
 
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Piece;
+import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -18,6 +19,7 @@ class FastBoardExplorer implements BoardExplorer {
 		this.cellIncrement = 1;
 		this.index = startPosition;
 		this.piece = pieces[index];
+		MemoryStats.add(this);
 	}
 	
 	@Override

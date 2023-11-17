@@ -2,23 +2,23 @@ package com.fathzer.jchess.generic;
 
 import java.util.function.BiPredicate;
 import java.util.function.IntPredicate;
-import java.util.stream.IntStream;
 
 import com.fathzer.games.Color;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.util.BiIntPredicate;
+import com.fathzer.util.MemoryStats;
 
 class MoveValidator {
 	private final BiPredicate<BoardExplorer, BoardExplorer> defaultValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> kingValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnCatchValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnNoCatchValidator;
-	private final AttackDetector attacks;
 	
-	MoveValidator(ChessBoard board, PinnedDetector detector) {
+	MoveValidator(ChessBoard board) {
+		final PinnedDetector detector = board.getPinnedDetector();
 		final Color opponent = board.getActiveColor().opposite();
-		this.attacks = new AttackDetector(board.getDirectionExplorer(-1));
+		AttackDetector attacks = board.getAttackDetector();
 		final boolean isCheck = detector.getCheckCount()>0;
 		if (isCheck || detector.hasPinned()) {
 			final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
@@ -38,6 +38,7 @@ class MoveValidator {
 				this.pawnCatchValidator = (s,d) -> d.getPiece()!=null && d.getPiece().getColor().equals(opponent);
 			}
 		}
+		MemoryStats.add(this);
 	}
 	
 	private boolean isDestBoardExplorerOk(Color color, Piece p) {
@@ -70,13 +71,5 @@ class MoveValidator {
 	 */
 	public BiPredicate<BoardExplorer, BoardExplorer> getKing() {
 		return this.kingValidator;
-	}
-	
-	public boolean isAttacked(int position, Color attacker) {
-		return attacks.isAttacked(position, attacker);
-	}
-	
-	public boolean isThreatened(Color color, IntStream positions) {
-		return positions.anyMatch(pos -> attacks.isAttacked(pos, color));
 	}
 }

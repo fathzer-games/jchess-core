@@ -30,9 +30,10 @@ import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 
 public abstract class ChessBoard implements Board<Move>, HashProvider {
-	private final DirectionExplorer exp;
 	private final BoardRepresentation board;
 	private final MovesBuilder movesBuilder;
+	private final DirectionExplorer exp;
+	private final AttackDetector attackDetector;
 	private int[] kingPositions;
 	private int enPassant;
 	private int enPassantDeletePawnIndex;
@@ -41,6 +42,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private int halfMoveCount;
 	private int moveNumber;
 	private InsufficientMaterialDetector insufficientMaterialDetector;
+	private PinnedDetector pinnedDetector;
 	private long key;
 	private List<Long> keyHistory;
 	private Stack<ChessBoardState> undoData;
@@ -62,6 +64,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		state.moveNumber = this.moveNumber;
 		state.halfMoveCount = this.halfMoveCount;
 		state.insufficientMaterialDetector.copy(this.insufficientMaterialDetector);
+		state.pinnedDetector = pinnedDetector;
 		state.key = this.key;
 	}
 	
@@ -73,6 +76,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this.moveNumber = state.moveNumber;
 		this.halfMoveCount = state.halfMoveCount;
 		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
+		this.pinnedDetector = state.pinnedDetector;
 		this.key = state.key;
 	}
 
@@ -90,7 +94,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			throw new NullPointerException();
 		}
 		this.board = new FastBoardRepresentation(dimension, pieces);
-		this.undoData = new Stack<>(ChessBoardState::new);
+		this.undoData = new Stack<>(() -> new ChessBoardState(this));
 		this.exp = getDirectionExplorer(-1);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
@@ -130,6 +134,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this.key = board.getZobrist().get(this);
 		this.keyHistory = new ArrayList<>();
 		this.movesBuilder = buildMovesBuilder();
+		this.pinnedDetector = new PinnedDetector(this);
+		this.attackDetector = new AttackDetector(board.getDirectionExplorer(-1));
 	}
 	
 	protected abstract MovesBuilder buildMovesBuilder();
@@ -236,6 +242,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			movesBuilder.setMoveComparator(moveComparatorBuilder.apply(this));
 		}
 		undoData.next();
+		pinnedDetector = undoData.get().pinnedDetector;
+		pinnedDetector.invalidate();
 		return true;
 	}
 	
@@ -498,6 +506,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
 			this.insufficientMaterialDetector.copy(((ChessBoard)other).insufficientMaterialDetector);
+			this.pinnedDetector.invalidate();
 			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
 			this.movesBuilder.clear();
 		} else {
@@ -564,8 +573,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 
 	@Override
 	public boolean isCheck() {
-		Color color = getActiveColor();
-		return new AttackDetector(board.getDirectionExplorer(-1)).isAttacked(getKingPosition(color), color.opposite());
+		return getPinnedDetector().getCheckCount()>0;
 	}
 
 	BoardRepresentation getBoard() {
@@ -601,5 +609,16 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 	}
 	
+	PinnedDetector getPinnedDetector() {
+		this.pinnedDetector.load();
+		return this.pinnedDetector;
+	}
 	
+	AttackDetector getAttackDetector() {
+		return this.attackDetector;
+	}
+	
+	DirectionExplorer getDirectionExplorer() {
+		return this.exp;
+	}
 }

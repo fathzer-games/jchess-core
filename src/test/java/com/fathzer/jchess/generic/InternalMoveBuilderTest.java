@@ -21,7 +21,7 @@ class InternalMoveBuilderTest {
 		final int index = explorer.getBoard().getCoordinatesSystem().getIndex(coord);
 		explorer.getFrom().reset(index);
 		explorer.getTo().reset(index);
-		explorer.clearMoves();
+		explorer.clear();
 	}
 	
 	@Test

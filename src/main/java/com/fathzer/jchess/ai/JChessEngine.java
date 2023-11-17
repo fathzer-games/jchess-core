@@ -132,8 +132,9 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		public void logSearch(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
 			final long duration = stat.getDurationMs();
 			final List<EvaluatedMove<Move>> cut = bestMoves.getCut();
-			log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
-					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
+			log.info("{} move generations, {} moves generated, {} moves played({} from TT), {} evaluations for {} first level moves at depth {} by {} threads in {}ms -> {}",
+					stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getMoveFromTTPlayedCount(),
+					stat.getEvaluationCount(), bestMoves.getList().size(),
 					depth, getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getEvaluation());
 			log.info("Search at depth {} returns: {}", depth, JChessEngine.toString(bestMoves.getCut(),cs));
 		}

@@ -66,7 +66,7 @@ public class MovesBuilder {
 			final BoardExplorer exp = tools.getFrom();
 			if (tools.getCheckCount()>1) {
 				// If double check, only king can move
-				final int kingPosition = tools.getBoard().getKingPosition(color);
+				final int kingPosition = board.getKingPosition(color);
 				exp.reset(kingPosition);
 				tools.getTo().reset(kingPosition);
 				addKingMoves(tools);
@@ -132,13 +132,13 @@ public class MovesBuilder {
 		}
 	}
 	private void tryCastling(InternalMoveBuilder tools, Castling castling) {
-		if (tools.getBoard().hasCastling(castling)) {
+		if (board.hasCastling(castling)) {
 			final int kingPosition = tools.getFrom().getIndex(); 
-			final int kingDestination = tools.getBoard().getKingDestination(castling);
-			final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
+			final int kingDestination = board.getKingDestination(castling);
+			final int rookPosition = board.getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(tools.getFrom(), kingDestination, rookPosition, rookDestination) &&
-					areCastlingCellsSafe(tools.mv, tools.getBoard().getActiveColor().opposite(), kingPosition, kingDestination)) {
+					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination)) {
 				addCastling(tools.getMoves(), kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
@@ -173,23 +173,23 @@ public class MovesBuilder {
 	}
 	
 	/** Checks the positions that should be safe (not attacked) to have the castling allowed.
-	 * @param mv A move validator to be used to check if positions are safe
 	 * @param attacker The color of the attacker of cell 
 	 * @param kingPosition Current king's position
 	 * @param kingDestination King's destination
 	 * @return true if safe. Please note that the king's cell is not checked in this method because the check state is verified before this method is called.
 	 */
-	private boolean areCastlingCellsSafe(MoveValidator mv, Color attacker, int kingPosition, int kingDestination) {
+	private boolean areCastlingCellsSafe(Color attacker, int kingPosition, int kingDestination) {
+		final AttackDetector attackDetector = board.getAttackDetector();
 		if (kingPosition<kingDestination) {
 			for (int i = kingPosition+1; i <= kingDestination; i++) {
-				if (mv.isAttacked(i, attacker)) {
+				if (attackDetector.isAttacked(i, attacker)) {
 					return false;
 				}
 			}
 		} else if (kingPosition!=kingDestination) {
 			// Warning, in chess960, king can stay at in position during castling
 			for (int i = kingDestination; i < kingPosition; i++) {
-				if (mv.isAttacked(i, attacker)) {
+				if (attackDetector.isAttacked(i, attacker)) {
 					return false;
 				}
 			}
@@ -210,7 +210,7 @@ public class MovesBuilder {
 		final boolean black = BLACK == tools.getFrom().getPiece().getColor();
 		// Take care of promotion when generating move
 		final int promotionRow = getPromotionRow(black);
-		final IntPredicate promoted = i -> tools.getBoard().getCoordinatesSystem().getRow(i)==promotionRow;
+		final IntPredicate promoted = i -> board.getCoordinatesSystem().getRow(i)==promotionRow;
 		final MoveGenerator generator = (m, f, t) -> {
 			if (promoted.test(t)) {
 				m.add(new BasicMove(f, t, black ? BLACK_KNIGHT : WHITE_KNIGHT));
@@ -293,13 +293,13 @@ try {
 				if (tools.getCheckCount()!=0) {
 					return  false;
 				}
-				final int rookPosition = tools.getBoard().getInitialRookPosition(castling);
+				final int rookPosition = board.getInitialRookPosition(castling);
 				final int rookDestination  = to + castling.getSide().getRookOffset();
 				if (!areCastlingCellsFree(tools.getFrom(), to, rookPosition, rookDestination) ||
-						!areCastlingCellsSafe(tools.mv, tools.getBoard().getActiveColor().opposite(), from, to)) {
+						!areCastlingCellsSafe(board.getActiveColor().opposite(), from, to)) {
 					return false;
 				}
-			} else if (tools.mv.isAttacked(to, activeColor.opposite())) {
+			} else if (board.getAttackDetector().isAttacked(to, activeColor.opposite())) {
 				return false;
 			}
 			return isReachable(KING.getDirections(), to, 1)!=null;

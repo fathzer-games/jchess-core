@@ -45,6 +45,8 @@ class PinnedDetectorTest {
 	}
 	
 	private static PinnedDetector buildPinnedDetector(Board<Move> board) {
-		return new PinnedDetector(((ChessBoard)board).getBoard(), board.getActiveColor(), board.getKingPosition(board.getActiveColor()));
+		final PinnedDetector pinnedDetector = new PinnedDetector((ChessBoard)board);
+		pinnedDetector.load();
+		return pinnedDetector;
 	}
 }

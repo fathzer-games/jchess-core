@@ -3,6 +3,7 @@ package com.fathzer.jchess.generic;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
+import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -10,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 
 public class InternalMoveBuilder {
@@ -22,7 +22,7 @@ public class InternalMoveBuilder {
 	private static final int MAX_POSSIBLE_MOVES = 218;
 	public static final MoveGenerator DEFAULT = (moves, from, to) -> moves.add(new BasicMove(from,to));
 	@Getter
-	private Board<Move> board;
+	private ChessBoard board;
 	@Getter
 	private List<Move> moves;
 	@Getter
@@ -37,11 +37,12 @@ public class InternalMoveBuilder {
 		this.moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
-		this.checkManager = new PinnedDetector(board.getBoard(), board.getActiveColor(), board.getKingPosition(board.getActiveColor()));
-		this.mv = new MoveValidator(board, checkManager);
+		this.checkManager = board.getPinnedDetector();
+		this.mv = new MoveValidator(board);
+		MemoryStats.add(this);
 	}
 
-	void clearMoves() {
+	void clear() {
 		this.moves = new ArrayList<>();
 	}
 	
@@ -88,10 +89,6 @@ public class InternalMoveBuilder {
 				break;
 			}
 		}
-	}
-	
-	public boolean hasPinned() {
-		return checkManager.hasPinned();
 	}
 
 	public Direction getPinnedDirection(int index) {
