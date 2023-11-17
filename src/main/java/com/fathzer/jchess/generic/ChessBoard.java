@@ -609,6 +609,10 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 	}
 	
+	public boolean isAttacked(int position, Color color) {
+		return this.attackDetector.isAttacked(position, color);
+	}
+
 	PinnedDetector getPinnedDetector() {
 		this.pinnedDetector.load();
 		return this.pinnedDetector;

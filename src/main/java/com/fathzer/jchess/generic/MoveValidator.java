@@ -10,35 +10,47 @@ import com.fathzer.jchess.util.BiIntPredicate;
 import com.fathzer.util.MemoryStats;
 
 class MoveValidator {
+	private final ChessBoard board;
 	private final BiPredicate<BoardExplorer, BoardExplorer> defaultValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> kingValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnCatchValidator;
 	private final BiPredicate<BoardExplorer, BoardExplorer> pawnNoCatchValidator;
 	
 	MoveValidator(ChessBoard board) {
+		this.board = board;
 		final PinnedDetector detector = board.getPinnedDetector();
 		final Color opponent = board.getActiveColor().opposite();
 		AttackDetector attacks = board.getAttackDetector();
 		final boolean isCheck = detector.getCheckCount()>0;
 		if (isCheck || detector.hasPinned()) {
 			final IntPredicate defenderDetector = isCheck ? i->true : i -> detector.apply(i)!=null;
-			final BiIntPredicate kingSafeAfterMove = new KingSafeAfterMoveValidator(board, attacks);
-			final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || kingSafeAfterMove.test(s,d);
-			this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && kingSafeAfterMove.test(s.getIndex(), d.getIndex()) : (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
+			final BiIntPredicate optimizedKingSafe = (s,d) -> !defenderDetector.test(s) || isKingSafeAfterMove(s,d);
+			this.kingValidator = isCheck ? (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && isKingSafeAfterMove(s.getIndex(), d.getIndex()) : (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
 			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && optimizedKingSafe.test(s.getIndex(), d.getIndex());
 			this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null && optimizedKingSafe.test(s.getIndex(), d.getIndex());
-			this.pawnCatchValidator = new PawnCatchValidator(board, kingSafeAfterMove, optimizedKingSafe);
+			this.pawnCatchValidator = new PawnCatchValidator(board, this::isKingSafeAfterMove, optimizedKingSafe);
 		} else {
 			this.defaultValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece());
 			this.kingValidator = (s,d) -> isDestBoardExplorerOk(opponent, d.getPiece()) && !attacks.isAttacked(d.getIndex(), opponent);
 			this.pawnNoCatchValidator = (s,d) -> d.getPiece()==null;
 			if (board.getEnPassant()>=0) {
-				this.pawnCatchValidator = new PawnCatchValidator(board, new KingSafeAfterMoveValidator(board, attacks), (s,d)->true);
+				this.pawnCatchValidator = new PawnCatchValidator(board, this::isKingSafeAfterMove, (s,d)->true);
 			} else {
 				this.pawnCatchValidator = (s,d) -> d.getPiece()!=null && d.getPiece().getColor().equals(opponent);
 			}
 		}
 		MemoryStats.add(this);
+	}
+	
+	/** Checks whether the king is safe after a move is played.
+	 * @param source the index of the piece's cell to move.
+	 * @param dest the index of destination cell
+	 */
+	public boolean isKingSafeAfterMove(int source, int dest) {
+		final int kingPos = board.moveOnlyCells(source, dest);
+		final boolean result = !board.isAttacked(kingPos, board.getActiveColor().opposite());
+		board.restoreCells();
+		return result; 
 	}
 	
 	private boolean isDestBoardExplorerOk(Color color, Piece p) {
