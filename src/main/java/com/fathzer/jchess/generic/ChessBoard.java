@@ -56,30 +56,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this(dimension, pieces,Color.WHITE, Castling.ALL, -1, 0, 1);
 	}
 	
-	private void save(ChessBoardState state) {
-		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
-		state.enPassant = this.enPassant;
-		state.enPassantDeletePawnIndex = this.enPassantDeletePawnIndex;
-		state.castlings = this.castlings;
-		state.moveNumber = this.moveNumber;
-		state.halfMoveCount = this.halfMoveCount;
-		state.insufficientMaterialDetector.copy(this.insufficientMaterialDetector);
-		state.pinnedDetector = pinnedDetector;
-		state.key = this.key;
-	}
-	
-	private void restore(ChessBoardState state) {
-		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
-		this.enPassant = state.enPassant;
-		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
-		this.castlings = state.castlings;
-		this.moveNumber = state.moveNumber;
-		this.halfMoveCount = state.halfMoveCount;
-		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
-		this.pinnedDetector = state.pinnedDetector;
-		this.key = state.key;
-	}
-
 	/** Constructor.
 	 * @param dimension The chess board dimension (8x8 for a standard game)
 	 * @param pieces The pieces to place on the board with their positions
@@ -237,14 +213,26 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 		activeColor = movedPiece.getColor().opposite();
 		key ^= board.getZobrist().getTurnKey();
-		movesBuilder.clear();
-		if (moveComparatorBuilder!=null) {
-			movesBuilder.setMoveComparator(moveComparatorBuilder.apply(this));
-		}
 		undoData.next();
-		pinnedDetector = undoData.get().pinnedDetector;
+		final ChessBoardState stateAfterMove = undoData.get();
+		pinnedDetector = stateAfterMove.pinnedDetector;
 		pinnedDetector.invalidate();
+		movesBuilder.restoreFrom(stateAfterMove);
+		movesBuilder.invalidate();
 		return true;
+	}
+	
+	private void save(ChessBoardState state) {
+		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
+		state.enPassant = this.enPassant;
+		state.enPassantDeletePawnIndex = this.enPassantDeletePawnIndex;
+		state.castlings = this.castlings;
+		state.moveNumber = this.moveNumber;
+		state.halfMoveCount = this.halfMoveCount;
+		state.insufficientMaterialDetector.copy(this.insufficientMaterialDetector);
+		state.pinnedDetector = pinnedDetector;
+		state.key = this.key;
+		this.movesBuilder.saveTo(state);
 	}
 	
 	@Override
@@ -257,9 +245,21 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		final BoardMoveUnmaker bmu = state.boardMoveUnmaker;
 		bmu.accept(getBoard().pieces);
 		bmu.reset();
-		this.movesBuilder.clear();
 	}
 	
+	private void restore(ChessBoardState state) {
+		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
+		this.enPassant = state.enPassant;
+		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
+		this.castlings = state.castlings;
+		this.moveNumber = state.moveNumber;
+		this.halfMoveCount = state.halfMoveCount;
+		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
+		this.pinnedDetector = state.pinnedDetector;
+		this.key = state.key;
+		this.movesBuilder.restoreFrom(state); 
+	}
+
 	int moveOnlyCells (int from, int to) {
 		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
 		undoData.next();
@@ -486,6 +486,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	/** Copy another board in this.
+	 * <br>WARNING: board history is not copied, it is not possible to undo moves after this method is called.
 	 * @param other The other board
 	 */
 	@Override
@@ -505,10 +506,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			this.keyHistory.clear();
 			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
 			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
+			undoData.clear();
 			this.insufficientMaterialDetector.copy(((ChessBoard)other).insufficientMaterialDetector);
 			this.pinnedDetector.invalidate();
 			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
-			this.movesBuilder.clear();
+			this.movesBuilder.invalidate();
 		} else {
 			throw new UnsupportedOperationException();
 		}

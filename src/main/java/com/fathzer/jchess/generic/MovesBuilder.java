@@ -5,14 +5,17 @@ import static com.fathzer.jchess.PieceKind.*;
 import static com.fathzer.jchess.Direction.*;
 import static com.fathzer.games.Color.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.Status;
+import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Direction;
@@ -24,46 +27,82 @@ import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
 import com.fathzer.util.MemoryStats;
 
 public class MovesBuilder {
+	static class MovesBuilderState {
+		List<Move> moves;
+		boolean sorted;
+		boolean needRefresh;
+		Status status;
+		
+		public MovesBuilderState() {
+			moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
+			needRefresh = true;
+		}
+
+		public void invalidate() {
+			this.moves.clear();
+			this.needRefresh = true;
+			this.status = null;
+		}
+		
+		public List<Move> sorted(Comparator<Move> comparator) {
+			if (!sorted && comparator!=null) {
+				moves.sort(comparator);
+				sorted = true;
+			}
+			return moves;
+		}
+	}
+	
+	private static final int MAX_POSSIBLE_MOVES = 218;
+
 	private static final Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
 	private static final Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
 	
 	private final ChessBoard board;
 	private InternalMoveBuilder tools;
-	// Cache
-	private List<Move> moves;
-	private Status status;
 	private Comparator<Move> moveComparator;
-	private boolean sorted;
+	private MovesBuilderState state;
 	
 	public MovesBuilder(ChessBoard board) {
 		super();
 		this.board = board;
+		final Function<Board<Move>, Comparator<Move>> moveComparatorBuilder = board.getMoveComparatorBuilder();
+		if (moveComparatorBuilder!=null) {
+			this.moveComparator = moveComparatorBuilder.apply(board);
+		}
+		this.state = new MovesBuilderState();
+	}
+	
+	public void saveTo(ChessBoardState chessboardState) {
+		chessboardState.moveBuidlerState = state;
+	}
+	
+	public void restoreFrom(ChessBoardState chessboardState) {
+		state = chessboardState.moveBuidlerState;
 	}
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
-		this.moveComparator = moveComparator;
-		if (this.moves!=null && moveComparator!=null && sorted) {
-			this.moves.sort(moveComparator);
+		if (state.moves!=null && moveComparator!=null && state.sorted) {
+			state.moves.sort(moveComparator);
 		}
 	}
 
-	protected void clear() {
-		this.moves = null;
-		this.status = null;
+	protected void invalidate() {
+		this.state.invalidate();
 	}
 	
-	private void initTools() {
+	private void init() {
 		if (tools==null) {
 			tools = new InternalMoveBuilder(board);
 		}
-		tools.clear();
+		tools.init(state.moves);
 	}
 
 	protected List<Move> getMoves() {
 MemoryStats.on = true;
 try {
-		if (moves==null) {
-			initTools();
+		if (state.needRefresh) {
+			init();
 //System.out.println("Computing move list for "+FENUtils.to(board));
 			final Color color = board.getActiveColor();
 			final BoardExplorer exp = tools.getFrom();
@@ -80,10 +119,10 @@ try {
 					}
 				} while (exp.next());
 			}
-			moves = tools.getMoves();
-			sorted = false;
+			state.sorted = false;
+			state.needRefresh = false;
 		}
-		return moves;
+		return state.moves;
 } finally {
 	MemoryStats.on = false;
 }
@@ -92,11 +131,7 @@ try {
 	protected List<Move> getPseudoLegalMoves() {
 		// Ensure moves is computed
 		getMoves();
-		if (!sorted && moveComparator!=null) {
-			sorted = true;
-			moves.sort(moveComparator);
-		}
-		return moves;
+		return state.sorted(moveComparator);
 	}
 	
 	private void addPossibleMoves(InternalMoveBuilder tools) {
@@ -145,7 +180,7 @@ try {
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(tools.getFrom(), kingDestination, rookPosition, rookDestination) &&
 					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination)) {
-				addCastling(tools.getMoves(), kingPosition, rookPosition, kingDestination, rookDestination);
+				addCastling(state.moves, kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
 	}
@@ -244,17 +279,17 @@ try {
 	}
 	
 	protected Status getStatus() {
-		if (status==null) {
-			status=buildStatus();
+		if (state.status==null) {
+			state.status=buildStatus();
 		}
-		return status;
+		return state.status;
 	}
 
 	private Status buildStatus() {
 		if (board.isInsufficientMaterial() || board.getHalfMoveCount()>=100 || board.isDrawByRepetition()) {
 			return Status.DRAW;
 		}
-		if (board.getLegalMoves().isEmpty()) {
+		if (getMoves().isEmpty()) {
 			if (board.isCheck()) {
 				return board.getActiveColor().equals(WHITE) ? Status.BLACK_WON : Status.WHITE_WON;
 			} else {
@@ -289,7 +324,7 @@ try {
 				|| promotion.getColor()!=activeColor || getPromotionRow(activeColor==BLACK)!=board.getCoordinatesSystem().getRow(to))) {
 			return false;
 		}
-		initTools();
+		init();
 		tools.getTo().reset(from);
 		if (piece.getKind()==KING) {
 			final Castling castling = board.getCastling(from, to);
@@ -323,7 +358,6 @@ try {
 } finally {
 MemoryStats.on = false;
 }
-//		return getMoves().contains(move);
 	}
 	
 

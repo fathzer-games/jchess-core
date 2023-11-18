@@ -7,23 +7,20 @@ import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
 
 import com.fathzer.jchess.BoardExplorer;
 
-public class InternalMoveBuilder {
+class InternalMoveBuilder {
 	@FunctionalInterface
 	public interface MoveGenerator {
 		void generate(List<Move> moves, int from, int to);
 	}
 	
-	private static final int MAX_POSSIBLE_MOVES = 218;
 	public static final MoveGenerator DEFAULT = (moves, from, to) -> moves.add(new BasicMove(from,to));
 	@Getter
 	private ChessBoard board;
-	@Getter
 	private List<Move> moves;
 	@Getter
 	private BoardExplorer from;
@@ -32,9 +29,8 @@ public class InternalMoveBuilder {
 	private PinnedDetector checkManager;
 	MoveValidator mv;
 	
-	public InternalMoveBuilder(ChessBoard board) {
+	InternalMoveBuilder(ChessBoard board) {
 		this.board = board;
-		this.moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
 		this.checkManager = board.getPinnedDetector();
@@ -42,9 +38,8 @@ public class InternalMoveBuilder {
 		MemoryStats.add(this);
 	}
 
-	void clear() {
-		this.moves = new ArrayList<>();
-		MemoryStats.add(moves);
+	void init(List<Move> moves) {
+		this.moves = moves;
 		this.mv = new MoveValidator(board);
 		this.from.reset(0);
 	}
