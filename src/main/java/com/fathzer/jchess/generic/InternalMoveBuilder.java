@@ -3,7 +3,6 @@ package com.fathzer.jchess.generic;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
-import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -35,7 +34,6 @@ class InternalMoveBuilder {
 		this.to = board.getDirectionExplorer(-1);
 		this.checkManager = board.getPinnedDetector();
 		this.mv = new MoveValidator(board);
-		MemoryStats.add(this);
 	}
 
 	void init(List<Move> moves) {

@@ -4,7 +4,6 @@ import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
-import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -23,7 +22,6 @@ public class FastDirectionExplorer implements DirectionExplorer {
 		this.rowIncrement = cs.getWidth()+2;
 		this.pieces = pieces;
 		this.startPosition = startPosition;
-		MemoryStats.add(this);
 	}
 
 	@Override

@@ -24,10 +24,10 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.InternalMoveBuilder.MoveGenerator;
-import com.fathzer.util.MemoryStats;
 
 public class MovesBuilder {
 	static class MovesBuilderState {
+		private static final int MAX_POSSIBLE_MOVES = 218;
 		List<Move> moves;
 		boolean sorted;
 		boolean needRefresh;
@@ -53,8 +53,6 @@ public class MovesBuilder {
 		}
 	}
 	
-	private static final int MAX_POSSIBLE_MOVES = 218;
-
 	private static final Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
 	private static final Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
 	
@@ -64,7 +62,6 @@ public class MovesBuilder {
 	private MovesBuilderState state;
 	
 	public MovesBuilder(ChessBoard board) {
-		super();
 		this.board = board;
 		final Function<Board<Move>, Comparator<Move>> moveComparatorBuilder = board.getMoveComparatorBuilder();
 		if (moveComparatorBuilder!=null) {
@@ -82,6 +79,7 @@ public class MovesBuilder {
 	}
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
+		this.moveComparator = moveComparator;
 		if (state.moves!=null && moveComparator!=null && state.sorted) {
 			state.moves.sort(moveComparator);
 		}
@@ -99,8 +97,6 @@ public class MovesBuilder {
 	}
 
 	protected List<Move> getMoves() {
-MemoryStats.on = true;
-try {
 		if (state.needRefresh) {
 			init();
 //System.out.println("Computing move list for "+FENUtils.to(board));
@@ -123,9 +119,6 @@ try {
 			state.needRefresh = false;
 		}
 		return state.moves;
-} finally {
-	MemoryStats.on = false;
-}
 	}
 	
 	protected List<Move> getPseudoLegalMoves() {
@@ -301,8 +294,6 @@ try {
 	}
 
 	protected boolean isLegal(Move move) {
-MemoryStats.on = true;
-try {
 		final Color activeColor = board.getActiveColor();
 		final int from = move.getFrom();
 		// Check a piece of the active color is moving
@@ -355,9 +346,6 @@ try {
 			final Direction pinnedDirection = tools.getPinnedDirection(from);
 			return pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction; 
 		}
-} finally {
-MemoryStats.on = false;
-}
 	}
 	
 
