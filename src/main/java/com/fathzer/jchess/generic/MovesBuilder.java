@@ -132,11 +132,11 @@ public class MovesBuilder {
 		tools.getTo().reset(tools.getFrom().getIndex());
 		if (ROOK.equals(piece.getKind()) || BISHOP.equals(piece.getKind()) || QUEEN.equals(piece.getKind())) {
 			for (Direction d:piece.getKind().getDirections()) {
-				tools.addAllMoves(d, tools.mv.getDefault());
+				tools.addAllMoves(d, tools.mv.getOthers());
 			}
 		} else if (KNIGHT.equals(piece.getKind())) {
 			for (Direction d:KNIGHT.getDirections()) {
-				tools.addMove(d, tools.mv.getDefault());
+				tools.addMove(d, tools.mv.getOthers());
 			}
 		} else if (KING.equals(piece.getKind())) {
 			addKingMoves(tools);

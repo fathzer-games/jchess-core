@@ -260,7 +260,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this.movesBuilder.restoreFrom(state); 
 	}
 
-	int moveOnlyCells (int from, int to) {
+	private int moveOnlyCells (int from, int to) {
 		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
 		undoData.next();
 		final Piece p = board.getPiece(from);
@@ -300,12 +300,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return to;
 	}
 
-	void restoreCells() {
-		undoData.previous();
-		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
-		bmu.accept(getBoard().pieces);
-		bmu.reset();
-	}
 	private Castling onKingMove(int from, int to, BoardMoveUnmaker bmu) {
 		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
@@ -615,7 +609,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return this.attackDetector.isAttacked(position, color);
 	}
 
-	PinnedDetector getPinnedDetector() {
+	public PinnedDetector getPinnedDetector() {
 		this.pinnedDetector.load();
 		return this.pinnedDetector;
 	}
@@ -626,5 +620,19 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	
 	DirectionExplorer getDirectionExplorer() {
 		return this.exp;
+	}
+	
+	/** Checks whether the king will be safe after a move is played.
+	 * @param source the index of the piece's cell to move.
+	 * @param dest the index of destination cell
+	 */
+	public boolean isKingSafeAfterMove(int source, int dest) {
+		final int kingPosition = moveOnlyCells(source, dest);
+		final boolean result = !isAttacked(kingPosition, activeColor.opposite());
+		undoData.previous();
+		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
+		bmu.accept(getBoard().pieces);
+		bmu.reset();
+		return result;
 	}
 }

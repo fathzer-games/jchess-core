@@ -1,4 +1,4 @@
-package com.fathzer.jchess.generic;
+package com.fathzer.jchess.generic.movevalidator;
 
 import java.util.function.BiPredicate;
 

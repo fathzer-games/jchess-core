@@ -3,11 +3,15 @@ package com.fathzer.jchess.generic;
 import com.fathzer.jchess.Direction;
 import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.generic.movevalidator.MoveValidator;
+import com.fathzer.jchess.generic.movevalidator.MoveValidatorBuilder;
+import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
 import com.fathzer.jchess.BoardExplorer;
 
@@ -17,7 +21,7 @@ class InternalMoveBuilder {
 		void generate(List<Move> moves, int from, int to);
 	}
 	
-	public static final MoveGenerator DEFAULT = (moves, from, to) -> moves.add(new BasicMove(from,to));
+	private static final MoveGenerator DEFAULT = (moves, from, to) -> moves.add(new BasicMove(from,to));
 	@Getter
 	private ChessBoard board;
 	private List<Move> moves;
@@ -26,6 +30,7 @@ class InternalMoveBuilder {
 	@Getter
 	private DirectionExplorer to;
 	private PinnedDetector checkManager;
+	private Supplier<MoveValidator> mvBuilder;
 	MoveValidator mv;
 	
 	InternalMoveBuilder(ChessBoard board) {
@@ -33,12 +38,13 @@ class InternalMoveBuilder {
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
 		this.checkManager = board.getPinnedDetector();
-		this.mv = new MoveValidator(board);
+		this.mvBuilder = new MoveValidatorBuilder(board);
+		MemoryStats.add(this);
 	}
 
 	void init(List<Move> moves) {
 		this.moves = moves;
-		this.mv = new MoveValidator(board);
+		this.mv = mvBuilder.get();
 		this.from.reset(0);
 	}
 	

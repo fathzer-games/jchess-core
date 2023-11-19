@@ -313,7 +313,7 @@ class ChessBoardTest {
 	}
 
 	@Test
-	void kingsMOveGenerationTest() {
+	void kingsMoveGenerationTest() {
 		final Board<Move> board = FENUtils.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		assertEquals(Set.of("f1","f2","g1"), getTo(cs, getMoves(board, "e1")), "Problem in king move");
