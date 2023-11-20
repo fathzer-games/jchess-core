@@ -29,7 +29,6 @@ class InternalMoveBuilder {
 	private BoardExplorer from;
 	@Getter
 	private DirectionExplorer to;
-	private PinnedDetector checkManager;
 	private Supplier<MoveValidator> mvBuilder;
 	MoveValidator mv;
 	
@@ -37,7 +36,6 @@ class InternalMoveBuilder {
 		this.board = board;
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
-		this.checkManager = board.getPinnedDetector();
 		this.mvBuilder = new MoveValidatorBuilder(board);
 		MemoryStats.add(this);
 	}
@@ -46,10 +44,6 @@ class InternalMoveBuilder {
 		this.moves = moves;
 		this.mv = mvBuilder.get();
 		this.from.reset(0);
-	}
-	
-	public int getCheckCount() {
-		return checkManager.getCheckCount();
 	}
 
 	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator)  {
@@ -91,9 +85,5 @@ class InternalMoveBuilder {
 				break;
 			}
 		}
-	}
-
-	public Direction getPinnedDirection(int index) {
-		return checkManager.apply(index);
 	}
 }

@@ -47,8 +47,8 @@ public class MovesBuilder {
 		public List<Move> sorted(Comparator<Move> comparator) {
 			if (!sorted && comparator!=null) {
 				moves.sort(comparator);
-				sorted = true;
 			}
+			sorted = true;
 			return moves;
 		}
 	}
@@ -102,7 +102,7 @@ public class MovesBuilder {
 //System.out.println("Computing move list for "+FENUtils.to(board));
 			final Color color = board.getActiveColor();
 			final BoardExplorer exp = tools.getFrom();
-			if (tools.getCheckCount()>1) {
+			if (board.isDoubleCheck()) {
 				// If double check, only king can move
 				final int kingPosition = board.getKingPosition(color);
 				exp.reset(kingPosition);
@@ -154,7 +154,7 @@ public class MovesBuilder {
 			tools.addMove(d, tools.mv.getKing());
 		}
 		// Castlings
-		if (tools.getCheckCount()==0) {
+		if (!board.isCheck()) {
 			// No castlings allowed when you're in check
 			if (WHITE==tools.getFrom().getPiece().getColor()) {
 				tryCastling(tools, Castling.WHITE_KING_SIDE);
@@ -323,7 +323,7 @@ public class MovesBuilder {
 				if (!board.hasCastling(castling)) {
 					return false;
 				}
-				if (tools.getCheckCount()!=0) {
+				if (board.isCheck()) {
 					return  false;
 				}
 				final int rookPosition = board.getInitialRookPosition(castling);
@@ -343,7 +343,7 @@ public class MovesBuilder {
 				return false;
 			}
 			// Test piece is not pinned
-			final Direction pinnedDirection = tools.getPinnedDirection(from);
+			final Direction pinnedDirection = board.getPinnedDetector().apply(from);
 			return pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction; 
 		}
 	}

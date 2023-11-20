@@ -572,6 +572,10 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return getPinnedDetector().getCheckCount()>0;
 	}
 
+	public boolean isDoubleCheck() {
+		return getPinnedDetector().getCheckCount()>1;
+	}
+
 	BoardRepresentation getBoard() {
 		return board;
 	}
