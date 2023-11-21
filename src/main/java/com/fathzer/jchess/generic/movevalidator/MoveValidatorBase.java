@@ -5,7 +5,6 @@ import java.util.function.BiPredicate;
 import com.fathzer.games.Color;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Piece;
-import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -28,10 +27,9 @@ abstract class MoveValidatorBase implements MoveValidator {
 		this.king = kingValidator;
 		this.pawnCatch = pawnCatchValidator;
 		this.pawnNoCatch = pawnNoCatchValidator;
-		MemoryStats.add(this);
 	}
 	
 	protected static boolean isDestBoardExplorerOk(Color color, Piece p) {
-		return p==null || p.getColor().equals(color);
+		return p==null || p.getColor()==color;
 	}
 }

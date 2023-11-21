@@ -3,6 +3,7 @@ package com.fathzer.jchess.generic.movevalidator;
 import java.util.function.BiPredicate;
 
 import com.fathzer.jchess.BoardExplorer;
+import com.fathzer.jchess.generic.ChessBoard;
 
 public abstract interface MoveValidator {
 
@@ -25,4 +26,8 @@ public abstract interface MoveValidator {
 	 * @return a BiPredicate<BoardExplorer, BoardExplorer>
 	 */
 	BiPredicate<BoardExplorer, BoardExplorer> getKing();
+	
+	default void update(ChessBoard board) {
+		
+	}
 }

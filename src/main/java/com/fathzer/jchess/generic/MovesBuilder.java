@@ -330,8 +330,7 @@ public class MovesBuilder {
 				return areCastlingCellsFree(tools.getFrom(), to, rookPosition, rookDestination) &&
 						areCastlingCellsSafe(board.getActiveColor().opposite(), from, to);
 			} else {
-				final boolean safe = isCheck ? board.isKingSafeAfterMove(from, to) : !board.isAttacked(to, activeColor.opposite());
-				return safe && isReachable(KING.getDirections(), to, 1)!=null;
+				return !board.isAttacked(to, activeColor.opposite()) && isReachable(KING.getDirections(), to, 1)!=null;
 			}
 		} else {
 			// Test that position is reachable

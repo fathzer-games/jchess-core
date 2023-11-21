@@ -3,7 +3,6 @@ package com.fathzer.jchess.generic.movevalidator;
 import java.util.function.Supplier;
 
 import com.fathzer.jchess.generic.ChessBoard;
-import com.fathzer.util.MemoryStats;
 
 public class MoveValidatorBuilder implements Supplier<MoveValidator> {
 	private static final class SimplifiedMoveValidator extends MoveValidatorBase {
@@ -11,7 +10,7 @@ public class MoveValidatorBuilder implements Supplier<MoveValidator> {
 			super(
 				(s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()),
 				(s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && !board.isAttacked(d.getIndex(), board.getActiveColor().opposite()),
-				(s,d) -> d.getPiece()!=null && d.getPiece().getColor().equals(board.getActiveColor().opposite()),
+				(s,d) -> d.getPiece()!=null && d.getPiece().getColor()==board.getActiveColor().opposite(),
 				(s,d) -> d.getPiece()==null);
 		}
 	} 
@@ -29,19 +28,28 @@ public class MoveValidatorBuilder implements Supplier<MoveValidator> {
 	private final ChessBoard board;
 	private final MoveValidator simplified;
 	private final MoveValidator simplifiedWithEnPassant;
+	private final MoveValidator checkValidator;
+	private final MoveValidator pinnedMoveValidator;
 	
 	public MoveValidatorBuilder(ChessBoard board) {
 		this.board = board;
 		this.simplified = new SimplifiedMoveValidator(board);
 		this.simplifiedWithEnPassant = new SimplifiedWithEnPassantMoveValidator(board);
-		MemoryStats.add(this);
+		this.checkValidator = new CheckMoveValidator(board);
+		this.pinnedMoveValidator = new PinnedMoveValidator(board);
 	}
 
 	@Override
 	public MoveValidator get() {
-		if (!board.isCheck() && !board.getPinnedDetector().hasPinned()) {
-			return board.getEnPassant()>=0 ? simplifiedWithEnPassant : simplified;
+		final MoveValidator mv;
+		if (board.isCheck()) {
+			mv = this.checkValidator;
+		} else if (board.getPinnedDetector().hasPinned()) {
+			mv = pinnedMoveValidator;
+		} else {
+			mv = board.getEnPassant()>=0 ? simplifiedWithEnPassant : simplified;
 		}
-		return new DefaultMoveValidator(board);
+		mv.update(board);
+		return mv;
 	}
 }

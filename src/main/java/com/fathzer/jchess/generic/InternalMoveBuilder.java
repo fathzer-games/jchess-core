@@ -5,7 +5,6 @@ import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.generic.movevalidator.MoveValidator;
 import com.fathzer.jchess.generic.movevalidator.MoveValidatorBuilder;
-import com.fathzer.util.MemoryStats;
 
 import lombok.Getter;
 
@@ -37,7 +36,6 @@ class InternalMoveBuilder {
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer(-1);
 		this.mvBuilder = new MoveValidatorBuilder(board);
-		MemoryStats.add(this);
 	}
 
 	void init(List<Move> moves) {
