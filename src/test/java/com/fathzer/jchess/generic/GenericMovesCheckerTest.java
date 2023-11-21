@@ -25,10 +25,17 @@ abstract class GenericMovesCheckerTest<M> {
 		testAllLegalMoves("3rk2r/PR3p1p/4pn2/3p2pP/3P2bb/4P2N/P1P2PP1/1N2K2R w k - 0 7");
 		testAllLegalMoves("8/2p5/3p4/KP5r/1R3pPk/8/4P3/8 b - g3 0 1");
 		
-		// Check pinned piece can move in pinned direction or opposite
-		String fen = "rnbqk1nr/pppp1ppp/4p3/b7/3P4/2B5/PPP1PPPP/RN1QKBNR w KQkq - 0 1";
+		// Check king can castle (was a bug of first version)
+		String fen = "3rk2r/PR3p1p/4pn2/3p2pP/3P2bb/4P2N/P1P2PP1/1N2K2R w Kk - 0 7";
 		MoveGenerator<M> mvg = fromFEN(fen);
-		M move = toMove("C3", "B4");
+		M move = toMove("E1", "G1");
+		assertTrue(mvg.makeMove(move, UNSAFE), "Error for "+toString(move)+" on "+fen);
+
+		
+		// Check pinned piece can move in pinned direction or opposite
+		fen = "rnbqk1nr/pppp1ppp/4p3/b7/3P4/2B5/PPP1PPPP/RN1QKBNR w KQkq - 0 1";
+		mvg = fromFEN(fen);
+		move = toMove("C3", "B4");
 		assertTrue(mvg.makeMove(move, UNSAFE), "Error for "+toString(move)+" on "+fen);
 		mvg.unmakeMove();
 		
@@ -107,11 +114,11 @@ abstract class GenericMovesCheckerTest<M> {
 
 		// Promotion to a pawn
 		move = toMove("A7", "A8", "WHITE_PAWN");
-		assertFalse(mvg.makeMove(move, UNSAFE)); //FIXME
+		assertFalse(mvg.makeMove(move, UNSAFE));
 
 		// Promotion of wrong color
 		move = toMove("A7", "A8", "BLACK_QUEEN");
-		assertFalse(mvg.makeMove(move, UNSAFE)); //FIXME
+		assertFalse(mvg.makeMove(move, UNSAFE));
 		
 		// Promotion of a piece that is not a pawn
 		move = toMove("B7", "B8", "WHITE_QUEEN");
@@ -142,7 +149,7 @@ abstract class GenericMovesCheckerTest<M> {
 		// En passant that leads to check
 		mvg = fromFEN("8/2p5/3p4/KP5r/1R3pPk/8/4P3/8 b - g3 0 1");
 		move = toMove("F4", "G3");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
 		
 		// King takes attacking piece ... on an protected cell
 		mvg = fromFEN("rnb1k1nr/pppp1ppp/4p3/B7/1q1P4/8/PPPbPPPP/RN1QKBNR w KQkq - 0 1");
@@ -151,6 +158,6 @@ abstract class GenericMovesCheckerTest<M> {
 		
 		// King is in check ... and remains in check
 		move = toMove("C2","C3");
-//		assertFalse(mvg.makeMove(move, UNSAFE));
+		assertFalse(mvg.makeMove(move, UNSAFE));
 	}
 }

@@ -317,25 +317,22 @@ public class MovesBuilder {
 		}
 		init();
 		tools.getTo().reset(from);
+		final boolean isCheck = board.isCheck();
 		if (piece.getKind()==KING) {
 			final Castling castling = board.getCastling(from, to);
 			if (castling!=null) {
-				if (!board.hasCastling(castling)) {
+				if (isCheck || !board.hasCastling(castling)) {
 					return false;
-				}
-				if (board.isCheck()) {
-					return  false;
 				}
 				final int rookPosition = board.getInitialRookPosition(castling);
 				final int rookDestination  = to + castling.getSide().getRookOffset();
-				if (!areCastlingCellsFree(tools.getFrom(), to, rookPosition, rookDestination) ||
-						!areCastlingCellsSafe(board.getActiveColor().opposite(), from, to)) {
-					return false;
-				}
-			} else if (board.getAttackDetector().isAttacked(to, activeColor.opposite())) {
-				return false;
+				tools.getFrom().reset(from);
+				return areCastlingCellsFree(tools.getFrom(), to, rookPosition, rookDestination) &&
+						areCastlingCellsSafe(board.getActiveColor().opposite(), from, to);
+			} else {
+				final boolean safe = isCheck ? board.isKingSafeAfterMove(from, to) : !board.isAttacked(to, activeColor.opposite());
+				return safe && isReachable(KING.getDirections(), to, 1)!=null;
 			}
-			return isReachable(KING.getDirections(), to, 1)!=null;
 		} else {
 			// Test that position is reachable
 			final Direction direction = isReachable(piece, from, to, caught);
@@ -344,7 +341,9 @@ public class MovesBuilder {
 			}
 			// Test piece is not pinned
 			final Direction pinnedDirection = board.getPinnedDetector().apply(from);
-			return pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction; 
+			final boolean notPinned = pinnedDirection==null || pinnedDirection==direction || pinnedDirection.getOpposite()==direction;
+			final boolean kingSafetyCheck = isCheck || (PAWN==piece.getKind() && to==board.getEnPassant());
+			return notPinned && (!kingSafetyCheck || board.isKingSafeAfterMove(from, to));
 		}
 	}
 	
