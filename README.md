@@ -33,7 +33,11 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - In check situations, the only valid moves are the one that intersects the attacks (or catch the piece).
 
 ## TODO
-- I think the generic part should be re-engeniered: MoveComparator management is ugly, BoardRepresentation owns what seems to be just a cache for MovesBuilder. MovesBuilder computes the chessboard status... Probably we can have the changing chessboard data in an object, only copy it to a backup stack when we make a move, and get this object back from the stack without any copy when unmaking the move.
+- I think the generic part should be re-engeniered: MoveComparator management is ugly. Working with lambda expressions to verify move is (pseudo-)legal is probably not a good idea. I feel having different classes to generates the moves depending on the board state (check, pinned, etc...), exactly as we have different move comparators could be cleaner and faster. Maybe we should try...
+- Engine improvements:
+    - Implement Quiesce moves
+    - Create incremental evaluation functions
+    - Implement pseudo-legal move generation
 - UCI stuff needs to be tested (especially if stop works with JChessEngine and perfT test that probably use the last move comparator, which is perfectly useless - Engine should have a perfT mode or, at least a way to set in perftT test if moves are sorted or not).  
 For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to System.out when moveComparator is null, could be helpful.
 - Finish FENParser for Chess960
@@ -42,12 +46,6 @@ For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to Sy
     - Move generation improvements:
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.
         - Think about using multithreading in move generation. It is quite simple except to check if move make king in check as it moves pieces on the board.
-- Engine improvements:
-    - Perform some Quiescence Search before evaluate move
-    - Improve evaluation function
-    - Use killer moves in Alpha beta pruning moves sort?
+
 
 ## Known bugs
-Not exactly bugs yet ... because all moves returned by Board are legal. But these are potential bugs:
-- See FIXME in com.fathzer.jchess.pgn.MoveAlgebraicNotationBuilder.
-- See FIXME in com.fathzer.jchess.ai.NaiveEngine and com.fathzer.jchess.ai.RandomEngine.
