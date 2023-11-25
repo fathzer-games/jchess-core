@@ -69,6 +69,10 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	public void setMoveComparatorSupplier(Function<Board<Move>, Comparator<Move>> moveComparatorSupplier) {
 		this.moveComparatorSupplier = moveComparatorSupplier;
 	}
+	
+	public Function<Board<Move>, Comparator<Move>> getMoveComparatorSupplier() {
+		return moveComparatorSupplier;
+	}
 
 	@Override
 	protected void setViewPoint(Evaluator<Board<Move>> evaluator, Board<Move> board) {
