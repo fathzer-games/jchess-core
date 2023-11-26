@@ -89,7 +89,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 			final List<EvaluatedMove<Move>> bestMoves = this.getMoveSelector().select(search, search.getBestMoves());
 			final EvaluatedMove<Move> evaluatedMove = bestMoves.get(0);
 			move = evaluatedMove.getContent();
-			log.info("Move choosen :{}", move.toString(board.getCoordinatesSystem()));
+			log.info("Move chosen :{}", move.toString(board.getCoordinatesSystem()));
 			final List<Move> pv = evaluatedMove.getPrincipalVariation();
 			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
 		} else {
