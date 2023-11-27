@@ -14,16 +14,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 class PawnCatchValidator implements BiPredicate<BoardExplorer, BoardExplorer> {
 	private final Board<Move> board;
-	private BiIntPredicate basicKingSafeAfterMove;
 	private BiIntPredicate optimizedKingSafeAfterMove;
 	
 	@Override
 	public boolean test(BoardExplorer from, BoardExplorer to) {
-		if (board.getEnPassant()==to.getIndex()) {
-			// Warning, the caught pawn can be a defender of the king
-			// like in 8/2p5/3p4/KP5r/1R3pPk/8/4P3/8 b - g3 0 1
-			return basicKingSafeAfterMove.test(from.getIndex(), to.getIndex());
-		} else if (to.getPiece()==null) {
+		if (to.getPiece()==null) {
 			// Can't catch no piece
 			return false;
 		} else {

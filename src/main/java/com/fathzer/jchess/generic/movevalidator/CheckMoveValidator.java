@@ -23,7 +23,7 @@ class CheckMoveValidator implements MoveValidator {
 		this.king = (s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && board.isKingSafeAfterMove(s.getIndex(), d.getIndex());
 		this.others = (s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && board.isKingSafeAfterMove(s.getIndex(), d.getIndex());
 		this.pawnNoCatch = (s,d) -> d.getPiece()==null && board.isKingSafeAfterMove(s.getIndex(), d.getIndex());
-		this.pawnCatch = new PawnCatchValidator(board, board::isKingSafeAfterMove, board::isKingSafeAfterMove);
+		this.pawnCatch = new PawnCatchValidator(board, board::isKingSafeAfterMove);
 	}
 	
 	private boolean isDestBoardExplorerOk(Color color, Piece p) {

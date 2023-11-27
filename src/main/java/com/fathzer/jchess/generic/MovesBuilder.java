@@ -122,6 +122,12 @@ public class MovesBuilder {
 		this.from.reset(0);
 	}
 
+	protected List<Move> getPseudoLegalMoves() {
+		// Ensure moves is computed
+		getMoves();
+		return state.sorted(moveComparator);
+	}
+
 	protected List<Move> getMoves() {
 		if (state.needRefresh) {
 			init();
@@ -138,17 +144,15 @@ public class MovesBuilder {
 						addPossibleMoves();
 					}
 				} while (from.next());
+				if (board.getEnPassant()>=0) {
+					// Generate en passant moves
+					addEnPassantMoves();
+				}
 			}
 			state.sorted = false;
 			state.needRefresh = false;
 		}
 		return state.moves;
-	}
-	
-	protected List<Move> getPseudoLegalMoves() {
-		// Ensure moves is computed
-		getMoves();
-		return state.sorted(moveComparator);
 	}
 	
 	private void addPossibleMoves() {
@@ -278,15 +282,36 @@ public class MovesBuilder {
 		if (black) {
 			// Standard moves (no catch)
 			addMoves(Direction.SOUTH, countAllowed, mv.getPawnNoCatch(), generator);
-			// Catches (including En-passant)
+			// Catches (excluding En-passant)
 			addMove(Direction.SOUTH_EAST, mv.getPawnCatch(), generator);
 			addMove(Direction.SOUTH_WEST, mv.getPawnCatch(), generator);
 		} else {
 			// Standard moves (no catch)
 			addMoves(Direction.NORTH, countAllowed, mv.getPawnNoCatch(), generator);
-			// Catches (including En-passant)
+			// Catches (excluding En-passant)
 			addMove(Direction.NORTH_EAST, mv.getPawnCatch(), generator);
 			addMove(Direction.NORTH_WEST, mv.getPawnCatch(), generator);
+		}
+	}
+	
+	private void addEnPassantMoves() {
+		final boolean black = BLACK == board.getActiveColor();
+		to.reset(board.getEnPassant());
+		if (black) {
+			// Catches (excluding En-passant)
+			addEnPassantMove(Direction.NORTH_EAST, BLACK_PAWN);
+			addEnPassantMove(Direction.NORTH_WEST, BLACK_PAWN);
+		} else {
+			// Catches (excluding En-passant)
+			addEnPassantMove(Direction.SOUTH_EAST, WHITE_PAWN);
+			addEnPassantMove(Direction.SOUTH_WEST, WHITE_PAWN);
+		}
+	}
+	
+	private void addEnPassantMove(Direction d, Piece expectedPiece) {
+		to.start(d);
+		if (to.next() && to.getPiece()==expectedPiece && board.isKingSafeAfterMove(to.getIndex(), board.getEnPassant())) {
+			DEFAULT.add(state.moves, to.getIndex(), board.getEnPassant());
 		}
 	}
 	

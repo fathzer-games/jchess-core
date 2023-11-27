@@ -25,7 +25,7 @@ class PinnedMoveValidator implements MoveValidator {
 		this.king = (s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && !board.isAttacked(d.getIndex(), board.getActiveColor().opposite());
 		this.others = (s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && optimizedKingSafe.test(s.getIndex(), d.getIndex());
 		this.pawnNoCatch = (s,d) -> d.getPiece()==null && optimizedKingSafe.test(s.getIndex(), d.getIndex());
-		this.pawnCatch = new PawnCatchValidator(board, board::isKingSafeAfterMove, optimizedKingSafe);
+		this.pawnCatch = new PawnCatchValidator(board, optimizedKingSafe);
 	}
 	
 	private boolean isDestBoardExplorerOk(Color color, Piece p) {

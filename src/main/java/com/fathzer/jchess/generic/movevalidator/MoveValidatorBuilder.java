@@ -20,7 +20,7 @@ public class MoveValidatorBuilder implements Supplier<MoveValidator> {
 			super(
 				(s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()),
 				(s,d) -> isDestBoardExplorerOk(board.getActiveColor().opposite(), d.getPiece()) && !board.isAttacked(d.getIndex(), board.getActiveColor().opposite()),
-				new PawnCatchValidator(board, board::isKingSafeAfterMove, (s,d)->true),
+				new PawnCatchValidator(board, (s,d)->true),
 				(s,d) -> d.getPiece()==null);
 		}
 	}
