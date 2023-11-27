@@ -158,20 +158,34 @@ public class MovesBuilder {
 	private void addPossibleMoves() {
 		final Piece piece = from.getPiece();
 		to.reset(from.getIndex());
-		if (ROOK.equals(piece.getKind()) || BISHOP.equals(piece.getKind()) || QUEEN.equals(piece.getKind())) {
-			for (Direction d:piece.getKind().getDirections()) {
-				addAllMoves(d, mv.getOthers());
-			}
-		} else if (KNIGHT.equals(piece.getKind())) {
-			for (Direction d:KNIGHT.getDirections()) {
-				addMove(d, mv.getOthers(), DEFAULT);
-			}
-		} else if (KING.equals(piece.getKind())) {
+		if (KING.equals(piece.getKind())) {
 			addKingMoves();
-		} else if (PAWN.equals(piece.getKind())) {
-			addPawnMoves();
 		} else {
-			throw new IllegalArgumentException("Unknown piece kind: "+piece.getKind());
+			final Direction pinnedDirection = board.getPinnedDetector().apply(from.getIndex());
+			if (ROOK.equals(piece.getKind()) || BISHOP.equals(piece.getKind()) || QUEEN.equals(piece.getKind())) {
+				if (pinnedDirection==null) {
+					for (Direction d:piece.getKind().getDirections()) {
+						addAllMoves(d, mv.getOthers());
+					}
+				} else if (piece.getKind().getDirections().contains(pinnedDirection)) {
+					addAllMoves(pinnedDirection, mv.getOthers());
+					addAllMoves(pinnedDirection.getOpposite(), mv.getOthers());
+				}
+			} else if (KNIGHT.equals(piece.getKind())) {
+				if (pinnedDirection==null) {
+					for (Direction d:KNIGHT.getDirections()) {
+						addMove(d, mv.getOthers(), DEFAULT);
+					}
+				}
+			} else if (PAWN.equals(piece.getKind())) {
+				if (pinnedDirection==null) {
+					addPawnMoves();
+				} else {
+					addPinnedPawnMoves(pinnedDirection);
+				}
+			} else {
+				throw new IllegalArgumentException("Unknown piece kind: "+piece.getKind());
+			}
 		}
 	}
 	
@@ -281,30 +295,51 @@ public class MovesBuilder {
 		final int countAllowed = getPawnMaxMoveLength(black, from.getIndex());
 		if (black) {
 			// Standard moves (no catch)
-			addMoves(Direction.SOUTH, countAllowed, mv.getPawnNoCatch(), generator);
+			addMoves(SOUTH, countAllowed, mv.getPawnNoCatch(), generator);
 			// Catches (excluding En-passant)
-			addMove(Direction.SOUTH_EAST, mv.getPawnCatch(), generator);
-			addMove(Direction.SOUTH_WEST, mv.getPawnCatch(), generator);
+			addMove(SOUTH_EAST, mv.getPawnCatch(), generator);
+			addMove(SOUTH_WEST, mv.getPawnCatch(), generator);
 		} else {
 			// Standard moves (no catch)
-			addMoves(Direction.NORTH, countAllowed, mv.getPawnNoCatch(), generator);
+			addMoves(NORTH, countAllowed, mv.getPawnNoCatch(), generator);
 			// Catches (excluding En-passant)
-			addMove(Direction.NORTH_EAST, mv.getPawnCatch(), generator);
-			addMove(Direction.NORTH_WEST, mv.getPawnCatch(), generator);
+			addMove(NORTH_EAST, mv.getPawnCatch(), generator);
+			addMove(NORTH_WEST, mv.getPawnCatch(), generator);
 		}
 	}
-	
+
+	private void addPinnedPawnMoves(Direction pinnedDirection) {
+		final boolean black = BLACK == board.getActiveColor();
+		// Take care of promotion when generating move
+		final int promotionRow = getPromotionRow(black);
+		final MoveAdder generator;
+		if (board.getCoordinatesSystem().getRow(from.getIndex())==promotionRow) {
+			generator = black ? BLACK_PROMOTION : WHITE_PROMOTION;
+		} else {
+			generator = DEFAULT;
+		}
+		if (pinnedDirection==SOUTH || pinnedDirection==NORTH) {
+			final int countAllowed = getPawnMaxMoveLength(black, from.getIndex());
+			// No catch moves are allowed and only them
+			addMoves(black ? SOUTH : NORTH, countAllowed, mv.getPawnNoCatch(), generator);
+		} else if (pinnedDirection==SOUTH_EAST || pinnedDirection==NORTH_WEST) {
+			addMove(black ? SOUTH_EAST : NORTH_WEST, mv.getPawnCatch(), generator);
+		} else if (pinnedDirection==SOUTH_WEST || pinnedDirection==NORTH_EAST) {
+			addMove(black ? SOUTH_WEST : NORTH_EAST, mv.getPawnCatch(), generator);
+		}
+	}
+
 	private void addEnPassantMoves() {
 		final boolean black = BLACK == board.getActiveColor();
 		to.reset(board.getEnPassant());
 		if (black) {
 			// Catches (excluding En-passant)
-			addEnPassantMove(Direction.NORTH_EAST, BLACK_PAWN);
-			addEnPassantMove(Direction.NORTH_WEST, BLACK_PAWN);
+			addEnPassantMove(NORTH_EAST, BLACK_PAWN);
+			addEnPassantMove(NORTH_WEST, BLACK_PAWN);
 		} else {
 			// Catches (excluding En-passant)
-			addEnPassantMove(Direction.SOUTH_EAST, WHITE_PAWN);
-			addEnPassantMove(Direction.SOUTH_WEST, WHITE_PAWN);
+			addEnPassantMove(SOUTH_EAST, WHITE_PAWN);
+			addEnPassantMove(SOUTH_WEST, WHITE_PAWN);
 		}
 	}
 	
