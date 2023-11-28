@@ -124,11 +124,11 @@ public class MovesBuilder {
 
 	protected List<Move> getPseudoLegalMoves() {
 		// Ensure moves is computed
-		getMoves();
+		getLegalMoves();
 		return state.sorted(moveComparator);
 	}
 
-	protected List<Move> getMoves() {
+	protected List<Move> getLegalMoves() {
 		if (state.needRefresh) {
 			init();
 			final Color color = board.getActiveColor();
@@ -196,7 +196,7 @@ public class MovesBuilder {
 			addMove(d, mv.getKing(), DEFAULT);
 		}
 		// Castlings
-		if (!board.isCheck()) {
+		if (board.hasCastling() && !board.isCheck()) {
 			// No castlings allowed when you're in check
 			if (WHITE==from.getPiece().getColor()) {
 				tryCastling(Castling.WHITE_KING_SIDE);
@@ -263,7 +263,7 @@ public class MovesBuilder {
 				}
 			}
 		} else if (kingPosition!=kingDestination) {
-			// Warning, in chess960, king can stay at in position during castling
+			// Warning, in chess960, king can stay at its position during castling
 			for (int i = kingDestination; i < kingPosition; i++) {
 				if (attackDetector.isAttacked(i, attacker)) {
 					return false;
@@ -394,7 +394,7 @@ public class MovesBuilder {
 		if (board.isInsufficientMaterial() || board.getHalfMoveCount()>=100 || board.isDrawByRepetition()) {
 			return Status.DRAW;
 		}
-		if (getMoves().isEmpty()) {
+		if (getLegalMoves().isEmpty()) {
 			if (board.isCheck()) {
 				return board.getActiveColor().equals(WHITE) ? Status.BLACK_WON : Status.WHITE_WON;
 			} else {

@@ -143,7 +143,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	
 	@Override
 	public List<Move> getLegalMoves() {
-		return movesBuilder.getMoves();
+		return movesBuilder.getLegalMoves();
 	}
 
 	@Override
@@ -477,6 +477,10 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	@Override
 	public boolean hasCastling(Castling c) {
 		return (c.getMask() & this.castlings) != 0;
+	}
+	
+	public boolean hasCastling() {
+		return this.castlings!=0;
 	}
 	
 	/** Copy another board in this.
