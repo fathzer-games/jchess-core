@@ -413,12 +413,6 @@ public class MovesBuilder {
 		if (piece==null || piece.getColor()!=activeColor) {
 			return false;
 		}
-		// Check piece does not catch its own color piece
-		final int target = move.getTo();
-		final Piece caught = board.getPiece(target);
-		if (caught!=null && caught.getColor()==activeColor) {
-			return false;
-		}
 		// Check promotion is valid
 		final Piece promotion = move.getPromotion();
 		// Reject promotions if moving piece is not a pawn or promotion is king or pawn or
@@ -427,9 +421,11 @@ public class MovesBuilder {
 				|| promotion.getColor()!=activeColor || getPromotionRow(activeColor==BLACK)!=board.getCoordinatesSystem().getRow(src))) {
 			return false;
 		}
+		final int target = move.getTo();
 		init();
 		this.to.reset(src);
 		final boolean isCheck = board.isCheck();
+		final Piece caught = board.getPiece(target);
 		if (piece.getKind()==KING) {
 			final Castling castling = board.getCastling(src, target);
 			if (castling!=null) {
@@ -442,12 +438,12 @@ public class MovesBuilder {
 				return areCastlingCellsFree(this.from, target, rookPosition, rookDestination) &&
 						areCastlingCellsSafe(board.getActiveColor().opposite(), src, target);
 			} else {
-				return !board.isAttacked(target, activeColor.opposite()) && isReachable(KING.getDirections(), target, 1)!=null;
+				return !catchOwnPiece(caught) && !board.isAttacked(target, activeColor.opposite()) && isReachable(KING.getDirections(), target, 1)!=null;
 			}
 		} else {
 			// Test that position is reachable
 			final Direction direction = isReachable(piece, src, target, caught);
-			if (direction==null) {
+			if (catchOwnPiece(caught) || direction==null) {
 				return false;
 			}
 			// Test piece is not pinned
@@ -458,6 +454,10 @@ public class MovesBuilder {
 		}
 	}
 	
+	private boolean catchOwnPiece(Piece caught) {
+		// Check piece does not catch its own color piece
+		return caught!=null && caught.getColor()==board.getActiveColor();
+	}
 
 	private Direction isReachable(Piece piece, int from, int to, Piece caught) {
 		final PieceKind kind = piece.getKind();

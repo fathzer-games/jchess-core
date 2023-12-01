@@ -1,7 +1,6 @@
 package com.fathzer.jchess.generic;
 
 class ChessBoardState {
-	int[] kingPositions;
 	int enPassant;
 	int enPassantDeletePawnIndex;
 	int castlings;
@@ -9,13 +8,12 @@ class ChessBoardState {
 	int halfMoveCount;
 	InsufficientMaterialDetector insufficientMaterialDetector;
 	PinnedDetector pinnedDetector;
-	BoardMoveUnmaker boardMoveUnmaker;
+	MoveHelperHolder moveHelperHolder;
 	long key;
 	MovesBuilder.MovesBuilderState moveBuidlerState;
 	
 	ChessBoardState(ChessBoard board) {
-		this.boardMoveUnmaker = new BoardMoveUnmaker();
-		this.kingPositions = new int[2];
+		this.moveHelperHolder = new MoveHelperHolder();
 		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
 		this.pinnedDetector = new PinnedDetector(board);
 		this.moveBuidlerState = new MovesBuilder.MovesBuilderState();

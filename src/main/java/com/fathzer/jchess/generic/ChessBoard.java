@@ -166,7 +166,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		keyHistory.add(key);
 		final ChessBoardState backup = undoData.get();
 		this.save(backup);
-		final BoardMoveUnmaker bmu = backup.boardMoveUnmaker;
+		final MoveHelperHolder bmu = backup.moveHelperHolder;
 		final int from = move.getFrom();
 		final int to = move.getTo();
 		final Piece movedPiece = board.getPiece(from);
@@ -212,7 +212,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			moveNumber++;
 		}
 		activeColor = movedPiece.getColor().opposite();
+		
 		key ^= board.getZobrist().getTurnKey();
+//if (bmu.get().updateKey(backup.key, board.getZobrist())!=key) {
+//throw new IllegalStateException("It does not work");	
+//}
 		undoData.next();
 		final ChessBoardState stateAfterMove = undoData.get();
 		pinnedDetector = stateAfterMove.pinnedDetector;
@@ -223,7 +227,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	private void save(ChessBoardState state) {
-		System.arraycopy(kingPositions, 0, state.kingPositions, 0, kingPositions.length);
 		state.enPassant = this.enPassant;
 		state.enPassantDeletePawnIndex = this.enPassantDeletePawnIndex;
 		state.castlings = this.castlings;
@@ -242,13 +245,14 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		final ChessBoardState state = undoData.get();
 		this.restore(state);
 		this.activeColor = this.activeColor.opposite();
-		final BoardMoveUnmaker bmu = state.boardMoveUnmaker;
-		bmu.accept(getBoard().pieces);
-		bmu.reset();
+		final MoveHelperHolder holder = state.moveHelperHolder;
+		final MoveHelper helper = holder.get();
+		helper.unmakePieces(getBoard().pieces);
+		helper.unmakeKingPosition(kingPositions, activeColor.ordinal());
+		holder.reset();
 	}
 	
 	private void restore(ChessBoardState state) {
-		System.arraycopy(state.kingPositions, 0, kingPositions, 0, kingPositions.length);
 		this.enPassant = state.enPassant;
 		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
 		this.castlings = state.castlings;
@@ -261,7 +265,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 
 	private int moveOnlyCells (int from, int to) {
-		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
+		final MoveHelperHolder bmu = undoData.get().moveHelperHolder;
 		undoData.next();
 		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
@@ -279,11 +283,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		} else {
 			bmu.setSimple(p, from, getPiece(to), to);
 		}
-		move(from,to, true);
+		move(from, to, true);
 		return getKingPosition(playingColor);
 	}
 
-	private int fastKingMove(int from, int to, BoardMoveUnmaker bmu) {
+	private int fastKingMove(int from, int to, MoveHelperHolder bmu) {
 		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
@@ -291,7 +295,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			// Move the rook too
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
-			movePieces(from, to, initialRookPosition, rookDest, true);
+			castlePieces(from, to, initialRookPosition, rookDest, true);
 			bmu.setCastling(castling, from, to, initialRookPosition, rookDest);
 		} else {
 			bmu.setSimple(getPiece(from), from, getPiece(to), to);
@@ -300,7 +304,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return to;
 	}
 
-	private Castling onKingMove(int from, int to, BoardMoveUnmaker bmu) {
+	private Castling onKingMove(int from, int to, MoveHelperHolder bmu) {
 		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
@@ -309,7 +313,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
 			bmu.setCastling(castling, from, to, initialRookPosition, rookDest);
-			movePieces(from, to, initialRookPosition, rookDest, false);
+			castlePieces(from, to, initialRookPosition, rookDest, false);
 		}
 		final boolean whitePlaying = WHITE.equals(activeColor);
 		eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
@@ -318,17 +322,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return castling;
 	}
 	
-	private void movePieces(int from1, int to1, int from2, int to2, boolean cellsOnly) {
+	private void castlePieces(int from1, int to1, int from2, int to2, boolean cellsOnly) {
 		final Piece moved1 = board.getPiece(from1);
 		final Piece moved2 = board.getPiece(from2);
 		if (!cellsOnly) {
 			// Update zobristKey
-			if (board.getPiece(to1)!=null) {
-				key ^= board.getZobrist().getKey(to1, board.getPiece(to1));
-			}
-			if (board.getPiece(to2)!=null) {
-				key ^= board.getZobrist().getKey(to2, board.getPiece(to2));
-			}
 			key ^= board.getZobrist().getKey(from1, moved1);
 			key ^= board.getZobrist().getKey(to1, moved1);
 			key ^= board.getZobrist().getKey(from2, moved2);
@@ -394,7 +392,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return board.getCoordinatesSystem().getIndex(row, column);
 	}
 
-	private void pawnMove(int from, int to, Piece promotion, BoardMoveUnmaker bmu) {
+	private void pawnMove(int from, int to, Piece promotion, MoveHelperHolder bmu) {
 		final Piece pawn = board.getPiece(from);
 		if (promotion!=null) {
 			board.setPiece(from, promotion);
@@ -638,9 +636,9 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		final int kingPosition = moveOnlyCells(source, dest);
 		final boolean result = !isAttacked(kingPosition, activeColor.opposite());
 		undoData.previous();
-		final BoardMoveUnmaker bmu = undoData.get().boardMoveUnmaker;
-		bmu.accept(getBoard().pieces);
-		bmu.reset();
+		final MoveHelperHolder holder = undoData.get().moveHelperHolder;
+		holder.get().unmakePieces(getBoard().pieces);
+		holder.reset();
 		return result;
 	}
 }
