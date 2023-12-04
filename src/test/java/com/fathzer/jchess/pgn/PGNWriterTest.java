@@ -2,8 +2,6 @@ package com.fathzer.jchess.pgn;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static com.fathzer.jchess.SimpleMove.*;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,20 +11,21 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameBuilders;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.MoveBuilder;
 
-class PGNWriterTest {
+class PGNWriterTest implements MoveBuilder {
 
 	@Test
 	void test() {
 		final Board<Move> board = GameBuilders.STANDARD.newGame();
 		final GameHistory history = new GameHistory(board);
-		history.add(get(board, "e2", "e4"));
-		history.add(get(board, "e7", "e5"));
-		history.add(get(board, "d1", "h5"));
-		history.add(get(board, "d7", "d6"));
-		history.add(get(board, "f1", "c4"));
-		history.add(get(board, "b8", "c6"));
-		history.add(get(board, "h5", "f7"));
+		history.add(move(board, "e2", "e4"));
+		history.add(move(board, "e7", "e5"));
+		history.add(move(board, "d1", "h5"));
+		history.add(move(board, "d7", "d6"));
+		history.add(move(board, "f1", "c4"));
+		history.add(move(board, "b8", "c6"));
+		history.add(move(board, "h5", "f7"));
 		
 		final PGNWriter writer = new PGNWriter();
 		final PGNHeaders headers = new PGNHeaders.Builder()
@@ -50,11 +49,11 @@ class PGNWriterTest {
 	void bug20231025() {
 		final Board<Move> board = GameBuilders.STANDARD.newGame();
 		final GameHistory history = new GameHistory(board);
-		history.add(get(board, "c2", "c4"));
-		history.add(get(board, "g8", "f6"));
-		history.add(get(board, "c4", "c5"));
-		history.add(get(board, "b7", "b5"));
-		history.add(get(board, "c5", "b6"));
+		history.add(move(board, "c2", "c4"));
+		history.add(move(board, "g8", "f6"));
+		history.add(move(board, "c4", "c5"));
+		history.add(move(board, "b7", "b5"));
+		history.add(move(board, "c5", "b6"));
 		final PGNWriter writer = new PGNWriter();
 		final List<String> pgn = writer.getPGN(new PGNHeaders.Builder().build(), history);
 		

@@ -27,25 +27,47 @@ import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.movevalidator.MoveValidator;
 import com.fathzer.jchess.generic.movevalidator.MoveValidatorBuilder;
 
+import lombok.Setter;
+
 public class MovesBuilder {
-	@FunctionalInterface
+	private enum Mode {LEGAL, PSEUDO, QUIESCE}
+
 	public interface MoveAdder {
-		void add(List<Move> moves, int from, int to);
+		void setList(List<Move> moves);
+		void add(int from, int to);
 	}
 	
-	private static final MoveAdder DEFAULT = (moves, f, t) -> moves.add(new BasicMove(f,t));
-	private static final MoveAdder WHITE_PROMOTION = (moves, f, t) -> {
-		moves.add(new BasicMove(f, t, WHITE_KNIGHT));
-		moves.add(new BasicMove(f, t, WHITE_QUEEN));
-		moves.add(new BasicMove(f, t, WHITE_ROOK));
-		moves.add(new BasicMove(f, t, WHITE_BISHOP));
-	};
-	private static final MoveAdder BLACK_PROMOTION = (moves, f, t) -> {
-		moves.add(new BasicMove(f, t, BLACK_KNIGHT));
-		moves.add(new BasicMove(f, t, BLACK_QUEEN));
-		moves.add(new BasicMove(f, t, BLACK_ROOK));
-		moves.add(new BasicMove(f, t, BLACK_BISHOP));
-	};
+	private static class SimpleMoveAdder implements MoveAdder {
+		@Setter
+		protected List<Move> list;
+
+		@Override
+		public void add(int from, int to) {
+			list.add(new BasicMove(from, to));
+		}
+	}
+	
+	private static class PromotionAdder extends SimpleMoveAdder {
+		@Setter
+		private Color playingColor;
+		@Override
+		public void add(int from, int to) {
+			if (playingColor==WHITE) {
+				list.add(new BasicMove(from, to, WHITE_KNIGHT));
+				list.add(new BasicMove(from, to, WHITE_QUEEN));
+				list.add(new BasicMove(from, to, WHITE_ROOK));
+				list.add(new BasicMove(from, to, WHITE_BISHOP));
+			} else {
+				list.add(new BasicMove(from, to, BLACK_KNIGHT));
+				list.add(new BasicMove(from, to, BLACK_QUEEN));
+				list.add(new BasicMove(from, to, BLACK_ROOK));
+				list.add(new BasicMove(from, to, BLACK_BISHOP));
+			}
+		}
+	}
+	
+	protected final MoveAdder defaultMoveAdder = new SimpleMoveAdder();
+	protected final PromotionAdder promotionAdder = new PromotionAdder();
 
 	static class MovesBuilderState {
 		private static final int MAX_POSSIBLE_MOVES = 218;
@@ -54,7 +76,6 @@ public class MovesBuilder {
 		List<Move> pseudoLegalMoves;
 		boolean needRefreshPseudoLegal;
 		Status status;
-		boolean sorted; //TODO Remove
 		
 		public MovesBuilderState() {
 			legalMoves = new ArrayList<>(MAX_POSSIBLE_MOVES);
@@ -67,14 +88,6 @@ public class MovesBuilder {
 			this.needRefreshLegal = true;
 			this.needRefreshPseudoLegal = true;
 			this.status = null;
-		}
-		
-		public List<Move> sorted(Comparator<Move> comparator) {
-			if (!sorted && comparator!=null) {
-				legalMoves.sort(comparator);
-			}
-			sorted = true;
-			return legalMoves;
 		}
 	}
 	
@@ -112,8 +125,8 @@ public class MovesBuilder {
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
 		this.moveComparator = moveComparator;
-		if (state.legalMoves!=null && moveComparator!=null && state.sorted) {
-			state.legalMoves.sort(moveComparator);
+		if (!state.needRefreshPseudoLegal && moveComparator!=null) {
+			state.pseudoLegalMoves.sort(moveComparator);
 		}
 	}
 
@@ -123,48 +136,64 @@ public class MovesBuilder {
 	
 	private void init() {
 		this.mv = mvBuilder.get();
+		this.promotionAdder.setPlayingColor(board.getActiveColor());
 		this.from.reset(0);
+	}
+	
+	private void setMode(Mode mode) {
+		List<Move> moves = mode==Mode.LEGAL?state.legalMoves:state.pseudoLegalMoves;
+		moves.clear();
+		this.defaultMoveAdder.setList(moves);
+		this.promotionAdder.setList(moves);
 	}
 
 	protected List<Move> getPseudoLegalMoves() {
-		// Ensure moves is computed
-		getLegalMoves();
-		return state.sorted(moveComparator);
+		if (state.needRefreshPseudoLegal) {
+			buildMoves(Mode.PSEUDO);
+			if (moveComparator!=null) {
+				state.pseudoLegalMoves.sort(moveComparator);
+			}
+			state.needRefreshPseudoLegal = false;
+		}
+		return state.pseudoLegalMoves;
 	}
 
 	protected List<Move> getLegalMoves() {
 		if (state.needRefreshLegal) {
-			state.legalMoves.clear();
-			init();
-			final Color color = board.getActiveColor();
-			if (board.isDoubleCheck()) {
-				// If double check, only king can move
-				final int kingPosition = board.getKingPosition(color);
-				from.reset(kingPosition);
-				to.reset(kingPosition);
-				addKingMoves();
-			} else {
-				do {
-					if (from.getPiece()!=null && color==from.getPiece().getColor()) {
-						addPossibleMoves();
-					}
-				} while (from.next());
-				if (board.getEnPassant()>=0) {
-					// Generate en passant moves
-					addEnPassantMoves();
-				}
-			}
-			state.sorted = false;
+			buildMoves(Mode.LEGAL);
 			state.needRefreshLegal = false;
 		}
 		return state.legalMoves;
 	}
 	
-	private void addPossibleMoves() {
+	private void buildMoves(Mode mode) {
+		setMode(mode);
+		init();
+		final Color color = board.getActiveColor();
+		if (board.isDoubleCheck()) {
+			// If double check, only king can move
+			final int kingPosition = board.getKingPosition(color);
+			from.reset(kingPosition);
+			to.reset(kingPosition);
+			addKingMoves(mode);
+		} else {
+			do {
+				if (from.getPiece()!=null && color==from.getPiece().getColor()) {
+					addPossibleMoves(mode);
+				}
+			} while (from.next());
+			if (board.getEnPassant()>=0) {
+				// Generate en passant moves
+				addEnPassantMoves(mode!=Mode.LEGAL);
+			}
+		}
+	}
+	
+	private void addPossibleMoves(Mode mode) {
 		final Piece piece = from.getPiece();
 		to.reset(from.getIndex());
 		if (KING.equals(piece.getKind())) {
-			addKingMoves();
+			addKingMoves(mode);
 		} else {
 			final Direction pinnedDirection = board.getPinnedDetector().apply(from.getIndex());
 			if (ROOK.equals(piece.getKind()) || BISHOP.equals(piece.getKind()) || QUEEN.equals(piece.getKind())) {
@@ -179,7 +208,7 @@ public class MovesBuilder {
 			} else if (KNIGHT.equals(piece.getKind())) {
 				if (pinnedDirection==null) {
 					for (Direction d:KNIGHT.getDirections()) {
-						addMove(d, mv.getOthers(), DEFAULT);
+						addMove(d, mv.getOthers(), defaultMoveAdder);
 					}
 				}
 			} else if (PAWN.equals(piece.getKind())) {
@@ -194,11 +223,11 @@ public class MovesBuilder {
 		}
 	}
 	
-	protected void addKingMoves() {
+	protected void addKingMoves(Mode mode) {
 		// We can think remember the free safe cells could be reused in castling //TODO
 		// StandardMoves => King can't go to attacked cell
 		for (Direction d:KING.getDirections()) {
-			addMove(d, mv.getKing(), DEFAULT);
+			addMove(d, mv.getKing(), defaultMoveAdder);
 		}
 		// Castlings
 		if (board.hasCastling() && !board.isCheck()) {
@@ -220,21 +249,20 @@ public class MovesBuilder {
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(from, kingDestination, rookPosition, rookDestination) &&
 					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination)) {
-				addCastling(state.legalMoves, kingPosition, rookPosition, kingDestination, rookDestination);
+				addCastling(kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
 	}
 
 	/** Adds a castling to the list of moves.
 	 * <br>This default implementation creates a move from the king's current position to its destination.
-	 * @param moves The moves list in which to add the move.
 	 * @param kingPosition The current king's position.
 	 * @param rookPosition The current rook's position.
 	 * @param kingDestination The king's destination.
 	 * @param rookDestination The rook's destination.
 	 */
-	protected void addCastling(List<Move> moves, int kingPosition, int rookPosition, int kingDestination, int rookDestination) {
-		DEFAULT.add(moves, kingPosition, kingDestination);
+	protected void addCastling(int kingPosition, int rookPosition, int kingDestination, int rookDestination) {
+		defaultMoveAdder.add(kingPosition, kingDestination);
 	}
 	
 	protected boolean areCastlingCellsFree(BoardExplorer exp, int kingDestination, int rookPosition, int rookDestination) {
@@ -293,9 +321,9 @@ public class MovesBuilder {
 		final int promotionRow = getPromotionRow(black);
 		final MoveAdder generator;
 		if (board.getCoordinatesSystem().getRow(from.getIndex())==promotionRow) {
-			generator = black ? BLACK_PROMOTION : WHITE_PROMOTION;
+			generator = promotionAdder;
 		} else {
-			generator = DEFAULT;
+			generator = defaultMoveAdder;
 		}
 		final int countAllowed = getPawnMaxMoveLength(black, from.getIndex());
 		if (black) {
@@ -319,9 +347,9 @@ public class MovesBuilder {
 		final int promotionRow = getPromotionRow(black);
 		final MoveAdder generator;
 		if (board.getCoordinatesSystem().getRow(from.getIndex())==promotionRow) {
-			generator = black ? BLACK_PROMOTION : WHITE_PROMOTION;
+			generator = promotionAdder;
 		} else {
-			generator = DEFAULT;
+			generator = defaultMoveAdder;
 		}
 		if (pinnedDirection==SOUTH || pinnedDirection==NORTH) {
 			final int countAllowed = getPawnMaxMoveLength(black, from.getIndex());
@@ -334,24 +362,24 @@ public class MovesBuilder {
 		}
 	}
 
-	private void addEnPassantMoves() {
+	private void addEnPassantMoves(boolean ignoreKingSafety) {
 		final boolean black = BLACK == board.getActiveColor();
 		to.reset(board.getEnPassant());
 		if (black) {
 			// Catches (excluding En-passant)
-			addEnPassantMove(NORTH_EAST, BLACK_PAWN);
-			addEnPassantMove(NORTH_WEST, BLACK_PAWN);
+			addEnPassantMove(NORTH_EAST, BLACK_PAWN, ignoreKingSafety);
+			addEnPassantMove(NORTH_WEST, BLACK_PAWN, ignoreKingSafety);
 		} else {
 			// Catches (excluding En-passant)
-			addEnPassantMove(SOUTH_EAST, WHITE_PAWN);
-			addEnPassantMove(SOUTH_WEST, WHITE_PAWN);
+			addEnPassantMove(SOUTH_EAST, WHITE_PAWN, ignoreKingSafety);
+			addEnPassantMove(SOUTH_WEST, WHITE_PAWN, ignoreKingSafety);
 		}
 	}
 	
-	private void addEnPassantMove(Direction d, Piece expectedPiece) {
+	private void addEnPassantMove(Direction d, Piece expectedPiece, boolean ignoreKingSafety) {
 		to.start(d);
-		if (to.next() && to.getPiece()==expectedPiece && board.isKingSafeAfterMove(to.getIndex(), board.getEnPassant())) {
-			DEFAULT.add(state.legalMoves, to.getIndex(), board.getEnPassant());
+		if (to.next() && to.getPiece()==expectedPiece && (ignoreKingSafety || board.isKingSafeAfterMove(to.getIndex(), board.getEnPassant()))) {
+			defaultMoveAdder.add(to.getIndex(), board.getEnPassant());
 		}
 	}
 	
@@ -359,7 +387,7 @@ public class MovesBuilder {
 		to.start(direction);
 		while (to.next()) {
 			if (validator.test(from, to)) {
-				DEFAULT.add(state.legalMoves, from.getIndex(), to.getIndex());
+				defaultMoveAdder.add(from.getIndex(), to.getIndex());
 			}
 			if (to.getPiece()!=null) {
 				break;
@@ -372,7 +400,7 @@ public class MovesBuilder {
 		int iteration = 0;
 		while (to.next()) {
 			if (validator.test(from, to)) {
-				moveGenerator.add(state.legalMoves, from.getIndex(), to.getIndex());
+				moveGenerator.add(from.getIndex(), to.getIndex());
 			}
 			iteration++;
 			if (iteration>=maxIteration || to.getPiece()!=null) {
@@ -384,7 +412,7 @@ public class MovesBuilder {
 	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator, MoveAdder moveGenerator)  {
 		to.start(direction);
 		if (to.next() && validator.test(from, to)) {
-			moveGenerator.add(state.legalMoves, from.getIndex(), to.getIndex());
+			moveGenerator.add(from.getIndex(), to.getIndex());
 		}
 	}
 	

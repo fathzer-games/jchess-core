@@ -1,15 +1,14 @@
 package com.fathzer.jchess.generic;
 
-import static com.fathzer.jchess.SimpleMove.*;
-
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.MoveBuilder;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.fen.FENUtils;
 
 
-class MovesCheckerTest extends GenericMovesCheckerTest<Move> {
+class MovesCheckerTest extends GenericMovesCheckerTest<Move> implements MoveBuilder {
 	private static final Board<Move> BOARD = FENUtils.from(FENUtils.NEW_STANDARD_GAME);
 
 	public MoveGenerator<Move> fromFEN(String fen) {
@@ -19,10 +18,10 @@ class MovesCheckerTest extends GenericMovesCheckerTest<Move> {
 		return move.toString(BOARD.getCoordinatesSystem());
 	}
 	public Move toMove(String from, String to) {
-		return get(BOARD, from, to);
+		return move(BOARD, from, to);
 	}
 	public Move toMove(String from, String to, String promotion) {
 		Piece piece = Piece.valueOf(promotion);
-		return get(BOARD, from, to, piece);
+		return move(BOARD, from, to, piece);
 	}
 }
