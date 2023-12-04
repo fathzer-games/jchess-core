@@ -1,7 +1,6 @@
 package com.fathzer.jchess.generic;
 
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.ZobristKeyBuilder;
 
 public abstract class MoveHelper {
 	protected Piece piece;
@@ -12,10 +11,16 @@ public abstract class MoveHelper {
 	public void unmakeKingPosition(int[] kingPositions, int index) {
 		// Does nothing by default
 	}
-	public long updateKey(long key, ZobristKeyBuilder zobrist) {
-		key ^= zobrist.getKey(fromIndex, piece);
-		key ^= zobrist.getKey(toIndex, piece);
-		key ^= zobrist.getTurnKey();
-		return key;
+	public boolean isCastling() {
+		return false;
+	}
+	public boolean isKingSafetyTestRequired() {
+		return true;
+	}
+	public boolean shouldIncHalfMoveCount() {
+		return false;
+	}
+	public Piece getCaptured() {
+		return null;
 	}
 }

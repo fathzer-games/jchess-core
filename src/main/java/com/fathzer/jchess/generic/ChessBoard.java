@@ -2,6 +2,7 @@ package com.fathzer.jchess.generic;
 
 import static com.fathzer.games.Color.*;
 import static com.fathzer.jchess.Piece.*;
+import static com.fathzer.jchess.PieceKind.*;
 import static com.fathzer.jchess.Direction.*;
 
 import java.util.ArrayList;
@@ -25,7 +26,6 @@ import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 
@@ -92,7 +92,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		this.kingPositions = new int[2];
 		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
 		for (PieceWithPosition p : pieces) {
-			if (PieceKind.KING.equals(p.getPiece().getKind())) {
+			if (KING==p.getPiece().getKind()) {
 				final int dest = board.getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
 				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
 			} else {
@@ -155,55 +155,62 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 * @param move a Move.
 	 * @param confidence The confidence we can have in the move.
 	 * <br>WARNING, this method does not verify the move is valid if confidence is not {@link MoveConfidence#UNSAFE}.
-	 * <br>In such a case, passing a invalid move may have unpredictable results and leave the board in an inconsistent state. 
-	 * @throws IllegalArgumentException if there's no piece at move.getFrom().
+	 * <br>In such a case, passing a invalid move may have unpredictable results. It can leave the board in an inconsistent state or throw an exception.
 	 */
 	@Override
 	public boolean makeMove(Move move, MoveConfidence confidence) {
 		if (confidence==MoveConfidence.UNSAFE && !movesBuilder.isLegal(move)) {
 			return false;
 		}
-		keyHistory.add(key);
 		final ChessBoardState backup = undoData.get();
 		this.save(backup);
-		final MoveHelperHolder bmu = backup.moveHelperHolder;
+		final MoveHelperHolder mhh = backup.moveHelperHolder;
 		final int from = move.getFrom();
 		final int to = move.getTo();
 		final Piece movedPiece = board.getPiece(from);
-		Castling castling = null;
-		if (PieceKind.PAWN.equals(movedPiece.getKind())) {
-			pawnMove(from, to, move.getPromotion(), bmu);
+		if (PAWN==movedPiece.getKind()) {
+			pawnMove(from, to, move.getPromotion(), mhh);
 		} else {
-			this.clearEnPassant();
-			if (PieceKind.KING.equals(movedPiece.getKind())) {
-				castling = onKingMove(from, to, bmu);
-			} else if (castlings!=0 && PieceKind.ROOK.equals(movedPiece.getKind())) {
-				// Erase castling if needed when rook moves
-				onRookEvent(from);
+			if (KING==movedPiece.getKind()) {
+				if (onKingMove(movedPiece, from, to, mhh, confidence==MoveConfidence.PSEUDO_LEGAL)) {
+					return false;
+				} else {
+					this.clearEnPassant();
+				}
+			} else {
+				this.clearEnPassant();
+				mhh.setSimple(movedPiece, from, getPiece(to), to);
+				if (castlings!=0 && ROOK==movedPiece.getKind()) {
+					// Erase castling if needed when rook moves
+					onRookEvent(from);
+				}
 			}
 		}
-		final boolean incHalfCount;
-		if (castling==null) {
-			final Piece erasedPiece = board.getPiece(to);
-			if (erasedPiece!=null && castlings!=0 && PieceKind.ROOK.equals(erasedPiece.getKind())) {
+		final MoveHelper helper = mhh.get();
+		if (!helper.isCastling()) {
+			final Piece captured = helper.getCaptured();
+			if (castlings!=0 && captured!=null && ROOK==captured.getKind()) {
 				// Erase castling if needed when rook is captured
 				onRookEvent(to);
 			}
-			if (!bmu.isSet()) {
-				bmu.setSimple(movedPiece, from, erasedPiece, to);
-			}
 			move(from, to, false);
-			if (erasedPiece!=null) {
-				incHalfCount = true;
-				insufficientMaterialDetector.remove(erasedPiece);
-			} else {
-				incHalfCount = !PieceKind.PAWN.equals(movedPiece.getKind());
+			if (captured!=null) {
+				insufficientMaterialDetector.remove(captured);
 			}
-		} else {
-			incHalfCount = true;
+		}
+		if (confidence==MoveConfidence.PSEUDO_LEGAL && helper.isKingSafetyTestRequired() &&
+				attackDetector.isAttacked(getKingPosition(activeColor), activeColor.opposite())) {
+			this.enPassant = backup.enPassant;
+			this.enPassantDeletePawnIndex = backup.enPassantDeletePawnIndex;
+			this.castlings = backup.castlings;
+			this.insufficientMaterialDetector.copy(backup.insufficientMaterialDetector);
+			this.key = backup.key;
+			helper.unmakePieces(board.pieces);
+			helper.unmakeKingPosition(kingPositions, activeColor.ordinal());
+			return false;
 		}
 		
-		if (incHalfCount) {
+		if (helper.shouldIncHalfMoveCount()) {
 			halfMoveCount++;
 		} else {
 			halfMoveCount = 0;
@@ -214,9 +221,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		activeColor = movedPiece.getColor().opposite();
 		
 		key ^= board.getZobrist().getTurnKey();
-//if (bmu.get().updateKey(backup.key, board.getZobrist())!=key) {
-//throw new IllegalStateException("It does not work");	
-//}
+		keyHistory.add(backup.key);
 		undoData.next();
 		final ChessBoardState stateAfterMove = undoData.get();
 		pinnedDetector = stateAfterMove.pinnedDetector;
@@ -249,45 +254,44 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		final MoveHelper helper = holder.get();
 		helper.unmakePieces(getBoard().pieces);
 		helper.unmakeKingPosition(kingPositions, activeColor.ordinal());
-		holder.reset();
 	}
 	
 	private void restore(ChessBoardState state) {
 		this.enPassant = state.enPassant;
 		this.enPassantDeletePawnIndex = state.enPassantDeletePawnIndex;
 		this.castlings = state.castlings;
+		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
+		this.key = state.key;
 		this.moveNumber = state.moveNumber;
 		this.halfMoveCount = state.halfMoveCount;
-		this.insufficientMaterialDetector.copy(state.insufficientMaterialDetector);
 		this.pinnedDetector = state.pinnedDetector;
-		this.key = state.key;
 		this.movesBuilder.restoreFrom(state); 
 	}
 
 	private int moveOnlyCells (int from, int to) {
-		final MoveHelperHolder bmu = undoData.get().moveHelperHolder;
+		final MoveHelperHolder mhh = undoData.get().moveHelperHolder;
 		undoData.next();
 		final Piece p = board.getPiece(from);
 		final Color playingColor = p.getColor();
-		if (PieceKind.KING.equals(p.getKind())) {
-			return fastKingMove(from, to, bmu);
+		if (KING==p.getKind()) {
+			return fastKingMove(from, to, mhh);
 		}
-		if (PieceKind.PAWN.equals(p.getKind())) {
+		if (PAWN==p.getKind()) {
 			if (to==enPassant) {
 				// en-passant catch => delete adverse's pawn
 				board.setPiece(enPassantDeletePawnIndex, null);
-				bmu.setEnPassant(p, from, to, enPassantDeletePawnIndex);
+				mhh.setEnPassant(p, from, to, enPassantDeletePawnIndex);
 			} else {
-				bmu.setSimple(p, from, getPiece(to), to);
+				mhh.setSimple(p, from, getPiece(to), to);
 			}
 		} else {
-			bmu.setSimple(p, from, getPiece(to), to);
+			mhh.setSimple(p, from, getPiece(to), to);
 		}
 		move(from, to, true);
 		return getKingPosition(playingColor);
 	}
 
-	private int fastKingMove(int from, int to, MoveHelperHolder bmu) {
+	private int fastKingMove(int from, int to, MoveHelperHolder mhh) {
 		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
@@ -296,30 +300,45 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
 			castlePieces(from, to, initialRookPosition, rookDest, true);
-			bmu.setCastling(castling, from, to, initialRookPosition, rookDest);
+			mhh.setCastling(castling, from, to, initialRookPosition, rookDest);
 		} else {
-			bmu.setSimple(getPiece(from), from, getPiece(to), to);
+			mhh.setSimple(getPiece(from), from, getPiece(to), to);
 			move(from,to, true);
 		}
 		return to;
 	}
 
-	private Castling onKingMove(int from, int to, MoveHelperHolder bmu) {
+	private boolean onKingMove(Piece movedPiece, int from, int to, MoveHelperHolder mhh, boolean checkIsValid) {
 		final Castling castling = getCastling(from, to);
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
 			to = getKingDestination(castling); 
+			if (checkIsValid && !movesBuilder.areCastlingCellsSafe(activeColor.opposite(), from, to)) {
+				return true;
+			}
 			// Move the rook too
 			final int rookDest = to + castling.getSide().getRookOffset();
 			final int initialRookPosition = getInitialRookPosition(castling);
-			bmu.setCastling(castling, from, to, initialRookPosition, rookDest);
+			mhh.setCastling(castling, from, to, initialRookPosition, rookDest);
 			castlePieces(from, to, initialRookPosition, rookDest, false);
+		} else {
+			mhh.setSimple(movedPiece, from, getPiece(to), to);
 		}
-		final boolean whitePlaying = WHITE.equals(activeColor);
-		eraseCastlings(whitePlaying ? Castling.WHITE_KING_SIDE : Castling.BLACK_KING_SIDE, 
-				whitePlaying ? Castling.WHITE_QUEEN_SIDE : Castling.BLACK_QUEEN_SIDE);
+		eraseActiveColorCastlings();
 		kingPositions[activeColor.ordinal()] = to;
-		return castling;
+		return false;
+	}
+	
+	private void eraseActiveColorCastlings() {
+		if (castlings!=0) {
+			if (WHITE==activeColor) {
+				clearCastling(Castling.WHITE_KING_SIDE);
+				clearCastling(Castling.WHITE_QUEEN_SIDE);
+			} else {
+				clearCastling(Castling.BLACK_KING_SIDE);
+				clearCastling(Castling.BLACK_QUEEN_SIDE);
+			}
+		}
 	}
 	
 	private void castlePieces(int from1, int to1, int from2, int to2, boolean cellsOnly) {
@@ -360,7 +379,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private void onRookEvent(int cell) {
 		for (Castling castling : Castling.ALL) {
 			if (cell==getInitialRookPosition(castling)) {
-				eraseCastlings(castling);
+				clearCastling(castling);
 				break;
 			}
 		}
@@ -392,7 +411,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		return board.getCoordinatesSystem().getIndex(row, column);
 	}
 
-	private void pawnMove(int from, int to, Piece promotion, MoveHelperHolder bmu) {
+	private void pawnMove(int from, int to, Piece promotion, MoveHelperHolder mhh) {
 		final Piece pawn = board.getPiece(from);
 		if (promotion!=null) {
 			board.setPiece(from, promotion);
@@ -402,14 +421,12 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 		if (to==enPassant) {
 			// en-passant catch => delete adverse's pawn
+			mhh.setEnPassant(pawn, from, to, enPassantDeletePawnIndex);
 			final int pos = enPassantDeletePawnIndex;
-			final Piece caught = board.getPiece(pos);
-			insufficientMaterialDetector.remove(caught);
-			key ^= board.getZobrist().getKey(pos, caught);
+			key ^= board.getZobrist().getKey(pos, mhh.get().getCaptured());
 			board.setPiece(pos, null);
-			bmu.setEnPassant(pawn, from, to, pos);
 		} else {
-			bmu.setSimple(pawn, from, board.getPiece(to), to);
+			mhh.setSimple(pawn, from, board.getPiece(to), to);
 		}
 		clearEnPassant();
 		
@@ -421,15 +438,13 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		}
 	}
 	
-	/** Erases castlings.
-	 * @param castlings The castling to be erased.
+	/** Clears a castling.
+	 * @param castling The castling to be erased.
 	 */
-	private void eraseCastlings(Castling... castlings) {
-		for (Castling castling : castlings) {
-			if ((this.castlings & castling.getMask()) != 0) {
-				key ^= board.getZobrist().getKey(castling);
-				this.castlings -= castling.getMask();
-			}
+	public void clearCastling(Castling castling) {
+		if ((this.castlings & castling.getMask()) != 0) {
+			key ^= board.getZobrist().getKey(castling);
+			this.castlings -= castling.getMask();
 		}
 	}
 	
@@ -638,7 +653,6 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		undoData.previous();
 		final MoveHelperHolder holder = undoData.get().moveHelperHolder;
 		holder.get().unmakePieces(getBoard().pieces);
-		holder.reset();
 		return result;
 	}
 }

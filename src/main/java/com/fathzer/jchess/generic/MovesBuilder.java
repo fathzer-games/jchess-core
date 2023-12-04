@@ -49,28 +49,32 @@ public class MovesBuilder {
 
 	static class MovesBuilderState {
 		private static final int MAX_POSSIBLE_MOVES = 218;
-		List<Move> moves;
-		boolean sorted;
-		boolean needRefresh;
+		List<Move> legalMoves;
+		boolean needRefreshLegal;
+		List<Move> pseudoLegalMoves;
+		boolean needRefreshPseudoLegal;
 		Status status;
+		boolean sorted; //TODO Remove
 		
 		public MovesBuilderState() {
-			moves = new ArrayList<>(MAX_POSSIBLE_MOVES);
-			needRefresh = true;
+			legalMoves = new ArrayList<>(MAX_POSSIBLE_MOVES);
+			pseudoLegalMoves = new ArrayList<>(MAX_POSSIBLE_MOVES);
+			needRefreshLegal = true;
+			needRefreshPseudoLegal = true;
 		}
 
 		public void invalidate() {
-			this.moves.clear();
-			this.needRefresh = true;
+			this.needRefreshLegal = true;
+			this.needRefreshPseudoLegal = true;
 			this.status = null;
 		}
 		
 		public List<Move> sorted(Comparator<Move> comparator) {
 			if (!sorted && comparator!=null) {
-				moves.sort(comparator);
+				legalMoves.sort(comparator);
 			}
 			sorted = true;
-			return moves;
+			return legalMoves;
 		}
 	}
 	
@@ -108,8 +112,8 @@ public class MovesBuilder {
 	
 	public void setMoveComparator(Comparator<Move> moveComparator) {
 		this.moveComparator = moveComparator;
-		if (state.moves!=null && moveComparator!=null && state.sorted) {
-			state.moves.sort(moveComparator);
+		if (state.legalMoves!=null && moveComparator!=null && state.sorted) {
+			state.legalMoves.sort(moveComparator);
 		}
 	}
 
@@ -129,7 +133,8 @@ public class MovesBuilder {
 	}
 
 	protected List<Move> getLegalMoves() {
-		if (state.needRefresh) {
+		if (state.needRefreshLegal) {
+			state.legalMoves.clear();
 			init();
 			final Color color = board.getActiveColor();
 			if (board.isDoubleCheck()) {
@@ -150,9 +155,9 @@ public class MovesBuilder {
 				}
 			}
 			state.sorted = false;
-			state.needRefresh = false;
+			state.needRefreshLegal = false;
 		}
-		return state.moves;
+		return state.legalMoves;
 	}
 	
 	private void addPossibleMoves() {
@@ -215,7 +220,7 @@ public class MovesBuilder {
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(from, kingDestination, rookPosition, rookDestination) &&
 					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination)) {
-				addCastling(state.moves, kingPosition, rookPosition, kingDestination, rookDestination);
+				addCastling(state.legalMoves, kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
 	}
@@ -346,7 +351,7 @@ public class MovesBuilder {
 	private void addEnPassantMove(Direction d, Piece expectedPiece) {
 		to.start(d);
 		if (to.next() && to.getPiece()==expectedPiece && board.isKingSafeAfterMove(to.getIndex(), board.getEnPassant())) {
-			DEFAULT.add(state.moves, to.getIndex(), board.getEnPassant());
+			DEFAULT.add(state.legalMoves, to.getIndex(), board.getEnPassant());
 		}
 	}
 	
@@ -354,7 +359,7 @@ public class MovesBuilder {
 		to.start(direction);
 		while (to.next()) {
 			if (validator.test(from, to)) {
-				DEFAULT.add(state.moves, from.getIndex(), to.getIndex());
+				DEFAULT.add(state.legalMoves, from.getIndex(), to.getIndex());
 			}
 			if (to.getPiece()!=null) {
 				break;
@@ -367,7 +372,7 @@ public class MovesBuilder {
 		int iteration = 0;
 		while (to.next()) {
 			if (validator.test(from, to)) {
-				moveGenerator.add(state.moves, from.getIndex(), to.getIndex());
+				moveGenerator.add(state.legalMoves, from.getIndex(), to.getIndex());
 			}
 			iteration++;
 			if (iteration>=maxIteration || to.getPiece()!=null) {
@@ -379,7 +384,7 @@ public class MovesBuilder {
 	public void addMove(Direction direction, BiPredicate<BoardExplorer, BoardExplorer> validator, MoveAdder moveGenerator)  {
 		to.start(direction);
 		if (to.next() && validator.test(from, to)) {
-			moveGenerator.add(state.moves, from.getIndex(), to.getIndex());
+			moveGenerator.add(state.legalMoves, from.getIndex(), to.getIndex());
 		}
 	}
 	

@@ -6,15 +6,14 @@ import com.fathzer.games.Color;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
-import com.fathzer.jchess.ZobristKeyBuilder;
 
 public class MoveHelperHolder implements Supplier<MoveHelper> {
-	private final SimpleMoveBoardUnmaker simple = new SimpleMoveBoardUnmaker();
-	private final EnPassantMoveBoardUnmaker enPassant = new EnPassantMoveBoardUnmaker();
-	private final CastlingMoveBoardUnmaker castling = new CastlingMoveBoardUnmaker();
+	private final SimpleMoveHelper simple = new SimpleMoveHelper();
+	private final EnPassantMoveHelper enPassant = new EnPassantMoveHelper();
+	private final CastlingMoveHelper castling = new CastlingMoveHelper();
 	private MoveHelper unmakeAction;
 	
-	private static class SimpleMoveBoardUnmaker extends MoveHelper {
+	private static class SimpleMoveHelper extends MoveHelper {
 		private Piece toWas;
 		
 		@Override
@@ -31,15 +30,22 @@ public class MoveHelperHolder implements Supplier<MoveHelper> {
 		}
 
 		@Override
-		public long updateKey(long key, ZobristKeyBuilder zobrist) {
-			if (toWas!=null) {
-				key ^= zobrist.getKey(toIndex, toWas);
-			}
-			return super.updateKey(key, zobrist);
+		public boolean isKingSafetyTestRequired() {
+			return piece.getKind()==PieceKind.KING;
+		}
+
+		@Override
+		public boolean shouldIncHalfMoveCount() {
+			return PieceKind.PAWN!=piece.getKind() && toWas==null;
+		}
+
+		@Override
+		public Piece getCaptured() {
+			return toWas;
 		}
 	}
 	
-	private static class EnPassantMoveBoardUnmaker extends MoveHelper {
+	private static class EnPassantMoveHelper extends MoveHelper {
 		private int capturedIndex;
 		
 		@Override
@@ -50,17 +56,12 @@ public class MoveHelperHolder implements Supplier<MoveHelper> {
 		}
 		
 		@Override
-		public long updateKey(long key, ZobristKeyBuilder zobrist) {
-			key ^= zobrist.getKey(capturedIndex, getCaptured());
-			return super.updateKey(key, zobrist);
-		}
-		
-		private Piece getCaptured() {
+		public Piece getCaptured() {
 			return piece==Piece.BLACK_PAWN ? Piece.WHITE_PAWN : Piece.BLACK_PAWN;
-		}
+		}	
 	}
 
-	private static class CastlingMoveBoardUnmaker  extends MoveHelper {
+	private static class CastlingMoveHelper  extends MoveHelper {
 		private int rookFrom;
 		private int rookTo;
 
@@ -79,9 +80,13 @@ public class MoveHelperHolder implements Supplier<MoveHelper> {
 		}
 
 		@Override
-		public long updateKey(long key, ZobristKeyBuilder zobrist) {
-throw new IllegalStateException("Not yet implemented"); // FIXME
-//			return super.updateKey(key, zobrist);
+		public boolean shouldIncHalfMoveCount() {
+			return true;
+		}
+
+		@Override
+		public boolean isCastling() {
+			return true;
 		}
 	}
 
@@ -89,14 +94,6 @@ throw new IllegalStateException("Not yet implemented"); // FIXME
 		return this.unmakeAction;
 	}
 	
-	public boolean isSet() {
-		return this.unmakeAction != null;
-	}
-	
-	public void reset() {
-		this.unmakeAction = null;
-	}
-
 	public void setSimple(Piece fromWas, int fromIndex, Piece toWas, int toIndex) {
 		simple.fromIndex = fromIndex;
 		simple.piece = fromWas;

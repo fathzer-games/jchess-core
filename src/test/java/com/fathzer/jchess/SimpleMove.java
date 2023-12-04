@@ -8,11 +8,11 @@ public class SimpleMove implements Move {
 	private final int to;
 	private Piece promoted;
 	
-	public SimpleMove(CoordinatesSystem cs, String from, String to) {
+	private SimpleMove(CoordinatesSystem cs, String from, String to) {
 		this(cs, from, to, null);
 	}
 
-	public SimpleMove(CoordinatesSystem cs, String from, String to, Piece promoted) {
+	private SimpleMove(CoordinatesSystem cs, String from, String to, Piece promoted) {
 		this.from = cs.getIndex(from.toLowerCase());
 		this.to = cs.getIndex(to.toLowerCase());
 		this.promoted = promoted;
@@ -21,5 +21,12 @@ public class SimpleMove implements Move {
 	@Override
 	public Piece getPromotion() {
 		return promoted;
+	}
+	
+	public static Move get(Board<Move> board, String from, String to) {
+		return new SimpleMove(board.getCoordinatesSystem(), from, to);
+	}
+	public static Move get(Board<Move> board, String from, String to, Piece promoted) {
+		return new SimpleMove(board.getCoordinatesSystem(), from, to, promoted);
 	}
 }

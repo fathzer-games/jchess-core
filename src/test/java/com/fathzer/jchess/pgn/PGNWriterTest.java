@@ -2,32 +2,31 @@ package com.fathzer.jchess.pgn;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import static com.fathzer.jchess.SimpleMove.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.GameBuilders;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
-import com.fathzer.jchess.SimpleMove;
 
 class PGNWriterTest {
 
 	@Test
 	void test() {
 		final Board<Move> board = GameBuilders.STANDARD.newGame();
-		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final GameHistory history = new GameHistory(board);
-		history.add(new SimpleMove(cs, "e2", "e4"));
-		history.add(new SimpleMove(cs, "e7", "e5"));
-		history.add(new SimpleMove(cs, "d1", "h5"));
-		history.add(new SimpleMove(cs, "d7", "d6"));
-		history.add(new SimpleMove(cs, "f1", "c4"));
-		history.add(new SimpleMove(cs, "b8", "c6"));
-		history.add(new SimpleMove(cs, "h5", "f7"));
+		history.add(get(board, "e2", "e4"));
+		history.add(get(board, "e7", "e5"));
+		history.add(get(board, "d1", "h5"));
+		history.add(get(board, "d7", "d6"));
+		history.add(get(board, "f1", "c4"));
+		history.add(get(board, "b8", "c6"));
+		history.add(get(board, "h5", "f7"));
 		
 		final PGNWriter writer = new PGNWriter();
 		final PGNHeaders headers = new PGNHeaders.Builder()
@@ -50,13 +49,12 @@ class PGNWriterTest {
 	@Test
 	void bug20231025() {
 		final Board<Move> board = GameBuilders.STANDARD.newGame();
-		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final GameHistory history = new GameHistory(board);
-		history.add(new SimpleMove(cs, "c2", "c4"));
-		history.add(new SimpleMove(cs, "g8", "f6"));
-		history.add(new SimpleMove(cs, "c4", "c5"));
-		history.add(new SimpleMove(cs, "b7", "b5"));
-		history.add(new SimpleMove(cs, "c5", "b6"));
+		history.add(get(board, "c2", "c4"));
+		history.add(get(board, "g8", "f6"));
+		history.add(get(board, "c4", "c5"));
+		history.add(get(board, "b7", "b5"));
+		history.add(get(board, "c5", "b6"));
 		final PGNWriter writer = new PGNWriter();
 		final List<String> pgn = writer.getPGN(new PGNHeaders.Builder().build(), history);
 		

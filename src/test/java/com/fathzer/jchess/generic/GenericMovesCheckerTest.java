@@ -31,7 +31,6 @@ abstract class GenericMovesCheckerTest<M> {
 		M move = toMove("E1", "G1");
 		assertTrue(mvg.makeMove(move, UNSAFE), "Error for "+toString(move)+" on "+fen);
 
-		
 		// Check pinned piece can move in pinned direction or opposite
 		fen = "rnbqk1nr/pppp1ppp/4p3/b7/3P4/2B5/PPP1PPPP/RN1QKBNR w KQkq - 0 1";
 		mvg = fromFEN(fen);
