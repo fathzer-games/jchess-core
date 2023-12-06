@@ -70,7 +70,6 @@ public class MovesBuilder {
 	protected final PromotionAdder promotionAdder = new PromotionAdder();
 
 	static class MovesBuilderState {
-		private static final int MAX_POSSIBLE_MOVES = 218;
 		List<Move> legalMoves;
 		boolean needRefreshLegal;
 		List<Move> pseudoLegalMoves;
@@ -78,8 +77,8 @@ public class MovesBuilder {
 		Status status;
 		
 		public MovesBuilderState() {
-			legalMoves = new ArrayList<>(MAX_POSSIBLE_MOVES);
-			pseudoLegalMoves = new ArrayList<>(MAX_POSSIBLE_MOVES);
+			legalMoves = new ArrayList<>();
+			pseudoLegalMoves = new ArrayList<>();
 			needRefreshLegal = true;
 			needRefreshPseudoLegal = true;
 		}
@@ -224,31 +223,32 @@ public class MovesBuilder {
 	}
 	
 	protected void addKingMoves(Mode mode) {
-		// We can think remember the free safe cells could be reused in castling //TODO
-		// StandardMoves => King can't go to attacked cell
+		final boolean pseudoLegal = mode==Mode.PSEUDO;
+		// Legal moves => King can't go to attacked cell, pseudo legal, perform no check
+		final BiPredicate<BoardExplorer, BoardExplorer> moveValidator = pseudoLegal ? mv.getOthers() : mv.getKing();
 		for (Direction d:KING.getDirections()) {
-			addMove(d, mv.getKing(), defaultMoveAdder);
+			addMove(d, moveValidator, defaultMoveAdder);
 		}
 		// Castlings
 		if (board.hasCastling() && !board.isCheck()) {
 			// No castlings allowed when you're in check
 			if (WHITE==from.getPiece().getColor()) {
-				tryCastling(Castling.WHITE_KING_SIDE);
-				tryCastling(Castling.WHITE_QUEEN_SIDE);
+				tryCastling(Castling.WHITE_KING_SIDE, pseudoLegal);
+				tryCastling(Castling.WHITE_QUEEN_SIDE, pseudoLegal);
 			} else {
-				tryCastling(Castling.BLACK_KING_SIDE);
-				tryCastling(Castling.BLACK_QUEEN_SIDE);
+				tryCastling(Castling.BLACK_KING_SIDE, pseudoLegal);
+				tryCastling(Castling.BLACK_QUEEN_SIDE, pseudoLegal);
 			}
 		}
 	}
-	private void tryCastling(Castling castling) {
+	private void tryCastling(Castling castling, boolean pseudoLegal) {
 		if (board.hasCastling(castling)) {
 			final int kingPosition = from.getIndex(); 
 			final int kingDestination = board.getKingDestination(castling);
 			final int rookPosition = board.getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(from, kingDestination, rookPosition, rookDestination) &&
-					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination, rookPosition)) {
+					(pseudoLegal || areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination, rookPosition))) {
 				addCastling(kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}

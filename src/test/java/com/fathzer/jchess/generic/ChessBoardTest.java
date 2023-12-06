@@ -334,7 +334,6 @@ class ChessBoardTest implements MoveBuilder {
 		List<Move> moves = board.getLegalMoves();
 		assertTrue(moves.isEmpty(), "Should have no legal moves but obtain "+asString(moves, board));
 		moves = board.getMoves(false);
-		assertEquals(1, moves.size(), "Should have one pseudo-legal moves but obtain "+asString(moves, board));
 		assertTrue(moves.contains(move(board, "f4", "g3")), "Should contains en-passant move");
 	}
 	

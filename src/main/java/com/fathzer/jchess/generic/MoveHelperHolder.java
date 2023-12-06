@@ -30,11 +30,6 @@ public class MoveHelperHolder implements Supplier<MoveHelper> {
 		}
 
 		@Override
-		public boolean isKingSafetyTestRequired() {
-			return piece.getKind()==PieceKind.KING;
-		}
-
-		@Override
 		public boolean shouldIncHalfMoveCount() {
 			return PieceKind.PAWN!=piece.getKind() && toWas==null;
 		}
@@ -58,7 +53,12 @@ public class MoveHelperHolder implements Supplier<MoveHelper> {
 		@Override
 		public Piece getCaptured() {
 			return piece==Piece.BLACK_PAWN ? Piece.WHITE_PAWN : Piece.BLACK_PAWN;
-		}	
+		}
+		
+		@Override
+		public boolean isKingSafetyTestRequired() {
+			return true;
+		}
 	}
 
 	private static class CastlingMoveHelper  extends MoveHelper {

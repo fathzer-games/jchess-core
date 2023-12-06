@@ -321,6 +321,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 			final int rookDest = to + castling.getSide().getRookOffset();
 			mhh.setCastling(castling, from, to, initialRookPosition, rookDest);
 			castlePieces(from, to, initialRookPosition, rookDest, false);
+		} else if (checkIsValid && attackDetector.isAttacked(to, activeColor.opposite())) {
+			return true;
 		} else {
 			mhh.setSimple(movedPiece, from, getPiece(to), to);
 		}

@@ -15,7 +15,7 @@ public abstract class MoveHelper {
 		return false;
 	}
 	public boolean isKingSafetyTestRequired() {
-		return true;
+		return false;
 	}
 	public boolean shouldIncHalfMoveCount() {
 		return false;
