@@ -50,6 +50,18 @@ class ChessBoardTest implements MoveBuilder {
 		final Move move = move(board,"c1","b1");
 		assertFalse(board.makeMove(move, UNSAFE));
 		assertFalse(board.makeMove(move, PSEUDO_LEGAL));
-//		assertFalse(board.getLegalMoves().contains(move));
+		assertFalse(board.getLegalMoves().contains(move));
+	}
+	
+	@Test
+	void testTrickyLegalCastling() {
+		// Rook is attacked, but the castling is legal
+		final Board<Move> board = FENUtils.from("nrk2rnb/pp1ppppp/6b1/q1p5/3P2Q1/1N3N2/1P2PPPP/1RK1BR1B w KQkq - 2 10");
+		final Move move = move(board,"c1","b1");
+		assertTrue(board.makeMove(move, UNSAFE));
+		board.unmakeMove();
+		assertTrue(board.makeMove(move, PSEUDO_LEGAL));
+		board.unmakeMove();
+		assertTrue(board.getLegalMoves().contains(move));
 	}
 }

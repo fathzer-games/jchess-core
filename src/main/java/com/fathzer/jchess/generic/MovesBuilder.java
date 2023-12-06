@@ -94,7 +94,7 @@ public class MovesBuilder {
 	private static final Collection<Direction> WHITE_PAWN_CATCH_DIRECTIONS = Arrays.asList(NORTH_WEST, NORTH_EAST);
 	private static final Collection<Direction> BLACK_PAWN_CATCH_DIRECTIONS = Arrays.asList(SOUTH_WEST, SOUTH_EAST);
 	
-	private final ChessBoard board;
+	protected final ChessBoard board;
 	private final BoardExplorer from;
 	private final DirectionExplorer to;
 	private final Supplier<MoveValidator> mvBuilder;
@@ -248,7 +248,7 @@ public class MovesBuilder {
 			final int rookPosition = board.getInitialRookPosition(castling);
 			final int rookDestination  = kingDestination + castling.getSide().getRookOffset();
 			if (areCastlingCellsFree(from, kingDestination, rookPosition, rookDestination) &&
-					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination)) {
+					areCastlingCellsSafe(board.getActiveColor().opposite(), kingPosition, kingDestination, rookPosition)) {
 				addCastling(kingPosition, rookPosition, kingDestination, rookDestination);
 			}
 		}
@@ -285,9 +285,10 @@ public class MovesBuilder {
 	 * @param attacker The color of the attacker of cell 
 	 * @param kingPosition Current king's position
 	 * @param kingDestination King's destination
+	 * @param rookPosition The rook's starting position
 	 * @return true if safe. Please note that the king's cell is not checked in this method because the check state is verified before this method is called.
 	 */
-	protected boolean areCastlingCellsSafe(Color attacker, int kingPosition, int kingDestination) {
+	protected boolean areCastlingCellsSafe(Color attacker, int kingPosition, int kingDestination, int rookPosition) {
 		final AttackDetector attackDetector = board.getAttackDetector();
 		if (kingPosition<kingDestination) {
 			for (int i = kingPosition+1; i <= kingDestination; i++) {
@@ -295,8 +296,7 @@ public class MovesBuilder {
 					return false;
 				}
 			}
-		} else if (kingPosition!=kingDestination) {
-			// Warning, in chess960, king can stay at its position during castling
+		} else {
 			for (int i = kingDestination; i < kingPosition; i++) {
 				if (attackDetector.isAttacked(i, attacker)) {
 					return false;
@@ -465,11 +465,12 @@ public class MovesBuilder {
 				if (isCheck || !board.hasCastling(castling)) {
 					return false;
 				}
+				final int kingDestination = board.getKingDestination(castling);
 				final int rookPosition = board.getInitialRookPosition(castling);
-				final int rookDestination  = target + castling.getSide().getRookOffset();
+				final int rookDestination = kingDestination + castling.getSide().getRookOffset();
 				this.from.reset(src);
-				return areCastlingCellsFree(this.from, target, rookPosition, rookDestination) &&
-						areCastlingCellsSafe(board.getActiveColor().opposite(), src, target);
+				return areCastlingCellsFree(this.from, kingDestination, rookPosition, rookDestination) &&
+						areCastlingCellsSafe(board.getActiveColor().opposite(), src, kingDestination, rookPosition);
 			} else {
 				return !catchOwnPiece(caught) && !board.isAttacked(target, activeColor.opposite()) && isReachable(KING.getDirections(), target, 1)!=null;
 			}

@@ -1,5 +1,6 @@
 package com.fathzer.jchess.generic;
 
+import static com.fathzer.games.MoveGenerator.MoveConfidence.PSEUDO_LEGAL;
 import static com.fathzer.games.MoveGenerator.MoveConfidence.UNSAFE;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,8 +106,11 @@ abstract class GenericMovesCheckerTest<M> {
 		assertFalse(mvg.makeMove(move, UNSAFE));
 
 		// Castling with free cells in check
-		//TODO Should also test castling in Chess960
 		move = toMove("e8", "g8");
+		assertFalse(mvg.makeMove(move, UNSAFE));
+		
+		// Castling with piece between rook and king  
+		move = toMove("e8", "c8");
 		assertFalse(mvg.makeMove(move, UNSAFE));
 		
 		mvg = fromFEN("3rk2r/PR3p1p/4pn2/3p2pP/3P2bb/4P2N/P1P2PP1/1N2K2R w k - 0 7");
@@ -159,4 +163,17 @@ abstract class GenericMovesCheckerTest<M> {
 		move = toMove("C2","C3");
 		assertFalse(mvg.makeMove(move, UNSAFE));
 	}
+	
+	@Test
+	void testTrickyLegalCastling() {
+		// Rook is attacked, but the castling is legal
+		MoveGenerator<M> mvg = fromFEN("r3k2r/1p1pppp1/2nb1nb1/2p5/3P4/3B1N2/1PNBPPP1/R3K2R w KQkq - 2 10");
+		final M move = toMove("E1","C1");
+		assertTrue(mvg.makeMove(move, UNSAFE));
+		mvg.unmakeMove();
+		assertTrue(mvg.makeMove(move, PSEUDO_LEGAL));
+		mvg.unmakeMove();
+		assertTrue(mvg.getLegalMoves().contains(move));
+	}
+
 }

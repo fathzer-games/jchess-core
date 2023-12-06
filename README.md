@@ -49,4 +49,3 @@ For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to Sy
 
 
 ## Known bugs
-- In *nrk1brnb/pp1ppppp/8/2p5/3P4/1N1Q1N2/1PP1PPPP/qRK1BR1B w KQkq - 2 10* FEN position, the board returns c1-b1 as a legal move.

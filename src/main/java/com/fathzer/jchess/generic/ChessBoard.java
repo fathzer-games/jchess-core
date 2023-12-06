@@ -313,12 +313,12 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		if (castling!=null) {
 			// Castling => Get the correct king's destination
 			to = getKingDestination(castling); 
-			if (checkIsValid && !movesBuilder.areCastlingCellsSafe(activeColor.opposite(), from, to)) {
+			final int initialRookPosition = getInitialRookPosition(castling);
+			if (checkIsValid && !movesBuilder.areCastlingCellsSafe(activeColor.opposite(), from, to, initialRookPosition)) {
 				return true;
 			}
 			// Move the rook too
 			final int rookDest = to + castling.getSide().getRookOffset();
-			final int initialRookPosition = getInitialRookPosition(castling);
 			mhh.setCastling(castling, from, to, initialRookPosition, rookDest);
 			castlePieces(from, to, initialRookPosition, rookDest, false);
 		} else {
