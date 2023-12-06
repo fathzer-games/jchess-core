@@ -38,23 +38,17 @@ public class BasicMove implements Move {
 		return from + "-" + to + (promotion==null ? "" : "("+promotion+ ")");
 	}
 
-	/** Gets the start position of the moving piece.
-	 * @return an integer
-	 */
+	@Override
 	public int getFrom() {
 		return from;
 	}
 
-	/** Gets the destination position of the moving piece.
-	 * @return an integer
-	 */
+	@Override
 	public int getTo() {
 		return to;
 	}
 
-	/** Gets the promotion of the moving piece.
-	 * @return a piece or null if the move doesn't lead to any promotion
-	 */
+	@Override
 	public Piece getPromotion() {
 		return promotion;
 	}
