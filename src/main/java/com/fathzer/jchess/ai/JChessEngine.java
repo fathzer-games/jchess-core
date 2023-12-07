@@ -7,20 +7,21 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.SearchStatistics;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
-import com.fathzer.games.ai.exec.ExecutionContext;
-import com.fathzer.games.ai.exec.MultiThreadsContext;
-import com.fathzer.games.ai.exec.SingleThreadContext;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningSearch;
 import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
 import com.fathzer.games.ai.moveSelector.StaticMoveSelector;
 import com.fathzer.games.ai.transposition.SizeUnit;
-import com.fathzer.games.util.ContextualizedExecutor;
+import com.fathzer.games.util.exec.ContextualizedExecutor;
+import com.fathzer.games.util.exec.ExecutionContext;
+import com.fathzer.games.util.exec.MultiThreadsContext;
+import com.fathzer.games.util.exec.SingleThreadContext;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -33,11 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	private Function<Board<Move>, Move> openingLibrary;
 	private Function<Board<Move>, Comparator<Move>> moveComparatorSupplier;
+	private Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier;
 	
-	public JChessEngine(Evaluator<Board<Move>> evaluator, int maxDepth) {
-		super(evaluator, maxDepth, new TT(16, SizeUnit.MB));
+	public JChessEngine(Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier, int maxDepth) {
+		super(maxDepth, new TT(16, SizeUnit.MB));
 		setDeepeningPolicy(new JChessDeepeningPolicy(maxDepth));
 		moveComparatorSupplier = BasicMoveComparator::new;
+		this.evaluatorSupplier = evaluatorSupplier;
 		setLogger(new DefaultEventLogger());
 	}
 	
@@ -51,17 +54,17 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		return this;
 	}
 	
+	public void setEvaluatorSupplier(Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier) {
+		this.evaluatorSupplier = evaluatorSupplier;
+	}
+	
 	@Override
-	protected ExecutionContext<Move, Board<Move>> buildExecutionContext(Board<Move> board) {
+	protected ExecutionContext<SearchContext<Move, Board<Move>>> buildExecutionContext(Board<Move> board) {
 		board.setMoveComparatorBuilder(moveComparatorSupplier);
 		if (getParallelism()==1) {
-			return new SingleThreadContext<>(board);
+			return new SingleThreadContext<>(SearchContextBuilder.get(evaluatorSupplier, board));
 		} else {
-			final Supplier<Board<Move>> supplier = () -> {
-				Board<Move> b = board.create();
-				b.copy(board);
-				return b;
-			};
+			final Supplier<SearchContext<Move, Board<Move>>> supplier = () -> SearchContextBuilder.get(evaluatorSupplier, board);
 			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(getParallelism()));
 		}
 	}
@@ -72,11 +75,6 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	
 	public Function<Board<Move>, Comparator<Move>> getMoveComparatorSupplier() {
 		return moveComparatorSupplier;
-	}
-
-	@Override
-	protected void setViewPoint(Evaluator<Board<Move>> evaluator, Board<Move> board) {
-		evaluator.setViewPoint(board.getActiveColor());
 	}
 
 	@Override

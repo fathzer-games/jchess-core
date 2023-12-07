@@ -411,11 +411,10 @@ class ChessBoardTest implements MoveBuilder {
 	@Test
 	void drawByRepetitionTest() {
 		Board<Move> board = GameBuilders.STANDARD.newGame();
-		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final Move kwf = move(board,"b1", "c3");
-		final Move kwb = new BasicMove(cs.getIndex("c3"),cs.getIndex("b1"));
-		final Move kbf = new BasicMove(cs.getIndex("b8"),cs.getIndex("c6"));
-		final Move kbb = new BasicMove(cs.getIndex("c6"),cs.getIndex("b8"));
+		final Move kwb = move(board,"c3", "b1");
+		final Move kbf = move(board, "b8", "c6");
+		final Move kbb = move(board, "c6", "b8");
 		board.makeMove(kwf, MoveConfidence.LEGAL);
 		board.makeMove(kbf, MoveConfidence.LEGAL);
 		board.makeMove(kwb, MoveConfidence.LEGAL);
@@ -430,8 +429,8 @@ class ChessBoardTest implements MoveBuilder {
 		
 		board.unmakeMove(); // Replace last move another reversible move
 		assertEquals(Status.PLAYING, board.getStatus());
-		final Move k2bf = new BasicMove(cs.getIndex("g8"),cs.getIndex("f6"));
-		final Move k2bb = new BasicMove(cs.getIndex("f6"),cs.getIndex("g8"));
+		final Move k2bf = move(board, "g8", "f6");
+		final Move k2bb = move(board, "f6", "g8");
 		board.makeMove(k2bf, MoveConfidence.LEGAL);
 		board.makeMove(kwf, MoveConfidence.LEGAL);
 		assertEquals(Status.PLAYING, board.getStatus());
