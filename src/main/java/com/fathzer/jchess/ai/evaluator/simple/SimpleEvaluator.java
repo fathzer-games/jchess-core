@@ -115,7 +115,7 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 		return points;
 	}
 
-	public int getPoints(Board<Move> board) {
+	public static int getPoints(Board<Move> board) {
 		final BoardExplorer exp = board.getExplorer();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		int points = 0;
@@ -143,7 +143,7 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 		return points;
 	}
 	
-	private int getPositionValue(int[] positionMap, int index, CoordinatesSystem cs, Color color) {
+	private static int getPositionValue(int[] positionMap, int index, CoordinatesSystem cs, Color color) {
 		index = 8*cs.getRow(index)+cs.getColumn(index);
 		if (color==BLACK) {
 			index = 63-index;
