@@ -55,8 +55,7 @@ class MoveAlgebraicNotationTest implements MoveBuilder {
 		assertEquals("Rdf8", san.get(board, move(board, "d8","f8")));
 		
 		// Illegal moves
-		final Board<Move> board2 = board.create();
-		board2.copy(board);
+		final Board<Move> board2 = (Board<Move>) board.fork();
 		final Move move2 = move(board, "f3","g2");
 		assertThrows(IllegalArgumentException.class, () -> san.get(board2, move2));
 		

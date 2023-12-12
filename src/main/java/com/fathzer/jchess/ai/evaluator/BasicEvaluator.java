@@ -14,22 +14,20 @@ import lombok.Setter;
 public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 	@Setter
 	private Color viewPoint;
-	private final Board<Move> board;
 
 	public BasicEvaluator(Board<Move> board) {
-		this.board = board;
 	}
 
 	@Override
-	public int evaluate() {
-		int points = 100*getPoints();
+	public int evaluate(Board<Move> board) {
+		int points = 100*getPoints(board);
 		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
 			points = -points;
 		}
 		return points;
 	}
 
-	public int getPoints() {
+	public int getPoints(Board<Move> board) {
 		final BoardExplorer exp = board.getExplorer(); 
 		int points = 0;
 		do {

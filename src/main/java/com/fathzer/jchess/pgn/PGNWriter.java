@@ -76,8 +76,7 @@ public class PGNWriter {
 	private ResultAndMoves getMovesAndResult(GameHistory history) {
 		final LinkedList<String> result = new LinkedList<>();
 		final MoveAlgebraicNotationBuilder an = new MoveAlgebraicNotationBuilder().withPlayMove(true).withEnPassantSymbol("");
-		final Board<Move> board = history.getStartBoard().create();
-		board.copy(history.getStartBoard());
+		final Board<Move> board = (Board<Move>) history.getStartBoard().fork();
 		final StringBuilder buf = new StringBuilder();
 		int moveNumber = -1;
 		for (Move move:history.getMoves()) {

@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
@@ -262,19 +261,19 @@ assertEquals(19, moves.size());
 
 		@Override
 		public void enter(TreeSearchStateStack<Move, Board<Move>> state) {
-			if (state.position.getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
+			if (state.context.getGamePosition().getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
 				traceDepth = state.getCurrentDepth();
-				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENUtils.to(state.position)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
+				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition())+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
 			}
 			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
-				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.position.getHashKey()+": "+FENUtils.to(state.position));
+				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition()));
 			}
 			Spy.super.enter(state);
 		}
 		
 		@Override
 		public void alphaBetaFromTT(TreeSearchStateStack<Move, Board<Move>> state, AlphaBetaState<Move> abState) {
-			if (state.position.getHashKey()==1283331931822092560L) {
+			if (state.context.getGamePosition().getHashKey()==1283331931822092560L) {
 //			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
 				System.out.println("Something in TT");
 			}
@@ -282,15 +281,15 @@ assertEquals(19, moves.size());
 		
 		@Override
 		public void storeTT(TreeSearchStateStack<Move, Board<Move>> state, AlphaBetaState<Move> abState, boolean store) {
-			if (state.position.getHashKey()==1283331931822092560L) {
-				System.out.println ("Stored: "+store+", value="+abState.getValue()+" at depth "+abState.getDepth()+". Put "+tt.get(state.position.getHashKey()).getValue()+" in table"+" ... "+Short.MAX_VALUE);
+			if (state.context.getGamePosition().getHashKey()==1283331931822092560L) {
+				System.out.println ("Stored: "+store+", value="+abState.getValue()+" at depth "+abState.getDepth()+". Put "+tt.get(state.context.getGamePosition().getHashKey()).getValue()+" in table"+" ... "+Short.MAX_VALUE);
 			}
 		}
 
 		@Override
 		public void exit(TreeSearchStateStack<Move, Board<Move>> state, Event evt) {
 			if (traceDepth>=0) {
-				final long key = state.position.getHashKey();
+				final long key = state.context.getGamePosition().getHashKey();
 				if (state.getCurrentDepth()==traceDepth-1) {
 					System.out.println (tab(state.getCurrentDepth())+"Exit with "+state.getCurrent().value+" ("+key+")");
 				}
@@ -302,11 +301,5 @@ assertEquals(19, moves.size());
 			Spy.super.exit(state, evt);
 		}
 		
-	}
-	
-	public static MoveGenerator<Move> getCopy(Board<Move> board) {
-		Board<Move> copy = board.create();
-		copy.copy(board);
-		return copy;
 	}
 }

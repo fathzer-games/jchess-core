@@ -21,7 +21,7 @@ import lombok.Setter;
  * <br>This only work with 8*8 games
  */
 public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
-	public static final Map<PieceKind, Integer> PIECE_VALUE;
+	private static final Map<PieceKind, Integer> PIECE_VALUE;
 	private static final Map<PieceKind, int[]> PIECE_POSITION_EVALUATOR_MAP;
 	private static final int[] KING_MID_GAME_EVAL = new int[] {
 			-30,-40,-40,-50,-50,-40,-40,-30,
@@ -44,7 +44,6 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 	
 	@Setter
 	private Color viewPoint;
-	private final Board<Move> board;
 	
 	static {
 		PIECE_VALUE = new EnumMap<>(PieceKind.class);
@@ -105,19 +104,18 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 	}
 	
 	public SimpleEvaluator(Board<Move> board) {
-		this.board = board;
 	}
 	
 	@Override
-	public int evaluate() {
-		int points = getPoints();
+	public int evaluate(Board<Move> board) {
+		int points = getPoints(board);
 		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
 			points = -points;
 		}
 		return points;
 	}
 
-	public int getPoints() {
+	public int getPoints(Board<Move> board) {
 		final BoardExplorer exp = board.getExplorer();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		int points = 0;

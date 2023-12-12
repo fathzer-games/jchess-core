@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchContext;
@@ -61,11 +60,12 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	@Override
 	protected ExecutionContext<SearchContext<Move, Board<Move>>> buildExecutionContext(Board<Move> board) {
 		board.setMoveComparatorBuilder(moveComparatorSupplier);
+		final SearchContext<Move, Board<Move>> context = SearchContextBuilder.get(evaluatorSupplier, board);
 		if (getParallelism()==1) {
-			return new SingleThreadContext<>(SearchContextBuilder.get(evaluatorSupplier, board));
+			return new SingleThreadContext<>(context);
 		} else {
-			final Supplier<SearchContext<Move, Board<Move>>> supplier = () -> SearchContextBuilder.get(evaluatorSupplier, board);
-			return new MultiThreadsContext<>(supplier, new ContextualizedExecutor<>(getParallelism()));
+			final ContextualizedExecutor<SearchContext<Move, Board<Move>>> contextualizedExecutor = new ContextualizedExecutor<>(getParallelism());
+			return new MultiThreadsContext<>(context, contextualizedExecutor);
 		}
 	}
 

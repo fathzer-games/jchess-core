@@ -502,8 +502,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 * <br>WARNING: board history is not copied, it is not possible to undo moves after this method is called.
 	 * @param other The other board
 	 */
-	@Override
-	public void copy(Board<Move> other) {
+	protected void copy(Board<Move> other) {
 		if (!getDimension().equals(other.getDimension())) {
 			throw new IllegalArgumentException("Can't copy board with different dimension");
 		}
@@ -655,6 +654,19 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 		undoData.previous();
 		final MoveHelperHolder holder = undoData.get().moveHelperHolder;
 		holder.get().unmakePieces(getBoard().pieces);
+		return result;
+	}
+
+	
+	/** Creates a copy of this board of the same class as this.
+	 * @return a new Board.
+	 */
+	protected abstract ChessBoard create();
+	
+	@Override
+	public Board<Move> fork() {
+		final ChessBoard result = create();
+		result.copy(this);
 		return result;
 	}
 }

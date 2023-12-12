@@ -23,7 +23,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 		this.filter = new KeyBasedNegaMaxSpyFilter<>(searched) {
 			@Override
 			public long getKey(TreeSearchStateStack<Move, Board<Move>> state) {
-				return state.position.getHashKey();
+				return state.context.getGamePosition().getHashKey();
 			}
 		};
 	}
@@ -49,7 +49,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	public void cut(TreeSearchStateStack<Move, Board<Move>> state, Move move) {
 		if (filter.isOn() && scoreFilter(state)) {
 			final TreeSearchState<Move> current = state.get(state.getCurrentDepth());
-			System.out.println(getTab(state)+" Cut on move "+current.lastMove.toString(state.position.getCoordinatesSystem())+" with score "+current.value);
+			System.out.println(getTab(state)+" Cut on move "+current.lastMove.toString(state.context.getGamePosition().getCoordinatesSystem())+" with score "+current.value);
 		}
 	}
 
@@ -80,12 +80,12 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 
 	private void print(TreeSearchStateStack<Move, Board<Move>> state) {
 		final CharSequence tab = getTab(state);
-		final Board<Move> bb = state.position;
+		final Board<Move> bb = state.context.getGamePosition();
 		System.out.print(tab+getMoves(state).toString()+", "+FENUtils.to(bb)+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth+": ");
 	}
 	
 	private List<String> getMoves(TreeSearchStateStack<Move, Board<Move>> state) {
-		final CoordinatesSystem cs = state.position.getCoordinatesSystem();
+		final CoordinatesSystem cs = state.context.getGamePosition().getCoordinatesSystem();
 		return IntStream.rangeClosed(state.getCurrentDepth()+1, state.maxDepth).map(i -> state.getCurrentDepth()+1 + state.maxDepth - i)
 			.mapToObj(i->{
 				final Move mv = state.get(i).lastMove;

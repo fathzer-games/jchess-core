@@ -44,7 +44,7 @@ public class Chess960Board extends ChessBoard {
 	}
 	
 	@Override
-	public Board<Move> create() {
+	protected ChessBoard create() {
 		return new Chess960Board(Collections.emptyList(), Color.WHITE, Collections.emptyList(), new int[4], -1, 0, 1);
 	}
 	
@@ -70,7 +70,7 @@ public class Chess960Board extends ChessBoard {
 	}
 
 	@Override
-	public void copy(Board<Move> other) {
+	protected void copy(Board<Move> other) {
 		super.copy(other);
 		System.arraycopy(((Chess960Board)other).initialRookPositions, 0, initialRookPositions, 0, initialRookPositions.length);
 	}

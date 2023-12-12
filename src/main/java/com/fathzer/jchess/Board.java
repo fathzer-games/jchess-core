@@ -80,22 +80,6 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
      * @return a status
      */
 	Status getStatus();
-
-
-	/** Creates a copy of this board of the same class as this.
-	 * @return a new Board.
-	 */
-	default Board<M> create() {
-		throw new UnsupportedOperationException();
-	}
-	
-	/** Copy another board in this.
-	 * @param board The other board, should have the same dimensions as this.
-	 * @throws UnsupportedOperationException if copying the argument is not supported by this board.
-	 */
-	default void copy(Board<M> board) {
-		throw new UnsupportedOperationException();
-	}
 	
 	Function<Board<Move>, Comparator<Move>> getMoveComparatorBuilder();
 

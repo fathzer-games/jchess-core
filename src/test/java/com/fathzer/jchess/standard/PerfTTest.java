@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -57,7 +56,7 @@ class PerfTTest {
 			final Board<Move> board = FENUtils.from("8/8/6b1/k3p2N/8/b1PB4/K6p/8 b - - 0 1");
 			final PerfT<Move> perfT = new PerfT<>(exec);
 			perfT.setPlayLeaves(false);
-			final PerfTResult<Move> divide = perfT.divide(2, copy(board));
+			final PerfTResult<Move> divide = perfT.divide(2, board);
 			System.out.println("Leaves: "+ divide.getNbLeaves());
 			System.out.println("Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 		}
@@ -69,7 +68,7 @@ class PerfTTest {
 		perfT.setPlayLeaves(false);
 		if (test.getSize()>=depth) {
 //			try {
-				final PerfTResult<Move> divide = perfT.divide(depth, copy(board));
+				final PerfTResult<Move> divide = perfT.divide(depth, board);
 				assertEquals(test.getCount(depth), divide.getNbLeaves(), "Error for "+test.getStartPosition()+". Divide is "+toString(divide.getDivides(),board.getCoordinatesSystem()));
 //				if (count != test.getCount(depth)) {
 //					System.out.println("Error for "+test.getFen()+" expected "+test.getCount(depth)+" got "+count);
@@ -81,14 +80,6 @@ class PerfTTest {
 //				throw e;
 //			}
 		}
-	}
-
-	private Supplier<MoveGenerator<Move>> copy(final Board<Move> board) {
-		return () -> {
-			Board<Move> b = board.create();
-			b.copy(board);
-			return b;
-		};
 	}
 
 	private List<PerfTTestData> readTests() throws IOException {

@@ -12,8 +12,7 @@ public class GameHistory {
 	}
 
 	public GameHistory(Board<Move> board, List<Move> moves) {
-		this.startBoard = board.create();
-		this.startBoard.copy(board);
+		this.startBoard = (Board<Move>) board.fork();
 		this.moves = moves;
 	}
 

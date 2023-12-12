@@ -265,7 +265,7 @@ class ChessBoardTest implements MoveBuilder {
 	
 	@Test
 	void pawnsMoveGenerationTest() {
-		final Board<Move> board = FENUtils.from("r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
+		final ChessBoard board = (ChessBoard) FENUtils.from("r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		final List<Move> blackMoves = board.getMoves(false);
 		assertEquals(Set.of("a4"), getTo(cs, getMoves(cs, blackMoves, "a5")));
@@ -438,8 +438,7 @@ class ChessBoardTest implements MoveBuilder {
 		assertEquals(Status.DRAW, board.getStatus());
 		
 		// Test it also working with copy
-		Board<Move> copy = board.create();
-		copy.copy(board);
+		Board<Move> copy = (Board<Move>) board.fork();
 		assertEquals(Status.DRAW, copy.getStatus());
 		board.unmakeMove();
 		assertEquals(Status.PLAYING, board.getStatus());
