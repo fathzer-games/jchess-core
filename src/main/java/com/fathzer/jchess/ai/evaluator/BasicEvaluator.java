@@ -40,10 +40,10 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 		Piece movingPiece = board.getPiece(from);
 		int increment = 0;
 		if (movingPiece.getKind()!=KING || board.getCastling(from,to)==null) {
-			final Piece capturedPiece = board.getPiece(to);
 	        if (board.getEnPassant()==to && PAWN==movingPiece.getKind()) {
 	            increment = PAWN.getValue();
 	        } else {
+				final Piece capturedPiece = board.getPiece(to);
 	        	if (capturedPiece!=null) {
 	        		increment = capturedPiece.getKind().getValue();
 	        	}
