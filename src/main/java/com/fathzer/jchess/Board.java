@@ -1,11 +1,11 @@
 package com.fathzer.jchess;
 
-import java.util.Comparator;
 import java.util.function.Function;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
+import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.HashProvider;
 
 /** A chess board.
@@ -81,7 +81,7 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
      */
 	Status getStatus();
 	
-	Function<Board<Move>, Comparator<Move>> getMoveComparatorBuilder();
+	Function<Board<Move>, SelectiveComparator<Move>> getMoveComparatorBuilder();
 
-	void setMoveComparatorBuilder(Function<Board<Move>, Comparator<Move>> moveComparatorBuilder);
+	void setMoveComparatorBuilder(Function<Board<Move>, SelectiveComparator<Move>> moveEvaluatorBuilder);
 }

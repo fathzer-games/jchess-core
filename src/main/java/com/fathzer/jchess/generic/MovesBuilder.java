@@ -8,7 +8,6 @@ import static com.fathzer.games.Color.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -26,6 +25,8 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.generic.movevalidator.MoveValidator;
 import com.fathzer.jchess.generic.movevalidator.MoveValidatorBuilder;
+import com.fathzer.games.util.MoveList;
+import com.fathzer.games.util.SelectiveComparator;
 
 import lombok.Setter;
 
@@ -72,13 +73,13 @@ public class MovesBuilder {
 	static class MovesBuilderState {
 		List<Move> legalMoves;
 		boolean needRefreshLegal;
-		List<Move> pseudoLegalMoves;
+		MoveList<Move> pseudoLegalMoves;
 		boolean needRefreshPseudoLegal;
 		Status status;
 		
 		public MovesBuilderState() {
 			legalMoves = new ArrayList<>();
-			pseudoLegalMoves = new ArrayList<>();
+			pseudoLegalMoves = new MoveList<>();
 			needRefreshLegal = true;
 			needRefreshPseudoLegal = true;
 		}
@@ -98,7 +99,7 @@ public class MovesBuilder {
 	private final DirectionExplorer to;
 	private final Supplier<MoveValidator> mvBuilder;
 	private MoveValidator mv;
-	private Comparator<Move> moveComparator;
+	private SelectiveComparator<Move> moveComparator;
 
 	private MovesBuilderState state;
 	
@@ -107,7 +108,7 @@ public class MovesBuilder {
 		this.from = board.getExplorer();
 		this.to = board.getDirectionExplorer();
 		this.mvBuilder = new MoveValidatorBuilder(board);
-		final Function<Board<Move>, Comparator<Move>> moveComparatorBuilder = board.getMoveComparatorBuilder();
+		final Function<Board<Move>, SelectiveComparator<Move>> moveComparatorBuilder = board.getMoveComparatorBuilder();
 		if (moveComparatorBuilder!=null) {
 			this.moveComparator = moveComparatorBuilder.apply(board);
 		}
@@ -122,10 +123,11 @@ public class MovesBuilder {
 		state = chessboardState.moveBuidlerState;
 	}
 	
-	public void setMoveComparator(Comparator<Move> moveComparator) {
+	public void setMoveComparator(SelectiveComparator<Move> moveComparator) {
 		this.moveComparator = moveComparator;
 		if (!state.needRefreshPseudoLegal && moveComparator!=null) {
-			state.pseudoLegalMoves.sort(moveComparator);
+			state.pseudoLegalMoves.setComparator(moveComparator);
+			state.pseudoLegalMoves.sort();
 		}
 	}
 
@@ -140,8 +142,16 @@ public class MovesBuilder {
 	}
 	
 	private void setMode(Mode mode) {
-		List<Move> moves = mode==Mode.LEGAL?state.legalMoves:state.pseudoLegalMoves;
-		moves.clear();
+		final List<Move> moves;
+		if (mode==Mode.LEGAL) {
+			moves = state.legalMoves;
+			moves.clear();
+		} else {
+			state.pseudoLegalMoves.clear();
+			state.pseudoLegalMoves.setComparator(this.moveComparator);
+			moves = state.pseudoLegalMoves;
+			
+		}
 		this.defaultMoveAdder.setList(moves);
 		this.promotionAdder.setList(moves);
 	}
@@ -150,13 +160,13 @@ public class MovesBuilder {
 		if (state.needRefreshPseudoLegal) {
 			buildMoves(Mode.PSEUDO);
 			if (moveComparator!=null) {
-				state.pseudoLegalMoves.sort(moveComparator);
+				state.pseudoLegalMoves.sort();
 			}
 			state.needRefreshPseudoLegal = false;
 		}
 		return state.pseudoLegalMoves;
 	}
-
+	
 	protected List<Move> getLegalMoves() {
 		if (state.needRefreshLegal) {
 			buildMoves(Mode.LEGAL);

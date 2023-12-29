@@ -8,8 +8,8 @@ import com.fathzer.jchess.PieceKind;
 
 /** A {@link RemainingMoveCountPredictor} that uses the function described in chapter 4 of <a href="http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf">Vuckovic and Solak paper</a>.
  */
-public class VuckovicSolakTimeManager implements RemainingMoveCountPredictor<Board<?>> {
-	public static final VuckovicSolakTimeManager INSTANCE = new VuckovicSolakTimeManager();
+public class VuckovicSolakOracle implements RemainingMoveCountPredictor<Board<?>> {
+	public static final VuckovicSolakOracle INSTANCE = new VuckovicSolakOracle();
 	
 	@Override
 	public int getRemainingHalfMoves(Board<?> board) {

@@ -8,11 +8,11 @@ import static com.fathzer.jchess.Direction.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
 import com.fathzer.games.Color;
+import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.util.Stack;
 import com.fathzer.games.HashProvider;
 import com.fathzer.games.Status;
@@ -46,7 +46,7 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	private long key;
 	private List<Long> keyHistory;
 	private Stack<ChessBoardState> undoData;
-	private Function<Board<Move>, Comparator<Move>> moveComparatorBuilder;
+	private Function<Board<Move>, SelectiveComparator<Move>> moveComparatorBuilder;
 	
 	protected ChessBoard(List<PieceWithPosition> pieces) {
 		this(Dimension.STANDARD, pieces);
@@ -599,12 +599,12 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 
 	@Override
-	public Function<Board<Move>, Comparator<Move>> getMoveComparatorBuilder() {
+	public Function<Board<Move>, SelectiveComparator<Move>> getMoveComparatorBuilder() {
 		return moveComparatorBuilder;
 	}
 
 	@Override
-	public void setMoveComparatorBuilder(Function<Board<Move>, Comparator<Move>> moveComparatorBuilder) {
+	public void setMoveComparatorBuilder(Function<Board<Move>, SelectiveComparator<Move>> moveComparatorBuilder) {
 		this.moveComparatorBuilder = moveComparatorBuilder;
 		if (moveComparatorBuilder==null) {
 			movesBuilder.setMoveComparator(null);

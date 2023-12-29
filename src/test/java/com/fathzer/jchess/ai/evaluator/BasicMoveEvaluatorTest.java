@@ -3,11 +3,11 @@ package com.fathzer.jchess.ai.evaluator;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import com.fathzer.games.util.MoveList;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -29,15 +29,16 @@ class BasicMoveComparatorTest implements MoveBuilder {
 		final Move pawnPromo = move(board, "e7", "e8", Piece.WHITE_QUEEN);
 		final Move pawnCatchPromo = move(board, "e7", "d8", Piece.WHITE_QUEEN);
 		
-		Arrays.stream(new Move[] {pawnMove, queenQueenCatch, queenPawnCatch, kingCatch, pawnCatchPromo, pawnPromo}).map(m -> m.toString(cs)+":"+cmp.getValue(m)).forEach(System.out::println);
-		final List<Move> sorted = Arrays.asList(queenPawnCatch, pawnPromo, kingCatch, pawnMove, queenQueenCatch, pawnCatchPromo);
-		sorted.sort(cmp);
+		Arrays.stream(new Move[] {pawnMove, queenQueenCatch, queenPawnCatch, kingCatch, pawnCatchPromo, pawnPromo}).map(m -> m.toString(cs)+":"+cmp.evaluate(m)).forEach(System.out::println);
+		final MoveList<Move> sorted = new MoveList<>();
+		sorted.setComparator(cmp);
+		sorted.addAll(Arrays.asList(queenPawnCatch, pawnPromo, kingCatch, pawnMove, queenQueenCatch, pawnCatchPromo));
+		sorted.sort();
 		System.out.println(sorted.stream().map(m -> m.toString(cs)).collect(Collectors.joining(",")));
 		assertEquals(Arrays.asList(pawnCatchPromo, queenQueenCatch, kingCatch, pawnPromo, queenPawnCatch, pawnMove), sorted);
+		assertFalse(cmp.test(pawnMove));
 		assertTrue(cmp.compare(kingCatch, queenQueenCatch)>0);
-		assertTrue(cmp.compare(pawnMove, queenQueenCatch)>0);
-		assertTrue(cmp.compare(pawnMove, kingCatch)>0);
-		assertTrue(cmp.compare(queenPawnCatch, kingCatch)>0);
+		assertTrue(cmp.compare(queenPawnCatch, queenQueenCatch)>0);
 	}
 
 }
