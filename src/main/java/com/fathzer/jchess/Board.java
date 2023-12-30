@@ -25,6 +25,11 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	
 	Color getActiveColor();
 	
+	@Override
+	default boolean isWhiteToMove() {
+		return getActiveColor()==Color.WHITE;
+	}
+	
 	/** Gets the enPassant cell
 	 * @return a negative number if there's no enPassant cell or the internal en passant cell index
 	 * @see #getCoordinatesSystem()
@@ -67,7 +72,7 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 		final int offset = Math.abs(to-from);
 		boolean castling = offset>=2 && (getCoordinatesSystem().getRow(from)==getCoordinatesSystem().getRow(to));
 		if (!castling) {
-			final Piece rook = Color.WHITE.equals(getActiveColor()) ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
+			final Piece rook = isWhiteToMove() ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
 			castling = rook.equals(getPiece(to));
 		}
 		return castling ? Castling.get(getActiveColor(), to>from) : null;

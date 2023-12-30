@@ -3,6 +3,7 @@ package com.fathzer.jchess.ai;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.fathzer.games.ai.SearchContext;
@@ -13,14 +14,11 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningSearch;
-import com.fathzer.games.ai.moveSelector.RandomMoveSelector;
-import com.fathzer.games.ai.moveSelector.StaticMoveSelector;
+import com.fathzer.games.ai.moveselector.RandomMoveSelector;
+import com.fathzer.games.ai.moveselector.StaticMoveSelector;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.util.SelectiveComparator;
-import com.fathzer.games.util.exec.ContextualizedExecutor;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.MultiThreadsContext;
-import com.fathzer.games.util.exec.SingleThreadContext;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -31,44 +29,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
-	private Function<Board<Move>, Move> openingLibrary;
 	private Function<Board<Move>, SelectiveComparator<Move>> moveComparatorSupplier;
-	private Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier;
 	
-	public JChessEngine(Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier, int maxDepth) {
-		super(maxDepth, new TT(16, SizeUnit.MB));
+	public JChessEngine(Supplier<Evaluator<Move, Board<Move>>> evaluatorSupplier, int maxDepth) {
+		super(maxDepth, new TT(16, SizeUnit.MB), evaluatorSupplier);
 		setDeepeningPolicy(new JChessDeepeningPolicy(maxDepth));
 		moveComparatorSupplier = BasicMoveComparator::new;
-		this.evaluatorSupplier = evaluatorSupplier;
+		setMoveSelectorBuilder(b -> {
+			final BasicMoveComparator c = new BasicMoveComparator(b);
+			final RandomMoveSelector<Move, IterativeDeepeningSearch<Move>> rnd = new RandomMoveSelector<>();
+			final StaticMoveSelector<Move, IterativeDeepeningSearch<Move>> stmv = new StaticMoveSelector<>(c::evaluate);
+			return new LoggedSelector(b).setNext(stmv.setNext(rnd));
+		});
 		setLogger(new DefaultEventLogger());
 	}
 	
-	/** Sets the opening library of this engine.
-	 * @param openingLibrary The opening library or null to play without such library.
-	 * <br>An openings library is a function that should return null if the library does not known what to play here.
-	 * @return This updated chess engine
-	 */
-	public JChessEngine setOpenings(Function<Board<Move>, Move> openingLibrary) {
-		this.openingLibrary = openingLibrary;
-		return this;
-	}
-	
-	public void setEvaluatorSupplier(Function<Board<Move>, Evaluator<Move, Board<Move>>> evaluatorSupplier) {
-		this.evaluatorSupplier = evaluatorSupplier;
-	}
-	
-	@Override
-	protected ExecutionContext<SearchContext<Move, Board<Move>>> buildExecutionContext(Board<Move> board) {
-		board.setMoveComparatorBuilder(moveComparatorSupplier);
-		final SearchContext<Move, Board<Move>> context = SearchContextBuilder.get(evaluatorSupplier, board);
-		if (getParallelism()==1) {
-			return new SingleThreadContext<>(context);
-		} else {
-			final ContextualizedExecutor<SearchContext<Move, Board<Move>>> contextualizedExecutor = new ContextualizedExecutor<>(getParallelism());
-			return new MultiThreadsContext<>(context, contextualizedExecutor);
-		}
-	}
-
 	public void setMoveComparatorSupplier(Function<Board<Move>, SelectiveComparator<Move>> moveComparatorSupplier) {
 		this.moveComparatorSupplier = moveComparatorSupplier;
 	}
@@ -78,27 +53,14 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 	}
 
 	@Override
-	public Move apply(Board<Move> board) {
-		Move move = openingLibrary==null ? null : openingLibrary.apply(board);
-		if (move==null) {
-			final BasicMoveComparator c = new BasicMoveComparator(board);
-			super.setMoveSelector(new LoggedSelector(board).setNext(new StaticMoveSelector<Move,IterativeDeepeningSearch<Move>>(c::evaluate).setNext(new RandomMoveSelector<>())));
-			final IterativeDeepeningSearch<Move> search = search(board);
-			final List<EvaluatedMove<Move>> bestMoves = this.getMoveSelector().select(search, search.getBestMoves());
-			final EvaluatedMove<Move> evaluatedMove = bestMoves.get(0);
-			move = evaluatedMove.getContent();
-			log.info("Move chosen :{}", move.toString(board.getCoordinatesSystem()));
-			final List<Move> pv = evaluatedMove.getPrincipalVariation();
-			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
-		} else {
-			log.info("Move from libray:{}", move.toString(board.getCoordinatesSystem()));
-		}
-		return move;
+	protected ExecutionContext<SearchContext<Move, Board<Move>>> buildExecutionContext(Board<Move> board) {
+		board.setMoveComparatorBuilder(moveComparatorSupplier); //TODO Not the right place?
+		return super.buildExecutionContext(board);
 	}
 
 	@Override
 	protected IterativeDeepeningSearch<Move> search(Board<Move> board) {
-		final EventLogger<Move> logger = getLogger();
+		final EventLogger<Move, Board<Move>> logger = getLogger();
 		if (logger instanceof DefaultEventLogger) {
 			((DefaultEventLogger)logger).cs = board.getCoordinatesSystem();
 		}
@@ -123,7 +85,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		return ev.getContent().toString(cs)+"("+value+")";
 	}
 
-	private class DefaultEventLogger implements EventLogger<Move> {
+	private class DefaultEventLogger implements EventLogger<Move, Board<Move>> {
 		private CoordinatesSystem cs;
 
 		public DefaultEventLogger() {
@@ -149,6 +111,18 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		@Override
 		public void logEndedByPolicy(int depth) {
 			log.info("Search ended by deepening policy at depth {}", depth);
+		}
+
+		@Override
+		public void logLibraryMove(Board<Move> board, Move move) {
+			log.info("Move from libray:{}", move.toString(board.getCoordinatesSystem()));
+		}
+
+		@Override
+		public void logMoveChosen(Board<Move> board, EvaluatedMove<Move> evaluatedMove) {
+			log.info("Move chosen :{}", evaluatedMove.getContent().toString(board.getCoordinatesSystem()));
+			final List<Move> pv = evaluatedMove.getPrincipalVariation();
+			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
 		}
 	}
 }

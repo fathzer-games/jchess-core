@@ -12,9 +12,12 @@ class BasicEvaluatorTest {
 
 	@Test
 	void test() {
+		final BasicEvaluator ev = new BasicEvaluator();
 		Board<Move> board = FENUtils.from(FENUtils.NEW_STANDARD_GAME);
-		assertEquals(0, new BasicEvaluator(board).evaluate(board));
+		ev.init(board);
+		assertEquals(0, ev.evaluate(board));
 		board = FENUtils.from("8/8/8/7R/k7/p1R1p3/4r3/1K2b3 b - - 0 7");
-		assertEquals(0, new BasicEvaluator(board).evaluate(board));
+		ev.init(board);
+		assertEquals(0, ev.evaluate(board));
 	}
 }

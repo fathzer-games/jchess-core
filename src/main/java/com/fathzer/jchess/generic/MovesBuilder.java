@@ -50,10 +50,10 @@ public class MovesBuilder {
 	
 	private static class PromotionAdder extends SimpleMoveAdder {
 		@Setter
-		private Color playingColor;
+		private boolean whitePlaying;
 		@Override
 		public void add(int from, int to) {
-			if (playingColor==WHITE) {
+			if (whitePlaying) {
 				list.add(new BasicMove(from, to, WHITE_KNIGHT));
 				list.add(new BasicMove(from, to, WHITE_QUEEN));
 				list.add(new BasicMove(from, to, WHITE_ROOK));
@@ -137,7 +137,7 @@ public class MovesBuilder {
 	
 	private void init() {
 		this.mv = mvBuilder.get();
-		this.promotionAdder.setPlayingColor(board.getActiveColor());
+		this.promotionAdder.setWhitePlaying(board.isWhiteToMove());
 		this.from.reset(0);
 	}
 	

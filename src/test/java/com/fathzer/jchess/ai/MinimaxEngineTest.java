@@ -30,7 +30,6 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.MoveBuilder;
 import com.fathzer.jchess.ai.evaluator.BasicEvaluator;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.generic.BasicMove;
 
 class MinimaxEngineTest implements MoveBuilder {
 	
@@ -127,7 +126,7 @@ assertEquals(19, moves.size());
 	@Test
 	void moreTests() {
 		final Board<Move> board = FENUtils.from("8/8/8/3kr3/8/8/5PPP/7K w - - 0 1");
-		final SearchContext<Move, Board<Move>> context = SearchContextBuilder.get(BasicEvaluator::new, board);
+		final SearchContext<Move, Board<Move>> context = SearchContext.get(board, BasicEvaluator::new);
 		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = new SingleThreadContext<>(context)) {
 			Negamax<Move, Board<Move>> ai = new Negamax<>(exec);
 			List<Move> l = new ArrayList<>();
@@ -215,7 +214,7 @@ assertEquals(19, moves.size());
 	void bug20230911_chase() {
 		final Board<Move> board = FENUtils.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		SearchContext<Move, Board<Move>> context = SearchContextBuilder.get(BasicEvaluator::new, board);
+		SearchContext<Move, Board<Move>> context = SearchContext.get(board, BasicEvaluator::new);
 		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = new SingleThreadContext<>(context)) {
 			Negamax3<Move, Board<Move>> ai = new Negamax3<>(exec);
 			final TT tt = new TT(16, SizeUnit.MB);

@@ -1,7 +1,5 @@
 package com.fathzer.jchess.fen;
 
-import static com.fathzer.games.Color.*;
-
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Move;
@@ -23,7 +21,7 @@ public class FENUtils {
 			}
 		}
 		b.append(' ');
-		b.append(WHITE.equals(board.getActiveColor())?'w':'b');
+		b.append(board.isWhiteToMove()?'w':'b');
 		b.append(' ');
 		addCastlings(b, board);
 		b.append(' ');

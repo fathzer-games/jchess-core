@@ -19,8 +19,14 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 	@Setter
 	private Color viewPoint;
 
-	public BasicEvaluator(Board<Move> board) {
-		this(getPoints(board));
+	public BasicEvaluator() {
+		this.scores = new Stack<>(null);
+	}
+	
+	@Override
+	public void init(Board<Move> board) {
+		this.scores.clear();
+		scores.set(getPoints(board));
 	}
 	
 	private BasicEvaluator(int score) {
@@ -51,7 +57,7 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 		        	increment = increment + move.getPromotion().getKind().getValue()-PAWN.getValue();
 		        }
 	        }
-			if (board.getActiveColor()!=WHITE) {
+			if (!board.isWhiteToMove()) {
 				increment = -increment;
 			}
 		}
@@ -72,7 +78,7 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 	@Override
 	public int evaluate(Board<Move> board) {
 		int points = 100*scores.get();
-		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
+		if (BLACK==viewPoint || (viewPoint==null && !board.isWhiteToMove())) {
 			points = -points;
 		}
 		return points;
