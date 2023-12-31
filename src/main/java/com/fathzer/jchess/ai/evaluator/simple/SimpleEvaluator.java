@@ -1,10 +1,6 @@
 package com.fathzer.jchess.ai.evaluator.simple;
 
 import static com.fathzer.games.Color.*;
-import static com.fathzer.jchess.PieceKind.*;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 import com.fathzer.games.Color;
 import com.fathzer.games.ai.evaluation.Evaluator;
@@ -21,8 +17,7 @@ import lombok.Setter;
  * <br>This only work with 8*8 games
  */
 public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
-	private static final Map<PieceKind, Integer> PIECE_VALUE;
-	private static final Map<PieceKind, int[]> PIECE_POSITION_EVALUATOR_MAP;
+	private static final int[] PIECE_VALUES = {100, 320, 330, 500, 900, 20000};
 	private static final int[] KING_MID_GAME_EVAL = new int[] {
 			-30,-40,-40,-50,-50,-40,-40,-30,
 			-30,-40,-40,-50,-50,-40,-40,-30,
@@ -32,6 +27,7 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 			-10,-20,-20,-20,-20,-20,-20,-10,
 			 20, 20,  0,  0,  0,  0, 20, 20,
 			 20, 30, 10,  0,  0, 10, 30, 20};
+
 	private static final int[] KING_END_GAME_EVAL = new int[] {
 			-50,-40,-30,-20,-20,-30,-40,-50,
 			-30,-20,-10,  0,  0,-10,-20,-30,
@@ -42,80 +38,72 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 			-30,-30,  0,  0,  0,  0,-30,-30,
 			-50,-30,-30,-30,-30,-30,-30,-50};
 	
+	private static final int [][] PIECE_POSITION_VALUES = new int[][] {
+		// PAWN
+		new int[] {
+			0,  0,  0,  0,  0,  0,  0,  0,
+			50, 50, 50, 50, 50, 50, 50, 50,
+			10, 10, 20, 30, 30, 20, 10, 10,
+			 5,  5, 10, 25, 25, 10,  5,  5,
+			 0,  0,  0, 20, 20,  0,  0,  0,
+			 5, -5,-10,  0,  0,-10, -5,  5,
+			 5, 10, 10,-20,-20, 10, 10,  5,
+			 0,  0,  0,  0,  0,  0,  0,  0},
+		// KNIGHT
+		new int[] {
+			-50,-40,-30,-30,-30,-30,-40,-50,
+			-40,-20,  0,  0,  0,  0,-20,-40,
+			-30,  0, 10, 15, 15, 10,  0,-30,
+			-30,  5, 15, 20, 20, 15,  5,-30,
+			-30,  0, 15, 20, 20, 15,  0,-30,
+			-30,  5, 10, 15, 15, 10,  5,-30,
+			-40,-20,  0,  5,  5,  0,-20,-40,
+			-50,-40,-30,-30,-30,-30,-40,-50},
+		// BISHOP
+		new int[] {
+			-20,-10,-10,-10,-10,-10,-10,-20,
+			-10,  0,  0,  0,  0,  0,  0,-10,
+			-10,  0,  5, 10, 10,  5,  0,-10,
+			-10,  5,  5, 10, 10,  5,  5,-10,
+			-10,  0, 10, 10, 10, 10,  0,-10,
+			-10, 10, 10, 10, 10, 10, 10,-10,
+			-10,  5,  0,  0,  0,  0,  5,-10,
+			-20,-10,-10,-10,-10,-10,-10,-20},
+		// ROOK
+		new int[] {
+			  0,  0,  0,  0,  0,  0,  0,  0,
+			  5, 10, 10, 10, 10, 10, 10,  5,
+			 -5,  0,  0,  0,  0,  0,  0, -5,
+			 -5,  0,  0,  0,  0,  0,  0, -5,
+			 -5,  0,  0,  0,  0,  0,  0, -5,
+			 -5,  0,  0,  0,  0,  0,  0, -5,
+			 -5,  0,  0,  0,  0,  0,  0, -5,
+			  0,  0,  0,  5,  5,  0,  0,  0},
+		// QUEEN
+		new int[] {
+			-20,-10,-10, -5, -5,-10,-10,-20,
+			-10,  0,  0,  0,  0,  0,  0,-10,
+			-10,  0,  5,  5,  5,  5,  0,-10,
+			 -5,  0,  5,  5,  5,  5,  0, -5,
+			  0,  0,  5,  5,  5,  5,  0, -5,
+			-10,  5,  5,  5,  5,  5,  0,-10,
+			-10,  0,  5,  0,  0,  0,  0,-10,
+			-20,-10,-10, -5, -5,-10,-10,-20
+	}};
+	
 	@Setter
 	private Color viewPoint;
-	
-	static {
-		PIECE_VALUE = new EnumMap<>(PieceKind.class);
-		PIECE_VALUE.put(KING, 20000);
-		PIECE_VALUE.put(QUEEN, 900);
-		PIECE_VALUE.put(ROOK, 500);
-		PIECE_VALUE.put(BISHOP, 330);
-		PIECE_VALUE.put(KNIGHT, 320);
-		PIECE_VALUE.put(PAWN, 100);
-		
-		PIECE_POSITION_EVALUATOR_MAP = new EnumMap<>(PieceKind.class);
-		PIECE_POSITION_EVALUATOR_MAP.put(PAWN, new int[] {
-				0,  0,  0,  0,  0,  0,  0,  0,
-				50, 50, 50, 50, 50, 50, 50, 50,
-				10, 10, 20, 30, 30, 20, 10, 10,
-				 5,  5, 10, 25, 25, 10,  5,  5,
-				 0,  0,  0, 20, 20,  0,  0,  0,
-				 5, -5,-10,  0,  0,-10, -5,  5,
-				 5, 10, 10,-20,-20, 10, 10,  5,
-				 0,  0,  0,  0,  0,  0,  0,  0});
-		PIECE_POSITION_EVALUATOR_MAP.put(KNIGHT, new int[] {
-				-50,-40,-30,-30,-30,-30,-40,-50,
-				-40,-20,  0,  0,  0,  0,-20,-40,
-				-30,  0, 10, 15, 15, 10,  0,-30,
-				-30,  5, 15, 20, 20, 15,  5,-30,
-				-30,  0, 15, 20, 20, 15,  0,-30,
-				-30,  5, 10, 15, 15, 10,  5,-30,
-				-40,-20,  0,  5,  5,  0,-20,-40,
-				-50,-40,-30,-30,-30,-30,-40,-50});
-		PIECE_POSITION_EVALUATOR_MAP.put(BISHOP, new int[] {
-				-20,-10,-10,-10,-10,-10,-10,-20,
-				-10,  0,  0,  0,  0,  0,  0,-10,
-				-10,  0,  5, 10, 10,  5,  0,-10,
-				-10,  5,  5, 10, 10,  5,  5,-10,
-				-10,  0, 10, 10, 10, 10,  0,-10,
-				-10, 10, 10, 10, 10, 10, 10,-10,
-				-10,  5,  0,  0,  0,  0,  5,-10,
-				-20,-10,-10,-10,-10,-10,-10,-20});
-		PIECE_POSITION_EVALUATOR_MAP.put(ROOK, new int[] {
-				  0,  0,  0,  0,  0,  0,  0,  0,
-				  5, 10, 10, 10, 10, 10, 10,  5,
-				 -5,  0,  0,  0,  0,  0,  0, -5,
-				 -5,  0,  0,  0,  0,  0,  0, -5,
-				 -5,  0,  0,  0,  0,  0,  0, -5,
-				 -5,  0,  0,  0,  0,  0,  0, -5,
-				 -5,  0,  0,  0,  0,  0,  0, -5,
-				  0,  0,  0,  5,  5,  0,  0,  0});
-		PIECE_POSITION_EVALUATOR_MAP.put(QUEEN, new int[] {
-				-20,-10,-10, -5, -5,-10,-10,-20,
-				-10,  0,  0,  0,  0,  0,  0,-10,
-				-10,  0,  5,  5,  5,  5,  0,-10,
-				 -5,  0,  5,  5,  5,  5,  0, -5,
-				  0,  0,  5,  5,  5,  5,  0, -5,
-				-10,  5,  5,  5,  5,  5,  0,-10,
-				-10,  0,  5,  0,  0,  0,  0,-10,
-				-20,-10,-10, -5, -5,-10,-10,-20
-		});
-	}
-	
-	public SimpleEvaluator(Board<Move> board) {
-	}
 	
 	@Override
 	public int evaluate(Board<Move> board) {
 		int points = getPoints(board);
-		if (BLACK==viewPoint || (viewPoint==null && BLACK==board.getActiveColor())) {
+		if (BLACK==viewPoint || (viewPoint==null && !board.isWhiteToMove())) {
 			points = -points;
 		}
 		return points;
 	}
 
-	public static int getPoints(Board<Move> board) {
+	protected static int getPoints(Board<Move> board) {
 		final BoardExplorer exp = board.getExplorer();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		int points = 0;
@@ -124,9 +112,9 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 			final Piece p = exp.getPiece();
 			if (p!=null) {
 				phaseDetector.add(p);
-				int inc = PIECE_VALUE.get(p.getKind());
-				final int[] positionMap = PIECE_POSITION_EVALUATOR_MAP.get(p.getKind());
-				if (positionMap!=null) {
+				int inc = PIECE_VALUES[p.getKind().ordinal()];
+				if (p.getKind()!=PieceKind.KING) {
+					final int[] positionMap = PIECE_POSITION_VALUES[p.getKind().ordinal()];
 					int index = exp.getIndex();
 					inc += getPositionValue(positionMap, index, cs, p.getColor());
 				}
@@ -146,8 +134,14 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 	private static int getPositionValue(int[] positionMap, int index, CoordinatesSystem cs, Color color) {
 		index = 8*cs.getRow(index)+cs.getColumn(index);
 		if (color==BLACK) {
-			index = 63-index;
+			final int row = 7 - index/8;
+			final int col = index%8;
+			index = row*8 + col;
 		}
 		return positionMap[index];
+	}
+	
+	protected static int getPositionValue(PieceKind type, int index) {
+		return PIECE_POSITION_VALUES[type.ordinal()][index];
 	}
 }

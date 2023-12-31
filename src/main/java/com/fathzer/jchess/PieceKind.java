@@ -9,9 +9,9 @@ import lombok.Getter;
 
 public enum PieceKind {
 	PAWN(1, null, false),
-	ROOK(5, EnumSet.of(NORTH,WEST,SOUTH,EAST), true),
 	KNIGHT(3, EnumSet.of(KNIGHT1, KNIGHT2, KNIGHT3, KNIGHT4, KNIGHT5, KNIGHT6, KNIGHT7, KNIGHT8), false), 
 	BISHOP(3, EnumSet.of(NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST), true),
+	ROOK(5, EnumSet.of(NORTH,WEST,SOUTH,EAST), true),
 	QUEEN(9, SLIDERS, true), KING(1000, SLIDERS, false);
 	
 	@Getter
