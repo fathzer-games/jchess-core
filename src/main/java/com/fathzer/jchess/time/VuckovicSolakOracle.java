@@ -3,16 +3,17 @@ package com.fathzer.jchess.time;
 import com.fathzer.games.ai.time.RemainingMoveCountPredictor;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
+import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
 /** A {@link RemainingMoveCountPredictor} that uses the function described in chapter 4 of <a href="http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.pdf">Vuckovic and Solak paper</a>.
  */
-public class VuckovicSolakOracle implements RemainingMoveCountPredictor<Board<?>> {
+public class VuckovicSolakOracle implements RemainingMoveCountPredictor<Board<Move>> {
 	public static final VuckovicSolakOracle INSTANCE = new VuckovicSolakOracle();
 	
 	@Override
-	public int getRemainingHalfMoves(Board<?> board) {
+	public int getRemainingHalfMoves(Board<Move> board) {
 		final int points = getPoints(board);
 		final int remainingMoves;
 		if (points<20) {
