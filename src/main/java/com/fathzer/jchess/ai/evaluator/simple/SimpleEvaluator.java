@@ -3,7 +3,7 @@ package com.fathzer.jchess.ai.evaluator.simple;
 import static com.fathzer.games.Color.*;
 
 import com.fathzer.games.Color;
-import com.fathzer.games.ai.evaluation.Evaluator;
+import com.fathzer.games.ai.evaluation.AbstractEvaluator;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -11,12 +11,10 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 
-import lombok.Setter;
-
 /** A simple evaluator described at <a href="https://www.chessprogramming.org/Simplified_Evaluation_Function">https://www.chessprogramming.org/Simplified_Evaluation_Function</a>
  * <br>This only work with 8*8 games
  */
-public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
+public class SimpleEvaluator extends AbstractEvaluator<Move, Board<Move>> {
 	private static final int[] PIECE_VALUES = {100, 320, 330, 500, 900, 20000};
 	private static final int[] KING_MID_GAME_EVAL = new int[] {
 			-30,-40,-40,-50,-50,-40,-40,-30,
@@ -91,16 +89,9 @@ public class SimpleEvaluator implements Evaluator<Move, Board<Move>> {
 			-20,-10,-10, -5, -5,-10,-10,-20
 	}};
 	
-	@Setter
-	private Color viewPoint;
-	
 	@Override
-	public int evaluate(Board<Move> board) {
-		int points = getPoints(board);
-		if (BLACK==viewPoint || (viewPoint==null && !board.isWhiteToMove())) {
-			points = -points;
-		}
-		return points;
+	public int evaluateAsWhite(Board<Move> board) {
+		return getPoints(board);
 	}
 
 	protected static int getPoints(Board<Move> board) {

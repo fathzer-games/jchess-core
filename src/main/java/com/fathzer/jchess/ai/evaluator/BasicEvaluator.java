@@ -3,7 +3,7 @@ package com.fathzer.jchess.ai.evaluator;
 import static com.fathzer.games.Color.*;
 import static com.fathzer.jchess.PieceKind.*;
 
-import com.fathzer.games.Color;
+import com.fathzer.games.ai.evaluation.AbstractEvaluator;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.Stack;
 import com.fathzer.jchess.Board;
@@ -11,13 +11,9 @@ import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 
-import lombok.Setter;
-
-public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
+public class BasicEvaluator extends AbstractEvaluator<Move, Board<Move>> {
 	private final Stack<Integer> scores;
 	private int toCommit; 
-	@Setter
-	private Color viewPoint;
 
 	public BasicEvaluator() {
 		this.scores = new Stack<>(null);
@@ -36,7 +32,9 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 
 	@Override
 	public Evaluator<Move, Board<Move>> fork() {
-		return new BasicEvaluator(scores.get());
+		BasicEvaluator result = new BasicEvaluator(scores.get());
+		result.viewPoint = viewPoint;
+		return result;
 	}
 	
 	@Override
@@ -76,12 +74,8 @@ public class BasicEvaluator implements Evaluator<Move, Board<Move>> {
 	}
 
 	@Override
-	public int evaluate(Board<Move> board) {
-		int points = 100*scores.get();
-		if (BLACK==viewPoint || (viewPoint==null && !board.isWhiteToMove())) {
-			points = -points;
-		}
-		return points;
+	public int evaluateAsWhite(Board<Move> board) {
+		return 100*scores.get();
 	}
 
 	/** Get evaluation from the white view point.
