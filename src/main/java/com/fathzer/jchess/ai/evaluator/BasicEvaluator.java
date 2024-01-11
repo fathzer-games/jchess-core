@@ -11,7 +11,7 @@ import com.fathzer.jchess.BoardExplorer;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 
-public class BasicEvaluator extends AbstractEvaluator<Move, Board<Move>> {
+public class BasicEvaluator extends AbstractEvaluator<Move, Board<Move>> implements Evaluator<Move, Board<Move>> {
 	private final Stack<Integer> scores;
 	private int toCommit; 
 
