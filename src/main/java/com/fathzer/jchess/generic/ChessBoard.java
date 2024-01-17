@@ -544,6 +544,11 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	}
 	
 	@Override
+	public int getEnPassantTarget() {
+		return enPassantDeletePawnIndex;
+	}
+
+	@Override
 	public long getHashKey() {
 		return key;
 	}

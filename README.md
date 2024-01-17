@@ -36,12 +36,10 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
 - I think the generic part should be re-engeniered: MoveComparator management is ugly. Working with lambda expressions to verify move is (pseudo-)legal is probably not a good idea. I feel having different classes to generates the moves depending on the board state (check, pinned, etc...), exactly as we have different move comparators could be cleaner and faster. Maybe we should try...
 - Engine improvements:
     - Implement Quiesce moves
-    - Create incremental evaluation functions
-    - Implement pseudo-legal move generation
 - UCI stuff needs to be tested (especially if stop works with JChessEngine and perfT test that probably use the last move comparator, which is perfectly useless - Engine should have a perfT mode or, at least a way to set in perftT test if moves are sorted or not).  
 For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to System.out when moveComparator is null, could be helpful.
 - Finish FENParser for Chess960
-- Implement Capablanca chess
+- Implement Capablanca chess?
 - General things ... if it does not alter performance too much:
     - Move generation improvements:
         - Use bitboards to generate moves faster? My guess is it is faster. Nevertheless, chesslib implementation, which is not very optimized, is not dramatically faster. Moreover, no way to have it work with some chess variants like Capablanca.

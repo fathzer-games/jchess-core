@@ -8,11 +8,11 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
 
-class BasicEvaluatorTest {
+class NaiveEvaluatorTest {
 
 	@Test
 	void test() {
-		final BasicEvaluator ev = new BasicEvaluator();
+		final NaiveEvaluator ev = new NaiveEvaluator();
 		Board<Move> board = FENUtils.from(FENUtils.NEW_STANDARD_GAME);
 		ev.init(board);
 		assertEquals(0, ev.evaluate(board));

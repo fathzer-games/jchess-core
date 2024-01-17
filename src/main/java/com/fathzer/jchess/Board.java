@@ -35,6 +35,12 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	 * @see #getCoordinatesSystem()
 	 */
 	int getEnPassant();
+	
+	/** Gets the cell of the pawn captured by en-passant move.
+	 * @return the index of captured pawn if {@link #getEnPassant()} returns a positive number. If {@link #getEnPassant()} returns a negative number, the result is not specified.
+	 */
+	int getEnPassantTarget();
+
 	int getHalfMoveCount();
 	boolean isInsufficientMaterial();
 	boolean isDrawByRepetition();
