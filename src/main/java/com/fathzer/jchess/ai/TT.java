@@ -6,7 +6,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.generic.BasicMove;
 
-class TT extends OneLongEntryTranspositionTable<Move> {
+public class TT extends OneLongEntryTranspositionTable<Move> {
 	// Move is encoded in an int:
 	// 12 bits for source, 12 bits for destination
 	// 8 bits for promotion
