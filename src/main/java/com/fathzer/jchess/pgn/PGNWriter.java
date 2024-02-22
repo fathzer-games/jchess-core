@@ -32,7 +32,7 @@ public class PGNWriter {
 			} else if (status==WHITE_WON) {
 				return "1-0";
 			} else if (status==BLACK_WON) {
-				return "1-0";
+				return "0-1";
 			} else {
 				return "*";
 			}
