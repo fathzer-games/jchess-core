@@ -267,7 +267,7 @@ class ChessBoardTest implements MoveBuilder {
 	void pawnsMoveGenerationTest() {
 		final ChessBoard board = (ChessBoard) FENUtils.from("r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		final List<Move> blackMoves = board.getMoves(false);
+		final List<Move> blackMoves = board.getMoves();
 		assertEquals(Set.of("a4"), getTo(cs, getMoves(cs, blackMoves, "a5")));
 		assertEquals(Set.of("g5","g6"), getTo(cs, getMoves(cs, blackMoves, "g7")));
 		assertEquals(Set.of("b6"), getTo(cs, getMoves(cs, blackMoves, "b7")));
@@ -278,7 +278,7 @@ class ChessBoardTest implements MoveBuilder {
 		final String fen = "r1b1k2r/1p1pqppp/2n2n1b/pP6/4QN2/B2B1P1N/P1pPP1P1/R3K2R w KQkq a6 0 1";
 		board.copy(FENUtils.from(fen));
 		assertEquals(fen, FENUtils.to(board));
-		final List<Move> whiteMoves = board.getMoves(false);
+		final List<Move> whiteMoves = board.getMoves();
 		assertEquals(Set.of("a6","b6","c6"), getTo(cs, getMoves(cs, whiteMoves, "b5")), asString(whiteMoves, board));
 
 		
@@ -322,7 +322,7 @@ class ChessBoardTest implements MoveBuilder {
 		assertEquals(Set.of("d1","f1"), getTo(cs ,getMoves(FENUtils.from("4k3/8/8/8/8/3n4/3PP3/4K2R w K - 0 1"), "e1")), "Problem in king move");
 		
 		// Can castle
-		List<Move> moves = FENUtils.from("r3kb1r/ppp2ppp/2nqb2n/P2p4/2P1p3/6R1/1PQPPPPP/1NB1KBNR b Kkq - 1 8").getMoves(false);
+		List<Move> moves = FENUtils.from("r3kb1r/ppp2ppp/2nqb2n/P2p4/2P1p3/6R1/1PQPPPPP/1NB1KBNR b Kkq - 1 8").getMoves();
 		moves = moves.stream().filter(m->"e8".equals(cs.getAlgebraicNotation(m.getFrom()))).collect(Collectors.toList());
 		assertEquals(Set.of("c8","d8", "d7", "e7"), getTo(cs, moves));
 		assertEquals(4, moves.size(), asString(moves, board));
@@ -333,7 +333,7 @@ class ChessBoardTest implements MoveBuilder {
 		final Board<Move> board = FENUtils.from("2Q1B3/8/8/KP4p1/1R3pPk/5R2/4P3/8 b - g3 0 1");
 		List<Move> moves = board.getLegalMoves();
 		assertTrue(moves.isEmpty(), "Should have no legal moves but obtain "+asString(moves, board));
-		moves = board.getMoves(false);
+		moves = board.getMoves();
 		assertTrue(moves.contains(move(board, "f4", "g3")), "Should contains en-passant move");
 	}
 	
@@ -344,7 +344,7 @@ class ChessBoardTest implements MoveBuilder {
 		// Only king can move
 		final Board<Move> board = FENUtils.from("r1b1k2r/1p1pqppp/2nN1n1b/pP6/4Q3/B2B1P1N/P1pPP1P1/R3K2R b KQkq - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-		List<Move> moves = board.getMoves(false);
+		List<Move> moves = board.getMoves();
 		assertEquals(Set.of("e8"), getFrom(cs, moves), "Only king can move");
 		assertEquals(Set.of("d8", "f8"), getTo(cs, moves));
 	}
