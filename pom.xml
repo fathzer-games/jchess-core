@@ -13,7 +13,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<check-dependencies-java-version>11</check-dependencies-java-version>
+		<check-dependencies-java-version>17</check-dependencies-java-version>
 	    <maven.compiler.release>11</maven.compiler.release>
 		<sonar.organization>fathzer-games</sonar.organization>
 	</properties>
@@ -22,12 +22,12 @@
 		<dependency>
 			<groupId>com.fathzer</groupId>
 			<artifactId>games-core</artifactId>
-			<version>0.0.8-SNAPSHOT</version>
+			<version>0.0.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
 			<artifactId>chess-utils</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
