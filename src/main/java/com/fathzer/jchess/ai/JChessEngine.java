@@ -120,9 +120,13 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 
 		@Override
 		public void logMoveChosen(Board<Move> board, EvaluatedMove<Move> evaluatedMove) {
-			log.info("Move chosen :{}", evaluatedMove.getContent().toString(board.getCoordinatesSystem()));
-			final List<Move> pv = evaluatedMove.getPrincipalVariation();
-			log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+			if (evaluatedMove==null) {
+				log.info("No valid move found");
+			} else {
+				log.info("Move chosen :{}", evaluatedMove.getContent().toString(board.getCoordinatesSystem()));
+				final List<Move> pv = evaluatedMove.getPrincipalVariation();
+				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+			}
 		}
 	}
 }

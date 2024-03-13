@@ -14,7 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<check-dependencies-java-version>17</check-dependencies-java-version>
-	    <maven.compiler.release>11</maven.compiler.release>
+	    <maven.compiler.release>17</maven.compiler.release>
 		<sonar.organization>fathzer-games</sonar.organization>
 	</properties>
 
@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>5.7.2</version>
+			<version>5.10.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
