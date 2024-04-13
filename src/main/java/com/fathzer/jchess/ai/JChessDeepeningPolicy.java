@@ -31,11 +31,13 @@ final class JChessDeepeningPolicy extends DeepeningPolicy {
 	}
 
 	@Override
-	public <M> void mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
+	public <M> boolean mergeInterrupted(SearchResult<M> bestMoves, int bestMovesDepth, List<EvaluatedMove<M>> partialList, int interruptionDepth) {
 		if ((interruptionDepth - bestMovesDepth)%2==0) {
 			//TODO Remove when quiesce will be implemented?
 			// Do not merge results if depth are optimistic and pessimistic. 
-			super.mergeInterrupted(bestMoves, bestMovesDepth, partialList, interruptionDepth);
+			return super.mergeInterrupted(bestMoves, bestMovesDepth, partialList, interruptionDepth);
+		} else {
+			return false;
 		}
 	}
 }

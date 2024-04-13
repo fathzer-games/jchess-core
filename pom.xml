@@ -9,7 +9,7 @@
 		<version>1.0.8</version>
 	</parent>
 	<artifactId>jchess-core</artifactId>
-	<version>0.0.6-SNAPSHOT</version>
+	<version>0.0.7-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>com.fathzer</groupId>
 			<artifactId>games-core</artifactId>
-			<version>0.0.9-SNAPSHOT</version>
+			<version>0.0.10-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.30</version>
+			<version>1.18.32</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

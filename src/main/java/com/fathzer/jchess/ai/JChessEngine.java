@@ -114,8 +114,8 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 
 		@Override
-		public void logLibraryMove(Board<Move> board, Move move) {
-			log.info("Move from libray:{}", move.toString(board.getCoordinatesSystem()));
+		public void logLibraryMove(Board<Move> board, EvaluatedMove<Move> move) {
+			log.info("Move from libray:{}", move.toString(m-> m.toString(board.getCoordinatesSystem())));
 		}
 
 		@Override
