@@ -410,7 +410,7 @@ class ChessBoardTest implements MoveBuilder {
 
 	@Test
 	void drawByRepetitionTest() {
-		Board<Move> board = GameBuilders.STANDARD.newGame();
+		Board<Move> board = GameBuilders.STANDARD.get();
 		final Move kwf = move(board,"b1", "c3");
 		final Move kwb = move(board,"c3", "b1");
 		final Move kbf = move(board, "b8", "c6");

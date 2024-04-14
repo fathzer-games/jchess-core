@@ -17,7 +17,7 @@ class PGNWriterTest implements MoveBuilder {
 
 	@Test
 	void test() {
-		final Board<Move> board = GameBuilders.STANDARD.newGame();
+		final Board<Move> board = GameBuilders.STANDARD.get();
 		final GameHistory history = new GameHistory(board);
 		history.add(move(board, "e2", "e4"));
 		history.add(move(board, "e7", "e5"));
@@ -47,7 +47,7 @@ class PGNWriterTest implements MoveBuilder {
 	
 	@Test
 	void bug20231025() {
-		final Board<Move> board = GameBuilders.STANDARD.newGame();
+		final Board<Move> board = GameBuilders.STANDARD.get();
 		final GameHistory history = new GameHistory(board);
 		history.add(move(board, "c2", "c4"));
 		history.add(move(board, "g8", "f6"));
