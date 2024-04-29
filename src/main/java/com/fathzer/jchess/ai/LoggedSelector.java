@@ -3,9 +3,9 @@ package com.fathzer.jchess.ai;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.fathzer.games.ai.SearchResult;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.iterativedeepening.FirstBestMoveSelector;
+import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 
@@ -20,7 +20,7 @@ public class LoggedSelector extends FirstBestMoveSelector<Move> {
 	}
 
 	@Override
-	protected List<EvaluatedMove<Move>> filter(List<SearchResult<Move>> history, List<EvaluatedMove<Move>> bestMoves) {
+	protected List<EvaluatedMove<Move>> filter(SearchHistory<Move> history, List<EvaluatedMove<Move>> bestMoves) {
 		log.info("Filtering with the best moves history:");
 		return super.filter(history, bestMoves);
 	}

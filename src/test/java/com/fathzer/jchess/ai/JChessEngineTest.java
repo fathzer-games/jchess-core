@@ -15,7 +15,7 @@ class JChessEngineTest {
 		System.out.println(board.getLegalMoves().size());
 		JChessEngine engine = new JChessEngine(SimplifiedEvaluator::new, 10);
 		engine.getDeepeningPolicy().setDeepenOnForced(false);
-		System.out.println(engine.apply(board));
+		System.out.println(engine.getBestMoves(board).getBest());
 	}
 
 }

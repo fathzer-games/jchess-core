@@ -14,9 +14,7 @@ import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
 import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
-import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningSearch;
-import com.fathzer.games.ai.moveselector.RandomMoveSelector;
-import com.fathzer.games.ai.moveselector.StaticMoveSelector;
+import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.util.exec.ExecutionContext;
@@ -36,12 +34,6 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		super(new DeepeningPolicy(maxDepth), new TT(16, SizeUnit.MB), evaluatorSupplier);
 		setDeepeningPolicy(new JChessDeepeningPolicy(maxDepth));
 		moveComparatorSupplier = BasicMoveComparator::new;
-		setMoveSelectorBuilder(b -> {
-			final BasicMoveComparator c = new BasicMoveComparator(b);
-			final RandomMoveSelector<Move, IterativeDeepeningSearch<Move>> rnd = new RandomMoveSelector<>();
-			final StaticMoveSelector<Move, IterativeDeepeningSearch<Move>> stmv = new StaticMoveSelector<>(c::evaluate);
-			return new LoggedSelector(b).setNext(stmv.setNext(rnd));
-		});
 		setLogger(new DefaultEventLogger());
 	}
 	
@@ -72,8 +64,9 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 			log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENUtils.to(board), engine.getDeepeningPolicy().getSize(), engine.getDeepeningPolicy().getAccuracy(), engine.getDeepeningPolicy().getDepth(), engine.getDeepeningPolicy().getMaxTime());
 		}
 
+		
 		@Override
-		public void logSearchEnd(Board<Move> board, IterativeDeepeningSearch<Move> result) {
+		public void logSearchEnd(Board<Move> board, SearchHistory<Move> result) {
 			log.info("--- End of iterative evaluation returns: {}", toString(result.getBestMoves()));
 		}
 
