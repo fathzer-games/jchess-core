@@ -68,6 +68,17 @@ public class Chess960Board extends ChessBoard {
 			initialRookPositions[castling.ordinal()] = position;
 		}
 	}
+	
+	@Override
+	public Castling getCastling(int from, int to) {
+		if (getCoordinatesSystem().getRow(from)!=getCoordinatesSystem().getRow(to)) {
+			// Doesn't move horizontally or by only one cell
+			return null;
+		}
+		final Castling castling = Castling.get(getActiveColor(), to>from);
+		return to==getInitialRookPosition(castling) ? castling : null;
+	}
+
 
 	@Override
 	protected void copy(Board<Move> other) {

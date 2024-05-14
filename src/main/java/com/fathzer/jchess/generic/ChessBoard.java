@@ -390,7 +390,8 @@ public abstract class ChessBoard implements Board<Move>, HashProvider {
 	 * <br>This generic implementation returns the corner that contains the rook in standard chess
 	 */
 	@Override
-	public int getInitialRookPosition(Castling castling) { //TODO Possible to optimize using same structure as in chess960
+	public int getInitialRookPosition(Castling castling) {
+		//TODO Possible to optimize using same structure as in chess960
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		if (Castling.BLACK_QUEEN_SIDE.equals(castling)) {
 			return cs.getIndex(0, 0);

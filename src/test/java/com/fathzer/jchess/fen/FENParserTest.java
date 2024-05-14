@@ -21,6 +21,9 @@ class FENParserTest {
 		assertEquals(Piece.WHITE_KING, board.getPiece(cs.getIndex("e1")));
 		assertEquals(Piece.WHITE_QUEEN, board.getPiece(cs.getIndex("e4")));
 		assertEquals(Piece.BLACK_BISHOP, board.getPiece(cs.getIndex("h6")));
+		assertEquals(cs.getIndex("h1"), board.getInitialRookPosition(Castling.WHITE_KING_SIDE));
+		assertEquals(cs.getIndex("a1"), board.getInitialRookPosition(Castling.WHITE_QUEEN_SIDE));
+		assertEquals(cs.getIndex("a8"), board.getInitialRookPosition(Castling.BLACK_QUEEN_SIDE));
 		
 		assertEquals(fen, FENUtils.to(board));
 		
@@ -45,8 +48,8 @@ class FENParserTest {
 	
 	@Test
 	void test960() {
-		final String fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
-		Board<Move> board = FENUtils.from(fen);
+		final var fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
+		var board = FENUtils.from(fen);
 		assertEquals(fen, FENUtils.to(board));
 		
 		final String fenWithInnerRook = "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11";
@@ -54,6 +57,17 @@ class FENParserTest {
 		assertTrue(board.hasCastling(Castling.WHITE_KING_SIDE));     
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));     
 		assertTrue(board.hasCastling(Castling.BLACK_KING_SIDE));     
-		assertTrue(board.hasCastling(Castling.BLACK_QUEEN_SIDE));     
+		assertTrue(board.hasCastling(Castling.BLACK_QUEEN_SIDE));
+		
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		assertEquals(cs.getIndex("g1"), board.getInitialRookPosition(Castling.WHITE_KING_SIDE));
+		assertEquals(cs.getIndex("g8"), board.getInitialRookPosition(Castling.BLACK_KING_SIDE));
+		assertEquals(cs.getIndex("a8"), board.getInitialRookPosition(Castling.BLACK_QUEEN_SIDE));
+
+		assertEquals(fenWithInnerRook, FENUtils.to(board));
+		
+		final String otherFenWithInnerRook = "1r2k1r1/ppp1pp2/3p2pp/5bn1/P7/2N2B2/1PPPPP2/RR2K3 w Bkq - 4 11";
+		board = FENUtils.from(otherFenWithInnerRook);
+		assertEquals(otherFenWithInnerRook, FENUtils.to(board));
 	}
 }

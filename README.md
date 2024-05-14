@@ -38,7 +38,6 @@ Some code may seem not very elegant as it uses "old fashion" *for* structures in
     - Implement Quiesce moves
 - UCI stuff needs to be tested (especially if stop works with JChessEngine and perfT test that probably use the last move comparator, which is perfectly useless - Engine should have a perfT mode or, at least a way to set in perftT test if moves are sorted or not).  
 For PerfT stuff, making ...generic.MovesBuilder#getMoves writing something to System.out when moveComparator is null, could be helpful.
-- Finish FENParser for Chess960
 - Implement Capablanca chess?
 - General things ... if it does not alter performance too much:
     - Move generation improvements:

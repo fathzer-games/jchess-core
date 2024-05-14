@@ -193,8 +193,8 @@ public class FENParser implements Supplier<Board<Move>> {
 			if (castlings.isEmpty()) {
 				return null;
 			}
-			final int[] positions = new int[Castling.ALL.size()];
-			Arrays.fill(positions, -1);
+			final int[] columns = new int[Castling.ALL.size()];
+			Arrays.fill(columns, -1);
 			final int blackKingColumn = getColumn(pieces, p->p.getPiece()==BLACK_KING);
 			final int whiteKingColumn = getColumn(pieces, p->p.getPiece()==WHITE_KING);
 			final int defaultKingColumn = dimension.getWidth()/2;
@@ -202,16 +202,42 @@ public class FENParser implements Supplier<Board<Move>> {
 			for (Castling castling : castlings) {
 				final int kingRow = castling.getColor()==WHITE ? dimension.getHeight()-1 : 0;
 				final int kingColumn = castling.getColor()==WHITE ? whiteKingColumn : blackKingColumn;
-				//TODO Support inner rook position as start position
-				// Initial rook position is the furthest rook from the king
-				int rookPosition = getFurthest(pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingRow, kingColumn, castling.getSide());
-				isDefault = isDefault && rookPosition==getStandardRookColumn(dimension, castling) && kingColumn==defaultKingColumn;
-				positions[castling.ordinal()] = rookPosition;
+				// Check for chess 960 like rook start position
+				int rookColumn = getRookStartColumn(castlingsString, kingColumn, dimension.getWidth(), castling);
+				if (rookColumn<0) {
+					// Initial rook position is the furthest rook from the king
+					rookColumn = getFurthest(pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingRow, kingColumn, castling.getSide());
+				}
+				isDefault = isDefault && rookColumn==getStandardRookColumn(dimension, castling) && kingColumn==defaultKingColumn;
+				columns[castling.ordinal()] = rookColumn;
 			}
-			return isDefault ? null : positions;
+			return isDefault ? null : columns;
 		} catch (NoSuchElementException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+	
+	private static int getRookStartColumn(String value, int kingColumn, int width, Castling castling) {
+		char firstColumn = castling.getColor()==WHITE ? 'A':'a';
+		char c = (char) (firstColumn+kingColumn);
+		if (castling.getSide()==KING) {
+			char max = (char) (firstColumn+width);
+			while (c<max) {
+				c++;
+				if (value.indexOf(c)>=0) {
+					return c-firstColumn;
+				}
+			}
+		} else {
+			char min = firstColumn;
+			while (c>min) {
+				c--;
+				if (value.indexOf(c)>=0) {
+					return c-firstColumn;
+				}
+			}
+		}
+		return -1;
 	}
 	
 	private int getColumn(List<PieceWithPosition> pieces, Predicate<PieceWithPosition> p) {

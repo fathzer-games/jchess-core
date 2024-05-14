@@ -40,4 +40,13 @@ public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 			throw new IllegalArgumentException("Invalid castling: Rook is not at its initial position");
 		}
 	}
+	
+	@Override
+	public Castling getCastling(int from, int to) {
+		if (Math.abs(to-from)<2 || getCoordinatesSystem().getRow(from)!=getCoordinatesSystem().getRow(to)) {
+			// Doesn't move horizontally or by only one cell
+			return null;
+		}
+		return Castling.get(getActiveColor(), to>from);
+	}
 }

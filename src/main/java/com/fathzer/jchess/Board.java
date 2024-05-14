@@ -51,8 +51,10 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 
 	/** Gets the initial rook position of a castling.
 	 * @param castling The castling
-	 * @return The initial position of the rook involved in the castling.
+	 * @return The initial position of the rook involved in the castling.<br>
+	 * Please note that the returned value is unpredictable if {@link #hasCastling(Castling)} returns false.
 	 * @see Board#getCoordinatesSystem()
+	 * @see #hasCastling(Castling)
 	 */
 	int getInitialRookPosition(Castling castling);
 	
@@ -69,20 +71,13 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	 * @param from The king's starting position.
 	 * @param to The king's end position.
 	 * <br>Please note this position is the representation of the king's destination in the encoded move,
-	 * not necessarily the 'effective' king's position after the move. For example, in chess360, the castling move
+	 * not necessarily the 'effective' king's position after the move. For example, in chess960, the castling move
 	 * is encoded as 'king moves to the rook it castles with', but the 'effective' end position is the same as in standard chess.
-	 * @return The castling if the move is a castling, null if it is a king standard move.
-	 * <br>The default implementation, returns true if the king moves more than 1 cell or on a cell occupied by a rook of the same color).
+	 * @return The castling if the move is a castling, null if it is a king standard move.<br>
+	 * Please note it is perfectly legal to return here a castling prohibited by some attacked or non empty cells. In other words,
+	 * this method check if the move is a castling, not if it is valid.
 	 */
-	default Castling getCastling(int from, int to) {
-		final int offset = Math.abs(to-from);
-		boolean castling = offset>=2 && (getCoordinatesSystem().getRow(from)==getCoordinatesSystem().getRow(to));
-		if (!castling) {
-			final Piece rook = isWhiteToMove() ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
-			castling = rook.equals(getPiece(to));
-		}
-		return castling ? Castling.get(getActiveColor(), to>from) : null;
-	}
+	Castling getCastling(int from, int to);
 	
 	Piece getPiece(int position);
 	
