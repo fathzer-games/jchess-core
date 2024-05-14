@@ -74,14 +74,14 @@ class Chess960BoardTest implements MoveBuilder {
 		final String fenWithRook = "rn2k2r/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Kkq - 4 11";
 		var board = FENUtils.from(fenWithRook);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
-//		// Verify e1-g1 which is a castling with the wrong rook is not in legal moves
-//		assertFalse(board.getLegalMoves().stream().map(m->m.toString(cs)).toList().contains("e1-g1"));
-//		// Can't castling with the wrong rook
-//		final BasicMove wrongMove = new BasicMove(board.getKingPosition(Color.WHITE), cs.getIndex("g1"));
-//		assertFalse(board.makeMove(wrongMove, MoveConfidence.UNSAFE));
-//		if (board.getMoves().stream().map(m->m.toString(cs)).toList().contains(wrongMove.toString(cs))) {
-//			assertFalse(board.makeMove(wrongMove, MoveConfidence.PSEUDO_LEGAL));
-//		}
+		// Verify e1-g1 which is a castling with the wrong rook is not in legal moves
+		assertFalse(board.getLegalMoves().stream().map(m->m.toString(cs)).toList().contains("e1-g1"));
+		// Can't castling with the wrong rook
+		final BasicMove wrongMove = new BasicMove(board.getKingPosition(Color.WHITE), cs.getIndex("g1"));
+		assertFalse(board.makeMove(wrongMove, MoveConfidence.UNSAFE));
+		if (board.getMoves().stream().map(m->m.toString(cs)).toList().contains(wrongMove.toString(cs))) {
+			assertFalse(board.makeMove(wrongMove, MoveConfidence.PSEUDO_LEGAL));
+		}
 		
 		final String fenWithInnerRook = "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11";
 		board = FENUtils.from(fenWithInnerRook);
