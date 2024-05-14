@@ -298,7 +298,7 @@ class ChessBoardTest implements MoveBuilder {
 
 	private List<Move> getMoves(CoordinatesSystem cs, List<Move> moves, String from) {
 		final int fromIndex = cs.getIndex(from);
-		return moves.stream().filter(m-> m.getFrom()==fromIndex).collect(Collectors.toList());
+		return moves.stream().filter(m-> m.getFrom()==fromIndex).toList();
 	}
 
 	private Set<String> getTo(CoordinatesSystem cs, List<Move> moves) {
@@ -323,7 +323,7 @@ class ChessBoardTest implements MoveBuilder {
 		
 		// Can castle
 		List<Move> moves = FENUtils.from("r3kb1r/ppp2ppp/2nqb2n/P2p4/2P1p3/6R1/1PQPPPPP/1NB1KBNR b Kkq - 1 8").getMoves();
-		moves = moves.stream().filter(m->"e8".equals(cs.getAlgebraicNotation(m.getFrom()))).collect(Collectors.toList());
+		moves = moves.stream().filter(m->"e8".equals(cs.getAlgebraicNotation(m.getFrom()))).toList();
 		assertEquals(Set.of("c8","d8", "d7", "e7"), getTo(cs, moves));
 		assertEquals(4, moves.size(), asString(moves, board));
 	}

@@ -3,7 +3,6 @@ package com.fathzer.jchess.ai.debug;
 import static com.fathzer.games.ai.experimental.KeyBasedNegaMaxSpyFilter.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.ai.AlphaBetaState;
@@ -90,7 +89,6 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 			.mapToObj(i->{
 				final Move mv = state.get(i).lastMove;
 				return mv==null ? "?"+i: mv.toString(cs);
-			})
-			.collect(Collectors.toList());
+			}).toList();
 	}
 }

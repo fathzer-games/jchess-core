@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +15,7 @@ import com.fathzer.jchess.util.U;
 class MovesBuilderTest {
 	private static List<Move> filterFrom(List<Move> moves, String coord, CoordinatesSystem cs) {
 		final int index = cs.getIndex(coord);
-		return moves.stream().filter(m -> m.getFrom()==index).collect(Collectors.toList());
+		return moves.stream().filter(m -> m.getFrom()==index).toList();
 	}
 	
 	@Test

@@ -1,7 +1,5 @@
 package com.fathzer.jchess.chessutils;
 
-import java.util.stream.IntStream;
-
 import com.fathzer.chess.utils.adapters.BoardExplorer;
 import com.fathzer.chess.utils.adapters.BoardExplorerBuilder;
 import com.fathzer.jchess.Board;
@@ -13,10 +11,4 @@ public interface JChessBoardExplorerBuilder extends BoardExplorerBuilder<Board<M
 	default BoardExplorer getExplorer(Board<Move> board) {
 		return new JChessBoardExplorer(board);
 	}
-
-//	@Override
-//	default IntStream getPieces(Board<Move> board) {
-//		// TODO Auto-generated method stub
-//		return BoardExplorerBuilder.super.getPieces(board);
-//	}
 }

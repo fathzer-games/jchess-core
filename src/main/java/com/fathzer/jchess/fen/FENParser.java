@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.fathzer.games.Color;
@@ -152,7 +151,7 @@ public class FENParser implements Supplier<Board<Move>> {
 		if ("-".equals(code)) {
 			return Collections.emptyList();
 		} else {
-			return code.chars().mapToObj(c -> toCastling((char)c)).collect(Collectors.toList());
+			return code.chars().mapToObj(c -> toCastling((char)c)).toList();
 		}
 	}
 

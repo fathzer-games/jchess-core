@@ -5,7 +5,6 @@ import static com.fathzer.jchess.PieceKind.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.fathzer.games.MoveGenerator.MoveConfidence;
@@ -41,7 +40,7 @@ public class MoveAlgebraicNotationBuilder {
 		// First, keep only moves with the right destination
 		// This list will allow us to check if the move is valid and if it needs disambiguation
 		final int to = move.getTo();
-		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).collect(Collectors.toList());
+		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).toList();
 		if (!checkValidMove(move, candidates)) {
 			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
 		}
@@ -114,7 +113,7 @@ public class MoveAlgebraicNotationBuilder {
 	private String getAmbiguitiesRemoval(Board<Move> board, Move move, List<Move> candidates) {
 		final int from = move.getFrom();
 		final PieceKind kind = board.getPiece(from).getKind();
-		final List<Move> ambiguities = candidates.stream().filter(m -> m.getFrom()!=from && kind==board.getPiece(m.getFrom()).getKind()).collect(Collectors.toList());
+		final List<Move> ambiguities = candidates.stream().filter(m -> m.getFrom()!=from && kind==board.getPiece(m.getFrom()).getKind()).toList();
 		if (ambiguities.isEmpty()) {
 			return "";
 		}

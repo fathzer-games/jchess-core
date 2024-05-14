@@ -71,7 +71,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		}
 
 		public String toString(Collection<EvaluatedMove<Move>> moves) {
-			return moves.stream().map(em -> toString(em)).collect(Collectors.joining(", ", "[", "]"));
+			return moves.stream().map(this::toString).collect(Collectors.joining(", ", "[", "]"));
 		}
 
 		public String toString(EvaluatedMove<Move> ev) {
@@ -118,7 +118,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 			} else {
 				log.info("Move chosen :{}", evaluatedMove.getContent().toString(board.getCoordinatesSystem()));
 				final List<Move> pv = evaluatedMove.getPrincipalVariation();
-				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).collect(Collectors.toList()));
+				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).toList());
 			}
 		}
 	}

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -247,7 +246,7 @@ assertEquals(19, moves.size());
 			spy.searchedKey = -3019684505475777408L; //d7d8
 			spy.searchedKey = 1283331931822092560L; //h6h8
 			e = ai.getBestMoves(Collections.singletonList(h1h6),new SearchParameters(8)).getList().get(0);
-			System.out.println("pv="+tt.collectPV(board, h1h6, 8).stream().map(m->m.toString(cs)).collect(Collectors.toList()));
+			System.out.println("pv="+tt.collectPV(board, h1h6, 8).stream().map(m->m.toString(cs)).toList());
 			assertEquals(Type.WIN, e.getEvaluation().getType());
 			assertEquals(4, e.getEvaluation().getCountToEnd());
 		}
