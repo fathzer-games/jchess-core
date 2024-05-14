@@ -3,6 +3,7 @@ package com.fathzer.jchess.pgn;
 import static com.fathzer.games.Status.*;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,14 +59,17 @@ public class PGNWriter {
 	}
 	
 	private List<String> getInitialPosition(String variant, GameHistory history) {
+		final var fen = FENUtils.to(history.getStartBoard());
+		final var fenField = getField("FEN", fen);
+		final var setupField = getField("SetUp", "1");
 		if (variant!=null) {
 			final List<String> result = new LinkedList<>();
 			result.add(getField("Variant", variant));
-			result.add(getField("SetUp", "1"));
-			result.add(getField("FEN", FENUtils.to(history.getStartBoard())));
+			result.add(setupField);
+			result.add(fenField);
 			return result;
 		} else {
-			return Collections.emptyList();
+			return FENUtils.NEW_STANDARD_GAME.equals(fen) ? Collections.emptyList() : Arrays.asList(setupField, fenField);
 		}
 	}
 
