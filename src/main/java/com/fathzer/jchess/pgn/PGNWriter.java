@@ -13,6 +13,7 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.pgn.PGNHeaders.Termination;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -53,6 +54,14 @@ public class PGNWriter {
 		final ResultAndMoves movesAndResult = getMovesAndResult(history);
 		result.add(getField("Result", movesAndResult.getResult()));
 		result.addAll(initialPosition);
+		final Termination termination = headers.getTermination();
+		if (termination!=null && termination!=Termination.NORMAL) {
+			result.add(getField("Termination", termination.toString()));
+		}
+		final String timeControl = headers.getTimeControl();
+		if (!"?".equals(timeControl)) {
+			result.add(getField("TimeControl", headers.getTimeControl()));
+		}
 		result.add("");
 		result.addAll(movesAndResult.getAnMoves());
 		return result;

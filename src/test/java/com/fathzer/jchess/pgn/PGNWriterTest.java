@@ -73,7 +73,6 @@ class PGNWriterTest implements MoveBuilder {
 		final var history = new GameHistory(board);
 		final var writer = new PGNWriter();
 		final List<String> pgn = writer.getPGN(new PGNHeaders.Builder().build(), history);
-		System.out.println(pgn);
 		final var setUpIndex = pgn.indexOf("[SetUp \"1\"]");
 		assertTrue(setUpIndex>=0);
 		final var fenIndex = pgn.indexOf("[FEN \"1r2k1r1/ppp1pp2/3p2pp/5bn1/P7/2N2B2/1PPPPP2/RR2K3 w Q - 4 11\"]");
