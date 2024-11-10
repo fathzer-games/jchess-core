@@ -13,7 +13,7 @@ import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.pgn.PGNHeaders.Termination;
+import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,12 +23,11 @@ public class PGNWriter {
 	
 	@AllArgsConstructor
 	private static class ResultAndMoves {
-		private final Board<Move> board;
+		private final Status status;
 		@Getter
 		private final List<String> anMoves;
 		
 		private String getResult() {
-			final Status status = board.getStatus();
 			if (status==DRAW) {
 				return "1/2-1/2";
 			} else if (status==WHITE_WON) {
@@ -54,8 +53,8 @@ public class PGNWriter {
 		final ResultAndMoves movesAndResult = getMovesAndResult(history);
 		result.add(getField("Result", movesAndResult.getResult()));
 		result.addAll(initialPosition);
-		final Termination termination = headers.getTermination();
-		if (termination!=null && termination!=Termination.NORMAL) {
+		final TerminationCause termination = history.getTerminationCause();
+		if (termination!=null && termination!=TerminationCause.NORMAL) {
 			result.add(getField("Termination", termination.toString()));
 		}
 		final String timeControl = headers.getTimeControl();
@@ -109,6 +108,6 @@ public class PGNWriter {
 		if (buf.length()!=0) {
 			result.add(buf.toString());
 		}
-		return new ResultAndMoves(board, result);
+		return new ResultAndMoves(history.getStatus(), result);
 	}
 }
