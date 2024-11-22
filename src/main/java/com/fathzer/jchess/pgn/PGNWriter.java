@@ -1,113 +1,25 @@
 package com.fathzer.jchess.pgn;
 
-import static com.fathzer.games.Status.*;
-
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
-import com.fathzer.jchess.GameHistory;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.fen.FENUtils;
-import com.fathzer.jchess.pgn.PGNHeaders.TerminationCause;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-public class PGNWriter {
-	public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+public class PGNWriter extends AbstractPGNWriter<Move, Board<Move>> {
+	private static final MoveAlgebraicNotationBuilder AN = new MoveAlgebraicNotationBuilder().withPlayMove(true).withEnPassantSymbol("");
 	
-	@AllArgsConstructor
-	private static class ResultAndMoves {
-		private final Status status;
-		@Getter
-		private final List<String> anMoves;
-		
-		private String getResult() {
-			if (status==DRAW) {
-				return "1/2-1/2";
-			} else if (status==WHITE_WON) {
-				return "1-0";
-			} else if (status==BLACK_WON) {
-				return "0-1";
-			} else {
-				return "*";
-			}
-		}
+	@Override
+	protected String getFEN(Board<Move> board) {
+		return FENUtils.to(board);
 	}
 
-	public List<String> getPGN(PGNHeaders headers, GameHistory history) {
-		final List<String> initialPosition = getInitialPosition(headers.getVariant(), history);
-		final List<String> result = new LinkedList<>();
-		result.add(getField("Event", headers.getEvent()));
-		result.add(getField("Site", headers.getSite()));
-		result.add(getField("Date", DATE_FORMAT.format(headers.getDate())));
-		final Long round = headers.getRound();
-		result.add(getField("Round", round==null?"?":round.toString()));
-		result.add(getField("White", headers.getWhiteName()));
-		result.add(getField("Black", headers.getBlackName()));
-		final ResultAndMoves movesAndResult = getMovesAndResult(history);
-		result.add(getField("Result", movesAndResult.getResult()));
-		result.addAll(initialPosition);
-		final TerminationCause termination = history.getTerminationCause();
-		if (termination!=null && termination!=TerminationCause.NORMAL) {
-			result.add(getField("Termination", termination.toString()));
-		}
-		final String timeControl = headers.getTimeControl();
-		if (!"?".equals(timeControl)) {
-			result.add(getField("TimeControl", headers.getTimeControl()));
-		}
-		result.add("");
-		result.addAll(movesAndResult.getAnMoves());
-		return result;
-	}
-	
-	private List<String> getInitialPosition(String variant, GameHistory history) {
-		final var fen = FENUtils.to(history.getStartBoard());
-		final var fenField = getField("FEN", fen);
-		final var setupField = getField("SetUp", "1");
-		if (variant!=null) {
-			final List<String> result = new LinkedList<>();
-			result.add(getField("Variant", variant));
-			result.add(setupField);
-			result.add(fenField);
-			return result;
-		} else {
-			return FENUtils.NEW_STANDARD_GAME.equals(fen) ? Collections.emptyList() : Arrays.asList(setupField, fenField);
-		}
+	@Override
+	protected int getMoveNumber(Board<Move> board) {
+		return board.getMoveNumber();
 	}
 
-	private String getField(String field, String content) {
-		return String.format("[%s \"%s\"]",field, content.replace('"', '\''));
+	@Override
+	protected String getAlgebraicNotation(Move move, Board<Move> board) {
+		return AN.get(board, move);
 	}
 
-	private ResultAndMoves getMovesAndResult(GameHistory history) {
-		final LinkedList<String> result = new LinkedList<>();
-		final MoveAlgebraicNotationBuilder an = new MoveAlgebraicNotationBuilder().withPlayMove(true).withEnPassantSymbol("");
-		final Board<Move> board = (Board<Move>) history.getStartBoard().fork();
-		final StringBuilder buf = new StringBuilder();
-		int moveNumber = -1;
-		for (Move move:history.getMoves()) {
-			if (board.getMoveNumber()!=moveNumber) {
-				if (buf.length()!=0) {
-					result.add(buf.toString());
-				}
-				moveNumber = board.getMoveNumber();
-				buf.setLength(0);
-				buf.append(moveNumber);
-				buf.append(". ");
-			} else {
-				buf.append(" ");
-			}
-			buf.append(an.get(board, move));
-		}
-		if (buf.length()!=0) {
-			result.add(buf.toString());
-		}
-		return new ResultAndMoves(history.getStatus(), result);
-	}
 }

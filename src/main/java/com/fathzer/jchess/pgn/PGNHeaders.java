@@ -3,15 +3,6 @@ package com.fathzer.jchess.pgn;
 import java.time.LocalDate;
 
 public class PGNHeaders {
-	public enum TerminationCause {
-		ABANDONED, ADJUDICATION, DEATH, EMERGENCY, NORMAL, RULES_INFRACTION, TIME_FORFEIT, UNTERMINATED;
-
-		@Override
-		public String toString() {
-			return super.toString().replace('_', ' ').toLowerCase();
-		}
-	}
-	
 	private String event = "?";
 	private String site = "?";
 	private LocalDate date = LocalDate.now();
@@ -20,7 +11,6 @@ public class PGNHeaders {
 	private String blackName = "?";
 	private String variant = null;
 	private String timeControl = "?";
-	private TerminationCause terminationCause = null; 
 	
     private PGNHeaders() {
         // Private constructor to enforce the use of the builder
@@ -57,11 +47,6 @@ public class PGNHeaders {
 	public String getTimeControl() {
 		return timeControl;
 	}
-	
-	public TerminationCause getTerminationCause() {
-		return terminationCause;
-	}
-
 
 	public static class Builder {
         private PGNHeaders headers;
@@ -109,15 +94,9 @@ public class PGNHeaders {
         	headers.timeControl  = timeControl;
         	return this;
         }
-        
-        public Builder setTerminationCause(TerminationCause termination) {
-        	headers.terminationCause = termination;
-        	return this;
-        }
-            
+
         public PGNHeaders build() {
             return headers;
         }
     }
- 
 }
