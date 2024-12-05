@@ -8,6 +8,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.GameHistory;
+import com.fathzer.games.GameHistory.TerminationCause;
+import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.GameBuilders;
 import com.fathzer.jchess.Move;
@@ -34,7 +36,6 @@ class PGNWriterTest implements MoveBuilder {
 				.setEvent("A competition").setRound(5L).setSite("there").setDate(LocalDate.of(2020, 1, 8))
 				.build();
 		final List<String> pgn = writer.getPGN(headers, history);
-		System.out.println(pgn); //TODO
 		assertEquals("[Event \"A competition\"]", pgn.get(0));
 		assertEquals("[Site \"there\"]", pgn.get(1));
 		assertEquals("[Date \"2020.01.08\"]", pgn.get(2));
@@ -78,5 +79,18 @@ class PGNWriterTest implements MoveBuilder {
 		assertTrue(setUpIndex>=0);
 		final var fenIndex = pgn.indexOf("[FEN \"1r2k1r1/ppp1pp2/3p2pp/5bn1/P7/2N2B2/1PPPPP2/RR2K3 w Q - 4 11\"]");
 		assertTrue(fenIndex>setUpIndex);
+	}
+	
+	@Test
+	void illegalMoveTest() {
+		final var board = FENUtils.from(FENUtils.NEW_STANDARD_GAME);
+		final var history = new GameHistory<>(board);
+		history.add(move(board, "e2", "e4"));
+		final Move illagalMove = move(board, "a1","a1");
+		assertFalse(history.add(illagalMove));
+		history.earlyEnd(Status.WHITE_WON, TerminationCause.RULES_INFRACTION);
+		final var writer = new PGNWriter();
+		final List<String> pgn = writer.getPGN(new PGNHeaders.Builder().build(), history);
+		assertEquals("1. e4 { Illegal move a1-a1 }", pgn.get(pgn.size()-1));
 	}
 }

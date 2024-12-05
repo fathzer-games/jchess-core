@@ -13,9 +13,9 @@ import com.fathzer.games.GameHistory.TerminationCause;
 import com.fathzer.games.MoveGenerator;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.pgn.MoveAlgebraicNotationBuilder.IllegalMoveException;
 
 public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
-	//TODO why DATE_FORMAT is public
 	public static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 	
 	private static record ResultAndMoves (Status status, List<String> anMoves) {
@@ -98,7 +98,13 @@ public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
 			} else {
 				buf.append(" ");
 			}
-			buf.append(getAlgebraicNotation(move, board));
+			String moveString;
+			try {
+				moveString = getAlgebraicNotation(move, board);
+			} catch (IllegalMoveException e) {
+				moveString = "{ Illegal move "+e.getMoveRepresentation()+" }";
+			}
+			buf.append(moveString);
 		}
 		if (buf.length()!=0) {
 			result.add(buf.toString());

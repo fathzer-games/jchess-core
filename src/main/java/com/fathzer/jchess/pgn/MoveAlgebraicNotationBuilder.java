@@ -19,6 +19,21 @@ import com.fathzer.jchess.PieceKind;
 /** A class to get <a href="https://en.wikipedia.org/wiki/Algebraic_notation_(chess)">Algebraic notation</a> of moves.
  */
 public class MoveAlgebraicNotationBuilder {
+	
+	public class IllegalMoveException extends IllegalArgumentException {
+		private static final long serialVersionUID = 1L;
+		private final String moveRepresentation;
+
+		private IllegalMoveException(String message, String moveRepresentation) {
+			super(message);
+			this.moveRepresentation = moveRepresentation;
+		}
+		
+		public String getMoveRepresentation() {
+			return this.moveRepresentation;
+		}
+	}
+	
 	private String checkSymbol = "+";
 	private String checkmateSymbol = "#";
 	private char captureSymbol = 'x';
@@ -28,11 +43,11 @@ public class MoveAlgebraicNotationBuilder {
 	private boolean playMove;
 	
 	/** Gets the algebraic notation of a move.
-	 * <br>If sideEffect attribute is true, move is played on the board
+	 * <br>If playMove attribute is true, move is played on the board
 	 * @param board The board before the move occurs
 	 * @param move The move to encode
 	 * @return The move in algebraic notation
-	 * @throws IllegalArgumentException if move is invalid
+	 * @throws IllegalMoveException if move is invalid
 	 */
 	public String get(Board<Move> board, Move move) {
 		final StringBuilder builder = new StringBuilder();
@@ -42,7 +57,8 @@ public class MoveAlgebraicNotationBuilder {
 		final int to = move.getTo();
 		final List<Move> candidates = StreamSupport.stream(state.spliterator(),false).filter(m -> m.getTo()==to).toList();
 		if (!checkValidMove(move, candidates)) {
-			throw new IllegalArgumentException("Move "+moveToString(move, board)+" is not valid");
+			final String moveString = moveToString(move, board).toString();
+			throw new IllegalMoveException("Move "+moveString+" is not valid", moveString);
 		}
 		final Piece moved = board.getPiece(move.getFrom());
 		final Castling castling = moved.getKind()==KING ? board.getCastling(move.getFrom(), to) : null;
@@ -58,7 +74,7 @@ public class MoveAlgebraicNotationBuilder {
 		return builder.toString();
 	}
 	
-	private CharSequence moveToString(Move move, Board<Move> board) {
+	private static CharSequence moveToString(Move move, Board<Move> board) {
 		final StringBuilder buf = new StringBuilder();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		buf.append(cs.getAlgebraicNotation(move.getFrom()));

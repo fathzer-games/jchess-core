@@ -11,6 +11,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.MoveBuilder;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.fen.FENUtils;
+import com.fathzer.jchess.pgn.MoveAlgebraicNotationBuilder.IllegalMoveException;
 
 class MoveAlgebraicNotationTest implements MoveBuilder {
 
@@ -57,11 +58,11 @@ class MoveAlgebraicNotationTest implements MoveBuilder {
 		// Illegal moves
 		final Board<Move> board2 = (Board<Move>) board.fork();
 		final Move move2 = move(board, "f3","g2");
-		assertThrows(IllegalArgumentException.class, () -> san.get(board2, move2));
+		assertThrows(IllegalMoveException.class, () -> san.get(board2, move2));
 		
 		final Board<Move> board3 = FENUtils.from("2kr3r/Rppppppp/8/8/2P1Q2Q/1P3K2/2PP2PP/RNB4Q w - - 0 1");
 		final Move move3 = move(board, "a7","a8", Piece.WHITE_QUEEN);
-		assertThrows(IllegalArgumentException.class, () -> san.get(board3, move3));
+		assertThrows(IllegalMoveException.class, () -> san.get(board3, move3));
 	}
 	
 	@Test
