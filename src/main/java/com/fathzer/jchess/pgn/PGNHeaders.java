@@ -9,7 +9,6 @@ public class PGNHeaders {
 	private Long round = null;
 	private String whiteName = "?";
 	private String blackName = "?";
-	private String variant = null;
 	private String timeControl = "?";
 	
     private PGNHeaders() {
@@ -38,10 +37,6 @@ public class PGNHeaders {
 
 	public String getBlackName() {
 		return blackName;
-	}
-
-	public String getVariant() {
-		return variant;
 	}
 	
 	public String getTimeControl() {
@@ -82,11 +77,6 @@ public class PGNHeaders {
         
         public Builder setBlackName(String blackName) {
             headers.blackName = blackName;
-            return this;
-        }
-        
-        public Builder setVariant(String variant) {
-            headers.variant = variant;
             return this;
         }
         

@@ -13,6 +13,7 @@ import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.generic.ChessBoard;
 import com.fathzer.jchess.generic.MovesBuilder;
 
@@ -36,6 +37,11 @@ public class Chess960Board extends ChessBoard {
 				this.initialRookPositions[i] = getCoordinatesSystem().getIndex(getDimension().getHeight()-1, initialRookColumns[i]);
 			}
 		}
+	}
+	
+	@Override
+	public Variant getVariant() {
+		return Variant.CHESS960;
 	}
 	
 	@Override

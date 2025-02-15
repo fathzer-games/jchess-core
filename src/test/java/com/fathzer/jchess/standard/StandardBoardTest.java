@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.fen.FENParser;
 
 class StandardBoardTest {
@@ -33,7 +34,7 @@ class StandardBoardTest {
 	}
 
 	private void testIllegal(String pieces, Castling castling) {
-		final List<PieceWithPosition> withPos = new FENParser(pieces+" w - - 0 1").getPieces();
+		final List<PieceWithPosition> withPos = new FENParser(pieces+" w - - 0 1", Variant.STANDARD).getPieces();
 		final Set<Castling> castlings = Collections.singleton(castling);
 		assertThrows(IllegalArgumentException.class, () -> new StandardBoard(withPos, WHITE, castlings, -1, 0, 1));
 	}

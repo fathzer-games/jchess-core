@@ -10,6 +10,7 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.Variant;
 
 class FENParserTest {
 
@@ -49,11 +50,11 @@ class FENParserTest {
 	@Test
 	void test960() {
 		final var fen = "nbbqrknr/pppppppp/8/8/8/8/PPPPPPPP/NBBQRKNR w KQkq - 0 1";
-		var board = FENUtils.from(fen);
+		var board = FENUtils.from(fen, Variant.CHESS960);
 		assertEquals(fen, FENUtils.to(board));
 		
 		final String fenWithInnerRook = "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11";
-		board = FENUtils.from(fenWithInnerRook);
+		board = FENUtils.from(fenWithInnerRook, Variant.CHESS960);
 		assertTrue(board.hasCastling(Castling.WHITE_KING_SIDE));     
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));     
 		assertTrue(board.hasCastling(Castling.BLACK_KING_SIDE));     
@@ -67,7 +68,15 @@ class FENParserTest {
 		assertEquals(fenWithInnerRook, FENUtils.to(board));
 		
 		final String otherFenWithInnerRook = "1r2k1r1/ppp1pp2/3p2pp/5bn1/P7/2N2B2/1PPPPP2/RR2K3 w Bkq - 4 11";
-		board = FENUtils.from(otherFenWithInnerRook);
+		board = FENUtils.from(otherFenWithInnerRook, Variant.CHESS960);
 		assertEquals(otherFenWithInnerRook, FENUtils.to(board));
+	}
+
+	@Test
+	void testIllegalVariant() {
+		final var fen = "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11";
+		assertThrows(IllegalArgumentException.class, () -> FENUtils.from(fen));
+		assertThrows(IllegalArgumentException.class, () -> FENUtils.from(fen, Variant.STANDARD));
+		assertThrows(IllegalArgumentException.class, () -> FENUtils.from(fen, null));
 	}
 }

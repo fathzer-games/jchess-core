@@ -9,6 +9,7 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Dimension;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.generic.ChessBoard;
 import com.fathzer.jchess.generic.MovesBuilder;
 
@@ -18,7 +19,12 @@ public class StandardBoard extends com.fathzer.jchess.generic.ChessBoard {
 		super(Dimension.STANDARD, pieces, activeColor, castlings, enPassant, halfMoveCount, moveNumber);
 		castlings.forEach(this::checkCastling);
 	}
-	
+
+	@Override
+	public Variant getVariant() {
+		return Variant.STANDARD;
+	}
+
 	@Override
 	protected MovesBuilder buildMovesBuilder() {
 		return new MovesBuilder(this);

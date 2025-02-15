@@ -2,6 +2,7 @@ package com.fathzer.jchess.pgn;
 
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.fen.FENUtils;
 
 public class PGNWriter extends AbstractPGNWriter<Move, Board<Move>> {
@@ -22,4 +23,8 @@ public class PGNWriter extends AbstractPGNWriter<Move, Board<Move>> {
 		return AN.get(board, move);
 	}
 
+	@Override
+	protected String getVariant(Board<Move> board) {
+		return board.getVariant()==Variant.CHESS960 ? "Chess960" : null;
+	}
 }

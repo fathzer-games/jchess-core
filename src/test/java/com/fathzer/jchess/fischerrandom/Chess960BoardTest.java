@@ -16,6 +16,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.MoveBuilder;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.chess960.Chess960Board;
 import com.fathzer.jchess.fen.FENParser;
 import com.fathzer.jchess.fen.FENUtils;
@@ -24,7 +25,7 @@ import com.fathzer.jchess.generic.BasicMove;
 class Chess960BoardTest implements MoveBuilder {
 	@Test
 	void test() {
-		final List<PieceWithPosition> pieces = new FENParser("rnbqkbnr/pppppppp/8/8/8/2PP4/PP2PPPP/2RK3R w - - 0 1").getPieces();
+		final List<PieceWithPosition> pieces = new FENParser("rnbqkbnr/pppppppp/8/8/8/2PP4/PP2PPPP/2RK3R w - - 0 1", Variant.CHESS960).getPieces();
 		final Chess960Board board = new Chess960Board(pieces);
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
@@ -50,7 +51,7 @@ class Chess960BoardTest implements MoveBuilder {
 	@Test
 	void testDangerousCastling() {
 		// Test castling where king seems safe ... but is not because he does not move and the rook does not defend him anymore
-		final Board<Move> board = FENUtils.from("nrk1brnb/pp1ppppp/8/2p5/3P4/1N1Q1N2/1PP1PPPP/qRK1BR1B w KQkq - 2 10");
+		final Board<Move> board = FENUtils.from("nrk1brnb/pp1ppppp/8/2p5/3P4/1N1Q1N2/1PP1PPPP/qRK1BR1B w KQkq - 2 10", Variant.CHESS960);
 		final Move move = move(board,"c1","b1");
 		assertFalse(board.makeMove(move, UNSAFE));
 		assertFalse(board.makeMove(move, PSEUDO_LEGAL));
@@ -60,7 +61,7 @@ class Chess960BoardTest implements MoveBuilder {
 	@Test
 	void testTrickyLegalCastling() {
 		// Rook is attacked, but the castling is legal
-		final Board<Move> board = FENUtils.from("nrk2rnb/pp1ppppp/6b1/q1p5/3P2Q1/1N3N2/1P2PPPP/1RK1BR1B w KQkq - 2 10");
+		final Board<Move> board = FENUtils.from("nrk2rnb/pp1ppppp/6b1/q1p5/3P2Q1/1N3N2/1P2PPPP/1RK1BR1B w KQkq - 2 10", Variant.CHESS960);
 		final Move move = move(board,"c1","b1");
 		assertTrue(board.makeMove(move, UNSAFE));
 		board.unmakeMove();
@@ -84,7 +85,7 @@ class Chess960BoardTest implements MoveBuilder {
 		}
 		
 		final String fenWithInnerRook = "rn2k1r1/ppp1pp1p/3p2p1/5bn1/P7/2N2B2/1PPPPP2/2BNK1RR w Gkq - 4 11";
-		board = FENUtils.from(fenWithInnerRook);
+		board = FENUtils.from(fenWithInnerRook, Variant.CHESS960);
 		assertTrue(board.hasCastling(Castling.WHITE_KING_SIDE));     
 		assertFalse(board.hasCastling(Castling.WHITE_QUEEN_SIDE));     
 		assertTrue(board.hasCastling(Castling.BLACK_KING_SIDE));     

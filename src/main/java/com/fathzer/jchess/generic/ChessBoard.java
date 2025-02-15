@@ -13,7 +13,6 @@ import java.util.function.Function;
 import com.fathzer.games.Color;
 import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.util.Stack;
-import com.fathzer.games.HashProvider;
 import com.fathzer.games.Status;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.BoardExplorer;
@@ -28,7 +27,7 @@ import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 
-public abstract class ChessBoard implements Board<Move>, HashProvider {
+public abstract class ChessBoard implements Board<Move> {
 	private final BoardRepresentation board;
 	private final MovesBuilder movesBuilder;
 	private final DirectionExplorer exp;

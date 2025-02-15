@@ -1,20 +1,9 @@
 package com.fathzer.jchess.fen;
 
-import static com.fathzer.games.Color.BLACK;
-import static com.fathzer.games.Color.WHITE;
+import static com.fathzer.games.Color.*;
 import static com.fathzer.jchess.Castling.Side.KING;
-import static com.fathzer.jchess.Piece.BLACK_BISHOP;
-import static com.fathzer.jchess.Piece.BLACK_KING;
-import static com.fathzer.jchess.Piece.BLACK_KNIGHT;
-import static com.fathzer.jchess.Piece.BLACK_PAWN;
-import static com.fathzer.jchess.Piece.BLACK_QUEEN;
-import static com.fathzer.jchess.Piece.BLACK_ROOK;
-import static com.fathzer.jchess.Piece.WHITE_BISHOP;
-import static com.fathzer.jchess.Piece.WHITE_KING;
-import static com.fathzer.jchess.Piece.WHITE_KNIGHT;
-import static com.fathzer.jchess.Piece.WHITE_PAWN;
-import static com.fathzer.jchess.Piece.WHITE_QUEEN;
-import static com.fathzer.jchess.Piece.WHITE_ROOK;
+import static com.fathzer.jchess.Piece.*;
+import static com.fathzer.jchess.Variant.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +27,7 @@ import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceKind;
 import com.fathzer.jchess.PieceWithPosition;
+import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.standard.StandardBoard;
 
 public class FENParser implements Supplier<Board<Move>> {
@@ -50,6 +40,7 @@ public class FENParser implements Supplier<Board<Move>> {
 	private final int enPassant;
 	private final int halfMoveCount;
 	private final int moveNumber;
+	private final Variant variant;
 	
 	static {
 		CODE_TO_PIECE = new HashMap<>();
@@ -67,7 +58,11 @@ public class FENParser implements Supplier<Board<Move>> {
 		CODE_TO_PIECE.put('K', WHITE_KING);
 	}
 	
-	public FENParser(String fen) {
+	public FENParser(String fen, Variant variant) {
+		if (variant==null) {
+			throw new IllegalArgumentException("Variant cannot be null");
+		}
+		this.variant = variant;
 		String[] tokens = fen.split(" ");
 		if (tokens.length!=6) {
 			throw new IllegalArgumentException("This FEN definition is invalid: "+fen);
@@ -85,7 +80,7 @@ public class FENParser implements Supplier<Board<Move>> {
 	@Override
 	public Board<Move> get() {
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
-			if (rookPositions!=null) {
+			if (variant==CHESS960) {
 				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rookPositions, enPassant, halfMoveCount, moveNumber);
 			} else {
 				return new com.fathzer.jchess.standard.StandardBoard(pieces, color, castlings, enPassant, halfMoveCount, moveNumber);
@@ -210,7 +205,10 @@ public class FENParser implements Supplier<Board<Move>> {
 				isDefault = isDefault && rookColumn==getStandardRookColumn(dimension, castling) && kingColumn==defaultKingColumn;
 				columns[castling.ordinal()] = rookColumn;
 			}
-			return isDefault ? null : columns;
+			if (!isDefault && CHESS960!=variant) {
+				throw new IllegalArgumentException("Invalid castling string for variant "+variant);
+			}
+			return CHESS960!=variant ? null : columns;
 		} catch (NoSuchElementException e) {
 			throw new IllegalArgumentException(e);
 		}

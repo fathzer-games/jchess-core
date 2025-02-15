@@ -8,6 +8,7 @@ import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Castling.Side;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
+import com.fathzer.jchess.Variant;
 
 import lombok.experimental.UtilityClass;
 
@@ -86,6 +87,10 @@ public class FENUtils {
 	}
 
 	public static Board<Move> from(String fen) {
-		return new FENParser(fen).get();
+		return new FENParser(fen, Variant.STANDARD).get();
+	}
+	
+	public static Board<Move> from(String fen, Variant variant) {
+		return new FENParser(fen, variant).get();
 	}
 }

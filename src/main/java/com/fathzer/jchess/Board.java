@@ -12,15 +12,28 @@ import com.fathzer.games.HashProvider;
  * @param <M> The class that represents a move.
  */
 public interface Board<M> extends MoveGenerator<M>, HashProvider {
+	/** Gets the dimension of the board.
+	 * @return the dimension of the board.
+	 */
 	Dimension getDimension();
+
 	/** Many methods in this interface use an int index to identify a position on the board.
 	 * Don't make any assumptions on how these values are related to row and columns.
 	 * Use the CoordinatesSystem instance returned by the this method of this class.
 	 * @return a CoordinatesSystem
 	*/
 	CoordinatesSystem getCoordinatesSystem();
+
+	/** Gets the variant of the board.
+	 * @return the variant of the board.
+	 */
+	Variant getVariant();
 	
+	/** Gets an explorer on the board
+	 * @return a BoardExplorer
+	*/
 	BoardExplorer getExplorer();
+
 	DirectionExplorer getDirectionExplorer(int index);
 	
 	Color getActiveColor();
@@ -41,13 +54,35 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	 */
 	int getEnPassantTarget();
 
+	/** Gets the half move counter.
+	 * @return a positive or null integer
+	 */
 	int getHalfMoveCount();
-	boolean isInsufficientMaterial();
-	boolean isDrawByRepetition();
+	/** Gets the move number.
+	 * @return a positive integer
+	 */
 	int getMoveNumber();
-	int getKingPosition(Color color);
-	boolean hasCastling(Castling c);
+
+	/** Tests whether the color to play king is in check.
+	 * @return true if the king is in check, false otherwise.
+	 */
 	boolean isCheck();
+	boolean isInsufficientMaterial();
+
+	/** Tests whether the game is a draw by repetition according to the <a href="https://en.wikipedia.org/wiki/Threefold_repetition">threefold repetition rule</a>.
+	 * @return true if the game is a draw by repetition, false otherwise.
+	 */
+	boolean isDrawByRepetition();
+	/** Gets a king's position.
+	 * @param color The color of the king
+	 * @return The position of the king.
+	 */
+	int getKingPosition(Color color);
+	/** Tests whether the board has a castling.
+	 * @param castling The castling
+	 * @return true if the board has the castling, false otherwise.
+	 */
+	boolean hasCastling(Castling castling);
 
 	/** Gets the initial rook position of a castling.
 	 * @param castling The castling
@@ -79,6 +114,12 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 	 */
 	Castling getCastling(int from, int to);
 	
+	/**
+	 * Gets the piece at the given position.
+	 * @param position The position of the piece expressed in the board's coordinates system.
+	 * @return The piece at the given position, or null if the position is empty.
+	 * @see CoordinatesSystem
+	 */
 	Piece getPiece(int position);
 	
     /**

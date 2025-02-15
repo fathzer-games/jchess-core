@@ -33,7 +33,7 @@ public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
 	}
 
 	public List<String> getPGN(PGNHeaders headers, GameHistory<M, B> history) {
-		final List<String> initialPosition = getInitialPosition(headers.getVariant(), history);
+		final List<String> initialPosition = getInitialPosition(history);
 		final List<String> result = new LinkedList<>();
 		result.add(getField("Event", headers.getEvent()));
 		result.add(getField("Site", headers.getSite()));
@@ -60,10 +60,11 @@ public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
 	
 	protected abstract String getFEN(B board);
 	
-	private List<String> getInitialPosition(String variant, GameHistory<M, B> history) {
+	private List<String> getInitialPosition(GameHistory<M, B> history) {
 		final var fen = getFEN(history.getStartBoard());
 		final var fenField = getField("FEN", fen);
 		final var setupField = getField("SetUp", "1");
+		final var variant = getVariant(history.getBoard());
 		if (variant!=null) {
 			final List<String> result = new LinkedList<>();
 			result.add(getField("Variant", variant));
@@ -115,4 +116,6 @@ public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
 	protected abstract int getMoveNumber(B board);
 	
 	protected abstract String getAlgebraicNotation(M move, B board);
+	
+	protected abstract String getVariant(B board);
 }
