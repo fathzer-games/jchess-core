@@ -6,7 +6,7 @@ import com.fathzer.jchess.DirectionExplorer;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.generic.BoardRepresentation;
 
-/** A square centric board representation that uses an array of (r)*(f+2) elements</a>
+/** A square centric board representation that uses an array of (r)*(f+2) elements.
  * <br>The idea is to place border pieces on each side of each rank in order to speed up the detection of possible exits from the board
  *  when going through it square by square.
  *	This implementation is faster than jkjm's.

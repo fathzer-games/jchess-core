@@ -11,19 +11,17 @@ class FastBoardExplorer implements BoardExplorer {
 	private int index;
 	@Getter
 	private Piece piece;
-	private int cellIncrement;
 	
 	FastBoardExplorer(Piece[] pieces, int startPosition) {
 		this.pieces = pieces;
-		this.cellIncrement = 1;
 		this.index = startPosition;
 		this.piece = pieces[index];
 	}
 	
 	@Override
 	public boolean next() {
-		index += cellIncrement;
-		if (index<0 || index>=pieces.length) {
+		index++;
+		if (index>=pieces.length) {
 			return false;
 		}
 		piece = pieces[index];
