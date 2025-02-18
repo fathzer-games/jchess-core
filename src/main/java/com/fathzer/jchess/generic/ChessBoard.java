@@ -6,6 +6,7 @@ import static com.fathzer.jchess.PieceKind.*;
 import static com.fathzer.jchess.Direction.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -29,29 +30,38 @@ import com.fathzer.jchess.generic.fast.FastBoardRepresentation;
 
 public abstract class ChessBoard implements Board<Move> {
 	private final BoardRepresentation board;
+	private final int[] kingPositions;
+	private final InsufficientMaterialDetector insufficientMaterialDetector;
 	private final MovesBuilder movesBuilder;
 	private final DirectionExplorer exp;
 	private final AttackDetector attackDetector;
-	private int[] kingPositions;
 	private int enPassant;
 	private int enPassantDeletePawnIndex;
 	private Color activeColor;
 	private int castlings;
 	private int halfMoveCount;
 	private int moveNumber;
-	private InsufficientMaterialDetector insufficientMaterialDetector;
-	private PinnedDetector pinnedDetector;
 	private long key;
-	private List<Long> keyHistory;
-	private Stack<ChessBoardState> undoData;
+	private PinnedDetector pinnedDetector;
+	private final List<Long> keyHistory;
+	private final Stack<ChessBoardState> undoData;
 	private Function<Board<Move>, SelectiveComparator<Move>> moveComparatorBuilder;
 	
-	protected ChessBoard(List<PieceWithPosition> pieces) {
-		this(Dimension.STANDARD, pieces);
-	}
-
-	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces) {
-		this(dimension, pieces,Color.WHITE, Castling.ALL, -1, 0, 1);
+	/**
+	 * Constructor of an empty board.
+	 * <br>It is intended to be used by subclasses that override {@link #create()}.
+	 * @param dimension The chess board dimension.
+	 */
+	protected ChessBoard(Dimension dimension) {
+		this.board = new FastBoardRepresentation(dimension);
+		this.kingPositions = new int[2];
+		this.exp = getDirectionExplorer(-1);
+		this.movesBuilder = buildMovesBuilder();
+		this.attackDetector = new AttackDetector(board.getDirectionExplorer(-1));
+		this.keyHistory = new ArrayList<>();
+		this.undoData = new Stack<>(() -> new ChessBoardState(this));
+		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
+		this.pinnedDetector = new PinnedDetector(this);
 	}
 	
 	/** Constructor.
@@ -64,37 +74,34 @@ public abstract class ChessBoard implements Board<Move> {
 	 * @param moveNumber The move number (1 at the beginning of the game)
 	 */
 	protected ChessBoard(Dimension dimension, List<PieceWithPosition> pieces, Color activeColor, Collection<Castling> castlings, int enPassantColumn, int halfMoveCount, int moveNumber) {
+		this(dimension);
 		if (activeColor==null) {
 			throw new NullPointerException();
 		}
-		this.board = new FastBoardRepresentation(dimension, pieces);
-		this.undoData = new Stack<>(() -> new ChessBoardState(this));
-		this.exp = getDirectionExplorer(-1);
+		this.board.fill(pieces);
 		this.activeColor = activeColor;
 		this.castlings = castlings==null ? 0 : Castling.toInt(castlings);
 		this.enPassant = -1;
 		if (enPassantColumn>=0) {
-			final int enPassantRow = Color.WHITE==activeColor ? 2 : board.getDimension().getHeight()-3;
-			final CoordinatesSystem cs = board.getCoordinatesSystem();
-			final int enPassantIndex = cs.getIndex(enPassantRow, enPassantColumn);
-			if (board.getPiece(enPassantIndex)!=null) {
-				throw new IllegalArgumentException("EnPassant cell is not empty");
-			}
-			final int pawnCell = WHITE==activeColor ? cs.nextRow(enPassantIndex) : cs.previousRow(enPassantIndex);
-			final Piece expected = WHITE==activeColor?BLACK_PAWN:WHITE_PAWN;
-			if (expected != board.getPiece(pawnCell)) {
-				throw new IllegalArgumentException("Attacked enPassant pawn is missing");
-			}
-			setEnPassant(enPassantIndex, activeColor, pawnCell);
+			checkedSetEnPassant(activeColor, enPassantColumn);
 		}
-		this.kingPositions = new int[2];
-		this.insufficientMaterialDetector = new InsufficientMaterialDetector();
+		Arrays.fill(kingPositions, -1);
+
 		for (PieceWithPosition p : pieces) {
 			if (KING==p.getPiece().getKind()) {
+				final int index = p.getPiece().getColor().ordinal();
+				if (this.kingPositions[index]>=0) {
+					throw new IllegalArgumentException("More than one "+p.getPiece().getColor()+"king");
+				}
 				final int dest = board.getCoordinatesSystem().getIndex(p.getRow(), p.getColumn());
-				this.kingPositions[p.getPiece().getColor().ordinal()] = dest;
+				this.kingPositions[index] = dest;
 			} else {
 				insufficientMaterialDetector.add(p.getPiece());
+			}
+		}
+		for (Color color : Color.values()) {
+			if (this.kingPositions[color.ordinal()]<0) {
+				throw new IllegalArgumentException("No "+color+" king");
 			}
 		}
 		if (halfMoveCount<0) {
@@ -106,11 +113,50 @@ public abstract class ChessBoard implements Board<Move> {
 		}
 		this.moveNumber = moveNumber;
 		this.key = board.getZobrist().get(this);
-		this.keyHistory = new ArrayList<>();
-		this.movesBuilder = buildMovesBuilder();
 		this.pinnedDetector = new PinnedDetector(this);
-		this.attackDetector = new AttackDetector(board.getDirectionExplorer(-1));
 	}
+
+	private void checkedSetEnPassant(Color activeColor, int enPassantColumn) {
+		final int enPassantRow = Color.WHITE==activeColor ? 2 : board.getDimension().getHeight()-3;
+		final CoordinatesSystem cs = board.getCoordinatesSystem();
+		final int enPassantIndex = cs.getIndex(enPassantRow, enPassantColumn);
+		if (board.getPiece(enPassantIndex)!=null) {
+			throw new IllegalArgumentException("EnPassant cell is not empty");
+		}
+		final int pawnCell = WHITE==activeColor ? cs.nextRow(enPassantIndex) : cs.previousRow(enPassantIndex);
+		final Piece expected = WHITE==activeColor?BLACK_PAWN:WHITE_PAWN;
+		if (expected != board.getPiece(pawnCell)) {
+			throw new IllegalArgumentException("Attacked enPassant pawn is missing");
+		}
+		setEnPassant(enPassantIndex, activeColor, pawnCell);
+	}
+
+	protected void checkCastling(Castling castling) {
+		final CoordinatesSystem cs = getCoordinatesSystem();
+		// Check there's a rook at its initial position
+		final int initialRookPosition = getInitialRookPosition(castling);
+		final Piece expectedPiece = castling.getColor()==WHITE ? WHITE_ROOK : BLACK_ROOK;
+		final Piece rook = getPiece(initialRookPosition);
+		if (expectedPiece!=rook) {
+			throw new IllegalArgumentException(String.format("Piece at rook's initial position of %s is not a rook",castling));
+		}
+		// Check the king is at its starting row
+		final int kingPosition = getKingPosition(castling.getColor());
+		if (cs.getRow(kingPosition)!=(castling.getColor()==BLACK ? 0 : board.getDimension().getHeight()-1)) {
+			throw new IllegalArgumentException(String.format("King of color %s is not at its starting row",castling.getColor()));
+		}
+		// Check the rook is at the right side of the king
+		if (castling.getSide()==Side.QUEEN) {
+			if (cs.getColumn(initialRookPosition)>=cs.getColumn(kingPosition)) {
+				throw new IllegalArgumentException(String.format("Rook of %s is not at the left side of the king",castling));
+			}
+		} else {
+			if (cs.getColumn(initialRookPosition)<=cs.getColumn(kingPosition)) {
+				throw new IllegalArgumentException(String.format("Rook of %s is not at the right side of the king",castling));
+			}
+		}
+	}
+
 	
 	protected abstract MovesBuilder buildMovesBuilder();
 	
@@ -505,20 +551,20 @@ public abstract class ChessBoard implements Board<Move> {
 		if (!getDimension().equals(other.getDimension())) {
 			throw new IllegalArgumentException("Can't copy board with different dimension");
 		}
-		if (other instanceof ChessBoard) {
-			this.activeColor = other.getActiveColor();
-			this.enPassant = other.getEnPassant();
-			this.enPassantDeletePawnIndex = ((ChessBoard)other).enPassantDeletePawnIndex;
+		if (other instanceof ChessBoard o) {
+			this.activeColor = o.activeColor;
+			this.enPassant = o.getEnPassant();
+			this.enPassantDeletePawnIndex = o.enPassantDeletePawnIndex;
 			this.halfMoveCount = other.getHalfMoveCount();
 			this.moveNumber = other.getMoveNumber();
-			this.castlings = ((ChessBoard)other).castlings;
-			this.board.copy(((ChessBoard)other).board);
+			this.castlings = o.castlings;
+			this.board.copy(o.board);
 			this.key = other.getHashKey();
 			this.keyHistory.clear();
-			this.keyHistory.addAll(((ChessBoard)other).keyHistory);
-			System.arraycopy(((ChessBoard)other).kingPositions, 0, kingPositions, 0, kingPositions.length);
+			this.keyHistory.addAll(o.keyHistory);
+			System.arraycopy(o.kingPositions, 0, kingPositions, 0, kingPositions.length);
 			undoData.clear();
-			this.insufficientMaterialDetector.copy(((ChessBoard)other).insufficientMaterialDetector);
+			this.insufficientMaterialDetector.copy(o.insufficientMaterialDetector);
 			this.pinnedDetector.invalidate();
 			this.setMoveComparatorBuilder(other.getMoveComparatorBuilder());
 			this.movesBuilder.invalidate();
@@ -531,8 +577,12 @@ public abstract class ChessBoard implements Board<Move> {
 	public int getKingPosition(Color color) {
 		return kingPositions[color.ordinal()];
 	}
-	
+
 	@Override
+	public boolean isWhiteToMove() {
+		return activeColor == WHITE;
+	}
+	
 	public Color getActiveColor() {
 		return activeColor;
 	}

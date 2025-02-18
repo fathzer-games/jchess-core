@@ -5,7 +5,6 @@ import static com.fathzer.jchess.Castling.Side.KING;
 import static com.fathzer.jchess.Piece.*;
 import static com.fathzer.jchess.Variant.*;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ public class FENParser implements Supplier<Board<Move>> {
 	private final List<PieceWithPosition> pieces;
 	private final Color color;
 	private final Collection<Castling> castlings;
-	private final int[] rookPositions;
+	private final int[] rookColumns;
 	private final int enPassant;
 	private final int halfMoveCount;
 	private final int moveNumber;
@@ -71,7 +70,7 @@ public class FENParser implements Supplier<Board<Move>> {
 		this.pieces = getPieces(tokens[0]);
 		this.color = getColor(tokens[1]);
 		this.castlings = getCastlings(tokens[2]);
-		this.rookPositions = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
+		this.rookColumns = getInitialRookColumns(dimension, pieces, castlings, tokens[2]);
 		this.enPassant = "-".equals(tokens[3]) ? -1 : getColumn(tokens[3]);
 		this.halfMoveCount = Integer.parseInt(tokens[4]);
 		this.moveNumber = Integer.parseInt(tokens[5]);
@@ -81,7 +80,7 @@ public class FENParser implements Supplier<Board<Move>> {
 	public Board<Move> get() {
 		if (dimension.getWidth()==8 && dimension.getHeight()==8) {
 			if (variant==CHESS960) {
-				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rookPositions, enPassant, halfMoveCount, moveNumber);
+				return new com.fathzer.jchess.chess960.Chess960Board(pieces, color, castlings, rookColumns, enPassant, halfMoveCount, moveNumber);
 			} else {
 				return new com.fathzer.jchess.standard.StandardBoard(pieces, color, castlings, enPassant, halfMoveCount, moveNumber);
 			}
@@ -184,11 +183,7 @@ public class FENParser implements Supplier<Board<Move>> {
 	
 	private int[] getInitialRookColumns(Dimension dimension, List<PieceWithPosition> pieces, Collection<Castling> castlings, String castlingsString) {
 		try {
-			if (castlings.isEmpty()) {
-				return null;
-			}
-			final int[] columns = new int[Castling.ALL.size()];
-			Arrays.fill(columns, -1);
+			final int[] columns = new int[] {-1,-1};
 			final int blackKingColumn = getColumn(pieces, p->p.getPiece()==BLACK_KING);
 			final int whiteKingColumn = getColumn(pieces, p->p.getPiece()==WHITE_KING);
 			final int defaultKingColumn = dimension.getWidth()/2;
@@ -203,7 +198,11 @@ public class FENParser implements Supplier<Board<Move>> {
 					rookColumn = getFurthest(pieces, castling.getColor()==BLACK ? BLACK_ROOK : WHITE_ROOK, kingRow, kingColumn, castling.getSide());
 				}
 				isDefault = isDefault && rookColumn==getStandardRookColumn(dimension, castling) && kingColumn==defaultKingColumn;
-				columns[castling.ordinal()] = rookColumn;
+				final int index = castling.getSide().ordinal();
+				if (columns[index] >= 0 && columns[index] != rookColumn) {
+					throw new IllegalArgumentException(String.format("Invalid castling string: %s. %s side rooks are not at the same columns.",castlingsString, castling.getSide()));
+				}
+				columns[index] = rookColumn;
 			}
 			if (!isDefault && CHESS960!=variant) {
 				throw new IllegalArgumentException("Invalid castling string for variant "+variant);

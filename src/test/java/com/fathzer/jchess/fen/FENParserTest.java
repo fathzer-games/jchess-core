@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.Color;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.CoordinatesSystem;
@@ -38,13 +37,13 @@ class FENParserTest {
 	@Test
 	void bug20230518() {
 		// Parser failed if not all rooks were in place
-		assertEquals(Color.WHITE, FENUtils.from("4k3/8/8/8/8/8/3PP3/r3K2R w K - 0 1").getActiveColor());
+		assertTrue(FENUtils.from("4k3/8/8/8/8/8/3PP3/r3K2R w K - 0 1").isWhiteToMove());
 	}
 	
 	@Test
 	void bug20230601() {
 		// Parser failed
-		assertEquals(Color.BLACK, FENUtils.from("r4br1/4p3/k1p2npp/PpnQ4/P5b1/2PPP1qP/5P2/RNB1KB2 b Q - 0 1").getActiveColor());
+		assertFalse(FENUtils.from("r4br1/4p3/k1p2npp/PpnQ4/P5b1/2PPP1qP/5P2/RNB1KB2 b Q - 0 1").isWhiteToMove());
 	}
 	
 	@Test

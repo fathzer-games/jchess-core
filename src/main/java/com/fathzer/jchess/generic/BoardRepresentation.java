@@ -1,5 +1,6 @@
 package com.fathzer.jchess.generic;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.fathzer.jchess.BoardExplorer;
@@ -26,12 +27,24 @@ public abstract class BoardRepresentation {
 	@Getter
 	private final Direction[] pinnedMap;
 	
-	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension, List<PieceWithPosition> pieces) {
+	protected BoardRepresentation(CoordinatesSystem coordinatesSystem, int arrayDimension) {
 		this.dimension = coordinatesSystem.getDimension();
 		this.coordinatesSystem = coordinatesSystem;
 		zobrist = ZobristKeyBuilder.get(arrayDimension);
 		this.pieces = new Piece[arrayDimension];
 		this.pinnedMap = new Direction[this.pieces.length];
+	}
+	
+	public Piece getPiece(int index) {
+		return pieces[index];
+	}
+	
+	public void clear() {
+		Arrays.fill(this.pieces, null);
+		Arrays.fill(this.pinnedMap, null);
+	}
+	
+	public void fill(List<PieceWithPosition> pieces) {
 		for (PieceWithPosition p : pieces) {
 			final int dest = coordinatesSystem.getIndex(p.getRow(), p.getColumn());
 			if (this.pieces[dest]!=null) {
@@ -39,10 +52,6 @@ public abstract class BoardRepresentation {
 			}
 			this.pieces[dest]=p.getPiece();
 		}
-	}
-	
-	public Piece getPiece(int index) {
-		return pieces[index];
 	}
 	
 	public void copy(BoardRepresentation other) {

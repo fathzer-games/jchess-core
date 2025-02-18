@@ -64,7 +64,7 @@ class ChessBoardTest implements MoveBuilder {
 		assertEquals(moveNumber, board.getMoveNumber());
 		assertEquals(halfMoveCount+1,board.getHalfMoveCount());
 		assertTrue(board.getEnPassant()<0);
-		assertEquals(Color.BLACK, board.getActiveColor());
+		assertFalse(board.isWhiteToMove());
 		board.unmakeMove();
 
 		// Rook move erases castling possibility
@@ -115,15 +115,15 @@ class ChessBoardTest implements MoveBuilder {
 		assertEquals(0, board.getHalfMoveCount());
 		
 		// Test promotion
-		assertEquals(Color.BLACK, board.getActiveColor());
+		assertFalse(board.isWhiteToMove());
 		board.makeMove(move(board,"g2","h1",Piece.BLACK_QUEEN), MoveConfidence.LEGAL);
 		assertEquals(Piece.BLACK_QUEEN, board.getPiece(cs.getIndex("h1")));
 		assertNull(board.getPiece(cs.getIndex("g2")));
-		assertEquals(Color.WHITE, board.getActiveColor());
+		assertTrue(board.isWhiteToMove());
 		
 		board = FENUtils.from("4k1r1/1P6/5p2/p1Np1P2/5B1p/5Q1P/1q3PPK/8 w - - 4 42");
 		board.makeMove(move(board,"b7","b8", Piece.WHITE_QUEEN), MoveConfidence.LEGAL);
-		assertEquals(Color.BLACK, board.getActiveColor());
+		assertFalse(board.isWhiteToMove());
 		
 		// Test enPassant is set when pawn moves two rows
 		board = FENUtils.from("4k1r1/2p5/5p2/NP1p1P2/5B1p/5Q1P/1q3PPK/8 b - - 4 42");

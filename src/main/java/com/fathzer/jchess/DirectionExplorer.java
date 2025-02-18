@@ -15,7 +15,7 @@ public interface DirectionExplorer extends BoardExplorer {
 	 */
 	int getStartPosition();
 	
-	/** Check whether a cell can be reach from the current position without encountering a piece. 
+	/** Check whether a cell can be reached from the current position without encountering a piece. 
 	 * @param toIndex The index to reach
 	 * @param maxIteration The maximum number of steps to make to reach the <i>toIndex</i> cell.
 	 * @return true if <i>toIndex</i> can be reached.

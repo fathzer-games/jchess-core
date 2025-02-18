@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.fathzer.games.Color;
+import com.fathzer.jchess.Castling;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.PieceWithPosition;
 
@@ -14,41 +16,64 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class StartPositionGenerator implements Supplier<List<PieceWithPosition>> {
+public class StartPositionGenerator implements Supplier<Chess960Board> {
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
-	private static final Piece[][] WHITE_KRN = new Piece[][] {
-			new Piece[] {Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
-			new Piece[] {Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT},
+	private static final Piece[][] WHITE_KRN = {
+		{Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK},
+		{Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK},
+		{Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
+		{Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
+		{Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK},
+		{Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
+		{Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
+		{Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK},
+		{Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT},
+		{Piece.WHITE_ROOK, Piece.WHITE_KING, Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_KNIGHT},
 	};
-	private static final Piece[][] BLACK_KRN = new Piece[][] {
-		new Piece[] {Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
-		new Piece[] {Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT},
-};
+	private static final Piece[][] BLACK_KRN = {
+		{Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK},
+		{Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK},
+		{Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
+		{Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
+		{Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK},
+		{Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
+		{Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
+		{Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK},
+		{Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT},
+		{Piece.BLACK_ROOK, Piece.BLACK_KING, Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_KNIGHT},
+	};
 	
 	public static final StartPositionGenerator INSTANCE = new StartPositionGenerator();
 
 	@Override
-	public List<PieceWithPosition> get() {
+	public Chess960Board get() {
 		return fromPositionNumber(RANDOM.nextInt(960));
 	}
 	
-	public List<PieceWithPosition> fromPositionNumber(int position) {
+	public Chess960Board fromPositionNumber(int position) {
+		final List<PieceWithPosition> pieces = getPiecesFromPositionNumber(position);
+		return new Chess960Board(pieces, Color.WHITE, Castling.ALL, buildRookColumns(pieces), -1, 0, 1);
+	}
+
+	private int[] buildRookColumns(List<PieceWithPosition> pieces) {
+		final int[] rookColumns = new int[2];
+		int kingColumn = -1;
+		for (PieceWithPosition piece : pieces) {
+			if (piece.getPiece()==Piece.WHITE_KING || piece.getPiece()==Piece.BLACK_KING) {
+				kingColumn = piece.getColumn();
+				break;
+			}
+		}
+		for (PieceWithPosition piece : pieces) {
+			if (piece.getPiece()==Piece.WHITE_ROOK) {
+				final Castling.Side side = piece.getColumn()<kingColumn ? Castling.Side.QUEEN : Castling.Side.KING;
+				rookColumns[side.ordinal()] = piece.getColumn();
+			}
+		}
+		return rookColumns;
+	}
+
+	private List<PieceWithPosition> getPiecesFromPositionNumber(int position) {
 		if (position<0 || position>=960) {
 			throw new IllegalArgumentException();
 		}
@@ -76,7 +101,7 @@ public class StartPositionGenerator implements Supplier<List<PieceWithPosition>>
 		pieces.add(new PieceWithPosition(Piece.BLACK_QUEEN, 0, queenPosition));
 		pieces.add(new PieceWithPosition(Piece.WHITE_QUEEN, 7, queenPosition));
 		
-		// Add rest of pieces
+		// Add remaining pieces
 		addKRN(pieces, freeCells, BLACK_KRN[position/6], 0);
 		addKRN(pieces, freeCells, WHITE_KRN[position/6], 7);
 		return pieces;

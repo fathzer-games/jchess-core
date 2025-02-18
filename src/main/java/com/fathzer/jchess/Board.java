@@ -36,13 +36,6 @@ public interface Board<M> extends MoveGenerator<M>, HashProvider {
 
 	DirectionExplorer getDirectionExplorer(int index);
 	
-	Color getActiveColor();
-	
-	@Override
-	default boolean isWhiteToMove() {
-		return getActiveColor()==Color.WHITE;
-	}
-	
 	/** Gets the enPassant cell
 	 * @return a negative number if there's no enPassant cell or the internal en passant cell index
 	 * @see #getCoordinatesSystem()

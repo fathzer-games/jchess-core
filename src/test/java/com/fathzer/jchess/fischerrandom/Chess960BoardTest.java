@@ -3,8 +3,6 @@ package com.fathzer.jchess.fischerrandom;
 import static org.junit.jupiter.api.Assertions.*;
 import static com.fathzer.games.MoveGenerator.MoveConfidence.*;
 
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
 
 import com.fathzer.games.Color;
@@ -15,7 +13,6 @@ import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.MoveBuilder;
 import com.fathzer.jchess.Piece;
-import com.fathzer.jchess.PieceWithPosition;
 import com.fathzer.jchess.Variant;
 import com.fathzer.jchess.chess960.Chess960Board;
 import com.fathzer.jchess.fen.FENParser;
@@ -25,8 +22,7 @@ import com.fathzer.jchess.generic.BasicMove;
 class Chess960BoardTest implements MoveBuilder {
 	@Test
 	void test() {
-		final List<PieceWithPosition> pieces = new FENParser("rnbqkbnr/pppppppp/8/8/8/2PP4/PP2PPPP/2RK3R w - - 0 1", Variant.CHESS960).getPieces();
-		final Chess960Board board = new Chess960Board(pieces);
+		final Board<Move> board = new FENParser("bnrqkbnr/pppppppp/8/8/8/2PP4/PP2PPPP/2RK3R w KQkq - 0 1", Variant.CHESS960).get();
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 
 		assertTrue(board.makeMove(move(board, "d1", "c1"), UNSAFE));
@@ -103,5 +99,22 @@ class Chess960BoardTest implements MoveBuilder {
 		assertTrue(board.makeMove(new BasicMove(cs.getIndex("h1"), cs.getIndex("h2")), MoveConfidence.UNSAFE));
 		assertTrue(board.makeMove(new BasicMove(cs.getIndex("h7"), cs.getIndex("h6")), MoveConfidence.UNSAFE));
 		assertTrue(board.makeMove(new BasicMove(board.getKingPosition(Color.WHITE), cs.getIndex("g1")), MoveConfidence.UNSAFE));
+	}
+	
+	@Test
+	void bug20250217() {
+		assertThrows (IllegalArgumentException.class, ()->FENUtils.from("bnn1qrkQ/pp1ppp1p/2p5/b5p1/8/5P1P/PPPPP1P1/BNNB1RKR b HFhf - 0 9", Variant.CHESS960));
+		assertThrows (IllegalArgumentException.class, ()->FENUtils.from("bnn1qrkQ/pp1ppp1p/2p5/b5p1/8/5P1P/PPPPP1P1/BNNB1RKR b KQkq - 0 9", Variant.CHESS960));
+	}
+
+	@Test
+	void bug20250216() {
+		final Chess960Board b = (Chess960Board) FENUtils.from("bnn1qrkr/pp1ppp1p/2p5/b3Q1p1/8/5P1P/PPPPP1P1/BNNB1RKR w HFhf - 0 9", Variant.CHESS960);
+		CoordinatesSystem cs = b.getCoordinatesSystem();
+		assertTrue(b.makeMove(new BasicMove(cs.getIndex("e5"), cs.getIndex("h8")), MoveConfidence.UNSAFE));
+		
+		final String boardStr = b.toString();
+		b.isKingSafeAfterMove(7, 8);
+		assertEquals(boardStr, b.toString());
 	}
 }

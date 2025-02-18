@@ -2,8 +2,6 @@ package com.fathzer.jchess;
 
 import java.util.Random;
 
-import com.fathzer.games.Color;
-
 import lombok.Getter;
 
 public class ZobristKeyBuilder {
@@ -48,7 +46,7 @@ public class ZobristKeyBuilder {
 		if (board.getEnPassant() >= 0) {
 			result ^= enPassantKeys[board.getEnPassant()];
 		}
-		if (Color.BLACK.equals(board.getActiveColor())) {
+		if (!board.isWhiteToMove()) {
 			result ^= turnKey;
 		}
 		for (Castling castling : Castling.ALL) {
