@@ -24,7 +24,6 @@ import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.SingleThreadContext;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -129,7 +128,7 @@ assertEquals(19, moves.size());
 	void moreTests() {
 		final Board<Move> board = FENUtils.from("8/8/8/3kr3/8/8/5PPP/7K w - - 0 1");
 		final SearchContext<Move, Board<Move>> context = SearchContext.get(board, NaiveEvaluator::new);
-		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = new SingleThreadContext<>(context)) {
+		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = ExecutionContext.get(1, context)) {
 			Negamax<Move, Board<Move>> ai = new Negamax<>(exec);
 			List<Move> l = new ArrayList<>();
 			l.add(move(board, "h1", "g1"));
@@ -229,7 +228,7 @@ assertEquals(19, moves.size());
 		final Board<Move> board = FENUtils.from("8/4k3/8/R7/8/8/8/4K2R w K - 0 1");
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 		SearchContext<Move, Board<Move>> context = SearchContext.get(board, NaiveEvaluator::new);
-		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = new SingleThreadContext<>(context)) {
+		try (ExecutionContext<SearchContext<Move, Board<Move>>> exec = ExecutionContext.get(1, context)) {
 			Negamax3<Move, Board<Move>> ai = new Negamax3<>(exec);
 			final TT tt = new TT(16, SizeUnit.MB);
 			ai.setTranspositonTable(tt);
