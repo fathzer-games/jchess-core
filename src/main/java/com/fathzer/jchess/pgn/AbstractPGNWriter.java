@@ -72,7 +72,7 @@ public abstract class AbstractPGNWriter<M, B extends MoveGenerator<M>> {
 			result.add(fenField);
 			return result;
 		} else {
-			//TODO remove this use of JChess method in order to put this class in another library/module
+			//TODO remove this use of JChess method in order to put this class in chess-utils
 			return FENUtils.NEW_STANDARD_GAME.equals(fen) ? Collections.emptyList() : Arrays.asList(setupField, fenField);
 		}
 	}

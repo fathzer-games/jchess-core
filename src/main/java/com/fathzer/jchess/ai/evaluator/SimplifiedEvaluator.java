@@ -3,7 +3,7 @@ package com.fathzer.jchess.ai.evaluator;
 import com.fathzer.chess.utils.adapters.BoardExplorer;
 import com.fathzer.chess.utils.adapters.MoveData;
 import com.fathzer.chess.utils.evaluators.simplified.AbstractIncrementalSimplifiedEvaluator;
-import com.fathzer.chess.utils.evaluators.simplified.IncrementalState;
+import com.fathzer.chess.utils.evaluators.simplified.SimplifiedState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.chessutils.JChessBoardExplorer;
@@ -15,7 +15,7 @@ public class SimplifiedEvaluator extends AbstractIncrementalSimplifiedEvaluator<
 		super();
 	}
 
-	private SimplifiedEvaluator(IncrementalState state) {
+	private SimplifiedEvaluator(SimplifiedState state) {
 		super(state);
 	}
 
@@ -30,7 +30,7 @@ public class SimplifiedEvaluator extends AbstractIncrementalSimplifiedEvaluator<
 	}
 
 	@Override
-	protected AbstractIncrementalSimplifiedEvaluator<Move, Board<Move>> fork(IncrementalState state) {
+	protected AbstractIncrementalSimplifiedEvaluator<Move, Board<Move>> fork(SimplifiedState state) {
 		return new SimplifiedEvaluator(state);
 	}
 }

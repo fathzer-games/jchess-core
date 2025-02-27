@@ -43,8 +43,8 @@ class MinimaxEngineTest implements MoveBuilder {
 		final CoordinatesSystem cs = board.getCoordinatesSystem();
 show(moves, cs);
 		assertEquals(1, moves.size());
-		assertEquals("h8", cs.getAlgebraicNotation(moves.get(0).getContent().getFrom()));
-		assertEquals("h7", cs.getAlgebraicNotation(moves.get(0).getContent().getTo()));
+		assertEquals("h8", cs.getAlgebraicNotation(moves.get(0).getMove().getFrom()));
+		assertEquals("h7", cs.getAlgebraicNotation(moves.get(0).getMove().getTo()));
 		assertEquals(-800, moves.get(0).getScore());
 	}
 	
@@ -81,7 +81,7 @@ show(moves, cs);
 		Evaluation max = moves.get(0).getEvaluation();
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(1, max.getCountToEnd());
-		Move mv = moves.get(0).getContent();
+		Move mv = moves.get(0).getMove();
 		assertEquals("c3", cs.getAlgebraicNotation(mv.getFrom()));
 		assertEquals("c2", cs.getAlgebraicNotation(mv.getTo()));
 		// Warning, due to transposition table effects, the second best move (M+3) can be detected even if we search at depth 4!
@@ -95,7 +95,7 @@ show(moves, cs);
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(2, max.getCountToEnd());
 		assertTrue(moves.get(1).getScore()<max.getScore());
-		mv = moves.get(0).getContent();
+		mv = moves.get(0).getMove();
 		assertEquals("b3", cs.getAlgebraicNotation(mv.getFrom()));
 		assertEquals("a1", cs.getAlgebraicNotation(mv.getTo()));
 		
@@ -107,8 +107,8 @@ show(moves, cs);
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(2, max.getCountToEnd());
 		assertTrue(moves.get(1).getScore()<max.getScore());
-		assertEquals("g6", cs.getAlgebraicNotation(moves.get(0).getContent().getFrom()));
-		assertEquals("h8", cs.getAlgebraicNotation(moves.get(0).getContent().getTo()));
+		assertEquals("g6", cs.getAlgebraicNotation(moves.get(0).getMove().getFrom()));
+		assertEquals("h8", cs.getAlgebraicNotation(moves.get(0).getMove().getTo()));
 		
 		
 		// Check in 3
@@ -120,7 +120,7 @@ show(moves, cs);
 		moves = engine.getBestMoves(board).getBestMoves();
 show(moves,cs);
 assertEquals(19, moves.size());
-		mv = moves.get(0).getContent();
+		mv = moves.get(0).getMove();
 		assertEquals("d1", cs.getAlgebraicNotation(mv.getFrom()));
 		assertEquals("d7", cs.getAlgebraicNotation(mv.getTo()));
 	}

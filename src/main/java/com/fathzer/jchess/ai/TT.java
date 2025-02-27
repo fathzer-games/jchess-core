@@ -2,11 +2,12 @@ package com.fathzer.jchess.ai;
 
 import com.fathzer.games.ai.transposition.OneLongEntryTranspositionTable;
 import com.fathzer.games.ai.transposition.SizeUnit;
+import com.fathzer.jchess.Board;
 import com.fathzer.jchess.Move;
 import com.fathzer.jchess.Piece;
 import com.fathzer.jchess.generic.BasicMove;
 
-public class TT extends OneLongEntryTranspositionTable<Move> {
+public class TT extends OneLongEntryTranspositionTable<Move, Board<Move>> {
 	// Move is encoded in an int:
 	// 12 bits for source, 12 bits for destination
 	// 8 bits for promotion
