@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
-import com.fathzer.games.ai.SearchParameters;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.evaluation.EvaluatedMove;
 import com.fathzer.games.ai.evaluation.Evaluation;
 import com.fathzer.games.ai.evaluation.Evaluation.Type;
@@ -135,7 +135,7 @@ assertEquals(19, moves.size());
 			l.add(move(board, "h1", "g1"));
 			l.add(move(board, "f2", "f3"));
 			l.add(move(board, "f2", "f4"));
-			final SearchParameters params = new SearchParameters(4, Integer.MAX_VALUE, 0);
+			final DepthFirstSearchParameters params = new DepthFirstSearchParameters(4, Integer.MAX_VALUE, 0);
 			final List<EvaluatedMove<Move>> eval = ai.getBestMoves(l, params).getCut();
 			assertEquals(3, eval.size());
 			for (EvaluatedMove<Move> e : eval) {
@@ -236,7 +236,7 @@ assertEquals(19, moves.size());
 			final Move a5a6 = move(board, "a5", "a6");
 			final MySpy spy = new MySpy(cs, tt);
 			ai.setSpy(spy);
-			EvaluatedMove<Move> e = ai.getBestMoves(Collections.singletonList(a5a6), new SearchParameters(8)).getList().get(0);
+			EvaluatedMove<Move> e = ai.getBestMoves(Collections.singletonList(a5a6), new DepthFirstSearchParameters(8)).getList().get(0);
 			assertEquals(Type.WIN, e.getEvaluation().getType());
 			assertEquals(4, e.getEvaluation().getCountToEnd());
 			final Move h1h6 = move(board, "h1", "h6");
@@ -245,7 +245,7 @@ assertEquals(19, moves.size());
 			spy.searchedKey = 6365043373273418417L; //a5a7
 			spy.searchedKey = -3019684505475777408L; //d7d8
 			spy.searchedKey = 1283331931822092560L; //h6h8
-			e = ai.getBestMoves(Collections.singletonList(h1h6),new SearchParameters(8)).getList().get(0);
+			e = ai.getBestMoves(Collections.singletonList(h1h6),new DepthFirstSearchParameters(8)).getList().get(0);
 			System.out.println("pv="+tt.collectPV(board, h1h6, 8).stream().map(m->m.toString(cs)).toList());
 			assertEquals(Type.WIN, e.getEvaluation().getType());
 			assertEquals(4, e.getEvaluation().getCountToEnd());
