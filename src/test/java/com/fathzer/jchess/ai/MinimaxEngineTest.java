@@ -195,7 +195,7 @@ assertEquals(19, moves.size());
 		// Not a bug, just a problem with evaluation function
 		Board<Move> board = FENUtils.from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76");
 		JChessEngine engine = new JChessEngine(NaiveEvaluator::new, 7);
-		System.out.println(engine.getBestMoves(board).getBest().toString(board.getCoordinatesSystem()));
+		System.out.println(engine.getBestMoves(board).getBestMoves().get(0).getMove().toString(board.getCoordinatesSystem()));
 	}
 	
 	@Test
