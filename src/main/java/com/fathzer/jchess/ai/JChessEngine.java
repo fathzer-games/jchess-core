@@ -67,7 +67,15 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		
 		@Override
 		public void logSearchEnd(Board<Move> board, SearchHistory<Move> result) {
-			log.info("--- End of iterative evaluation returns: {}", toString(result.getBestMoves()));
+			log.info("--- End of iterative evaluation returns: {}", toString(result.getAccurateMoves()));
+			if (result.isEmpty()) {
+				log.info("No valid move found");
+			} else {
+				final EvaluatedMove<Move> evaluatedMove = result.getAccurateMoves().get(0);
+				log.info("Move chosen :{}", evaluatedMove.getMove().toString(board.getCoordinatesSystem()));
+				final List<Move> pv = evaluatedMove.getPrincipalVariation();
+				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).toList());
+			}
 		}
 
 		public String toString(Collection<EvaluatedMove<Move>> moves) {
@@ -109,17 +117,6 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		@Override
 		public void logLibraryMove(Board<Move> board, EvaluatedMove<Move> move) {
 			log.info("Move from libray:{}", move.toString(m-> m.toString(board.getCoordinatesSystem())));
-		}
-
-		@Override
-		public void logMoveChosen(Board<Move> board, EvaluatedMove<Move> evaluatedMove) {
-			if (evaluatedMove==null) {
-				log.info("No valid move found");
-			} else {
-				log.info("Move chosen :{}", evaluatedMove.getMove().toString(board.getCoordinatesSystem()));
-				final List<Move> pv = evaluatedMove.getPrincipalVariation();
-				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).toList());
-			}
 		}
 	}
 }
