@@ -26,7 +26,7 @@ public class LoggedSelector extends FirstBestMoveSelector<Move> {
 	}
 
 	@Override
-	protected void log(int index, List<Move> cut, List<EvaluatedMove<Move>> result) {
+	protected void log(SearchHistory<Move> history, int index, List<Move> cut, List<EvaluatedMove<Move>> result) {
 		log.info(cut.stream().map(m->m.toString(board.getCoordinatesSystem())).collect(Collectors.joining(",")));
 		log.info("  -> {}", EvaluatedMove.toString(result, m-> m.toString(board.getCoordinatesSystem())));
 	}

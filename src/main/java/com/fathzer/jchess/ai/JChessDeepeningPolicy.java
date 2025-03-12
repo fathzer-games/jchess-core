@@ -32,7 +32,7 @@ final class JChessDeepeningPolicy extends DeepeningPolicy {
 
 	@Override
 	public <M> Optional<SearchResult<M>> mergeInterrupted(SearchHistory<M> history, SearchResult<M> interruptedSearch, int interruptionDepth) {
-		if ((interruptionDepth - history.getDepth())%2==0) {
+		if ((interruptionDepth - history.getLastDepth())%2==0) {
 			//TODO Remove when quiesce will be implemented?
 			// Do not merge results if depth are optimistic and pessimistic. 
 			return super.mergeInterrupted(history, interruptedSearch, interruptionDepth);
