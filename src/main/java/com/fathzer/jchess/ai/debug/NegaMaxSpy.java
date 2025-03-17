@@ -5,11 +5,11 @@ import static com.fathzer.games.ai.experimental.KeyBasedNegaMaxSpyFilter.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.experimental.Spy;
 import com.fathzer.games.ai.experimental.KeyBasedNegaMaxSpyFilter;
 import com.fathzer.games.ai.experimental.TreeSearchState;
 import com.fathzer.games.ai.experimental.TreeSearchStateStack;
+import com.fathzer.games.ai.transposition.AlphaBetaState;
 import com.fathzer.jchess.Board;
 import com.fathzer.jchess.CoordinatesSystem;
 import com.fathzer.jchess.Move;
@@ -48,7 +48,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	public void cut(TreeSearchStateStack<Move, Board<Move>> state, Move move) {
 		if (filter.isOn() && scoreFilter(state)) {
 			final TreeSearchState<Move> current = state.get(state.getCurrentDepth());
-			System.out.println(getTab(state)+" Cut on move "+current.lastMove.toString(state.context.getGamePosition().getCoordinatesSystem())+" with score "+current.value);
+			System.out.println(getTab(state)+" Cut on move "+current.getLastMove().toString(state.context.getGamePosition().getCoordinatesSystem())+" with score "+current.getValue());
 		}
 	}
 
@@ -65,7 +65,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	public void exit(TreeSearchStateStack<Move, Board<Move>> state, Event evt) {
 		if (filter.isOn()) {
 			if (scoreFilter(state)) {
-				System.out.println(getTab(state)+" Exit on "+evt+" -->"+state.getCurrent().value);
+				System.out.println(getTab(state)+" Exit on "+evt+" -->"+state.getCurrent().getValue());
 			}
 			if (filter.exit(state)) {
 				System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
@@ -74,7 +74,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 	}
 
 	protected boolean scoreFilter(TreeSearchStateStack<Move, Board<Move>> state) {
-		return Math.abs(state.getCurrent().value)>30000;
+		return Math.abs(state.getCurrent().getValue())>30000;
 	}
 
 	private void print(TreeSearchStateStack<Move, Board<Move>> state) {
@@ -87,7 +87,7 @@ final class NegaMaxSpy implements Spy<Move, Board<Move>> {
 		final CoordinatesSystem cs = state.context.getGamePosition().getCoordinatesSystem();
 		return IntStream.rangeClosed(state.getCurrentDepth()+1, state.maxDepth).map(i -> state.getCurrentDepth()+1 + state.maxDepth - i)
 			.mapToObj(i->{
-				final Move mv = state.get(i).lastMove;
+				final Move mv = state.get(i).getLastMove();
 				return mv==null ? "?"+i: mv.toString(cs);
 			}).toList();
 	}

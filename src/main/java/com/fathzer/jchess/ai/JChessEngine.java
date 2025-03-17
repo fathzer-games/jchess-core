@@ -16,6 +16,7 @@ import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
 import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.transposition.SizeUnit;
+import com.fathzer.games.ai.transposition.TranspositionTable;
 import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.jchess.Board;
@@ -53,6 +54,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 
 	private class DefaultEventLogger implements EngineEventLogger<Move, Board<Move>> {
 		private CoordinatesSystem cs;
+		private TranspositionTable<Move, Board<Move>> tt;
 
 		public DefaultEventLogger() {
 			super();
@@ -61,6 +63,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 		@Override
 		public void logSearchStart(Board<Move> board, IterativeDeepeningEngine<Move, Board<Move>> engine) {
 			cs = board.getCoordinatesSystem();
+			this.tt = engine.getTranspositionTable();
 			log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}, maxTime={} ---", FENUtils.to(board), engine.getDeepeningPolicy().getSize(), engine.getDeepeningPolicy().getAccuracy(), engine.getDeepeningPolicy().getDepth(), engine.getDeepeningPolicy().getMaxTime());
 		}
 
@@ -73,7 +76,7 @@ public class JChessEngine extends IterativeDeepeningEngine<Move, Board<Move>> {
 			} else {
 				final EvaluatedMove<Move> evaluatedMove = result.getAccurateMoves().get(0);
 				log.info("Move chosen :{}", evaluatedMove.getMove().toString(board.getCoordinatesSystem()));
-				final List<Move> pv = evaluatedMove.getPrincipalVariation();
+				final List<Move> pv = tt.collectPV(board, evaluatedMove.getMove(), result.getLastDepth()); 
 				log.info("pv: {}", pv.stream().map(m -> m.toString(board.getCoordinatesSystem())).toList());
 			}
 		}

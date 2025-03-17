@@ -10,7 +10,6 @@ import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.fathzer.games.ai.AlphaBetaState;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.DepthFirstSearchParameters;
@@ -22,6 +21,7 @@ import com.fathzer.games.ai.experimental.Spy;
 import com.fathzer.games.ai.experimental.TreeSearchStateStack;
 import com.fathzer.games.ai.iterativedeepening.DeepeningPolicy;
 import com.fathzer.games.ai.iterativedeepening.SearchHistory;
+import com.fathzer.games.ai.transposition.AlphaBetaState;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.jchess.Board;
@@ -275,10 +275,10 @@ assertEquals(19, moves.size());
 		public void enter(TreeSearchStateStack<Move, Board<Move>> state) {
 			if (state.context.getGamePosition().getHashKey()==searchedKey && traceDepth==Integer.MAX_VALUE) {
 				traceDepth = state.getCurrentDepth();
-				System.out.println ("Start spy "+state.get(traceDepth+1).lastMove.toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition())+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
+				System.out.println ("Start spy "+state.get(traceDepth+1).getLastMove().toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition())+" at depth "+state.getCurrentDepth()+"/"+state.maxDepth);
 			}
 			if (traceDepth>=0 && state.getCurrentDepth()==traceDepth-1) {
-				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).lastMove.toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition()));
+				System.out.println (tab(state.getCurrentDepth()+1)+state.get(traceDepth).getLastMove().toString(cs)+" --> "+state.context.getGamePosition().getHashKey()+": "+FENUtils.to(state.context.getGamePosition()));
 			}
 			Spy.super.enter(state);
 		}
@@ -303,11 +303,11 @@ assertEquals(19, moves.size());
 			if (traceDepth>=0) {
 				final long key = state.context.getGamePosition().getHashKey();
 				if (state.getCurrentDepth()==traceDepth-1) {
-					System.out.println (tab(state.getCurrentDepth())+"Exit with "+state.getCurrent().value+" ("+key+")");
+					System.out.println (tab(state.getCurrentDepth())+"Exit with "+state.getCurrent().getValue()+" ("+key+")");
 				}
 				if (state.getCurrentDepth()==traceDepth && key==searchedKey) {
 					traceDepth = Integer.MAX_VALUE;
-					System.out.println ("Stop spy on "+evt+". Value="+state.getCurrent().value);
+					System.out.println ("Stop spy on "+evt+". Value="+state.getCurrent().getValue());
 				}
 			}
 			Spy.super.exit(state, evt);
